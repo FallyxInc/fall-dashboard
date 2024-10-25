@@ -1,59 +1,855 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <title>我的主页</title>
     <style>
-      body {
-        font-family: Arial, sans-serif;
-        margin: 0;
-        padding: 0;
-        background-color: #f2f2f2;
-      }
-      header,
-      footer {
-        background-color: #0078d7;
-        color: #ffffff;
-        padding: 20px;
-      }
-      header h1,
-      footer p {
-        margin: 0;
-      }
-      nav {
-        margin-top: 10px;
-      }
-      nav a {
-        color: #ffffff;
-        margin-right: 15px;
-        text-decoration: none;
-      }
-      main {
-        padding: 20px;
-        background-color: #ffffff;
-      }
-      main h2 {
-        margin-top: 0;
+      /* Target only mobile devices with max-width of 768px */
+      @media only screen and (max-width: 768px) {
+        /* Increase space between "The Future of Senior Care" and the top */
+        .hero1 .main-headding {
+          margin-top: 50px; /* Adjust the value to control spacing */
+        }
+
+        /* Adjust the "Problem" section for mobile */
+        #problem .images .row .col-lg-12,
+        #problem .images .row .col-lg-6 {
+          display: none; /* Hide extra images */
+        }
+
+        #product1 {
+          height: 500px;
+        }
+
+        /* Only show one image in "The Problem" section */
+        #problem .images .row .col-lg-12:first-child {
+          display: block; /* Ensure the first image is visible */
+        }
+
+        /* Add more space between the image and the title */
+        #problem .heading1 h2 {
+          margin-bottom: 20px; /* Add more space between the title and the image */
+        }
+
+        #problem .images {
+          margin-bottom: 20px; /* Additional margin below the image */
+        }
+
+        /* Increase font size for "The Problem" text and reduce spacing */
+        #problem .heading1 h2 {
+          font-size: 50px; /* Adjust font size */
+          margin-bottom: 10px;
+          margin-top: 40px; /* Reduce space between title and text */
+        }
+
+        /* Decrease space below the paragraph under "The Problem" */
+        #problem .heading1 p {
+          margin-bottom: 5px; /* Adjust the spacing */
+        }
+
+        /* Reduce space between the last paragraph and next heading (Undetected Resident Falls & Wandering) */
+        #problem .item-box h3 {
+          margin-top: 10px; /* Reduce space above the "Undetected Resident Falls & Wandering" heading */
+        }
+
+        #classbox {
+          margin-top: -5px;
+        }
+
+        #bam {
+          margin-bottom: -500px;
+        }
+
+        img[src='moo.png'] {
+          content: url('tri.png'); /* Replace the image */
+          height: 10000px; /* Set height to 200px */
+          width: auto; /* Maintain the aspect ratio */
+        }
+
+        img[src='imageee.png'] {
+          content: url('imagee2.png'); /* Replace the image */
+        }
+
+        /* Replace 'moo.png' with 'product2.png' */
+        img[src='hero-p.png'] {
+          content: url('hero.png'); /* Replace the image source */
+        }
+
+        .hero1-all-images {
+          margin-top: -100px;
+        }
       }
     </style>
+
+    <script>
+      function closeMobileMenu() {
+        var mobileSidebar = document.getElementById('mobileSidebar');
+        mobileSidebar.classList.remove('mobile-menu-active');
+      }
+    </script>
+
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fallyx - The Future of Senior Care</title>
+
+    <!--=====FAB ICON=======-->
+    <link rel="shortcut icon" href="favicon.png" type="image/x-icon" />
+
+    <!--=====CSS=======-->
+    <link rel="stylesheet" href="assets/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="assets/css/fontawesome.css" />
+    <link rel="stylesheet" href="assets/css/magnific-popup.css" />
+    <link rel="stylesheet" href="assets/css/nice-select.css" />
+    <link rel="stylesheet" href="assets/css/slick-slider.css" />
+    <link rel="stylesheet" href="assets/css/owl.carousel.min.css" />
+    <link rel="stylesheet" href="assets/css/aos.css" />
+    <link rel="stylesheet" href="assets/css/mobile-menu.css" />
+    <link rel="stylesheet" href="assets/css/main.css" />
+
+    <!--=====JQUERY=======-->
+    <script src="assets/js/jquery-3-7-1.min.js"></script>
   </head>
-  <body>
+
+  <body class="body body3 tg-heading-subheading animation-style3">
+    <!--=====progress END=======-->
+
+    <!--=====progress END=======-->
+
+    <!--=====HEADER START=======-->
     <header>
-      <h1>欢迎来到我的主页</h1>
-      <nav>
-        <a href="#">主页</a>
-        <a href="#">关于我</a>
-        <a href="#">联系我</a>
-      </nav>
+      <div class="header-area header-area4 header-area-all d-none d-lg-block" id="header">
+        <div class="container">
+          <div class="row">
+            <div class="col-12">
+              <div class="header-elements">
+                <div class="site-logo">
+                  <a href="index.html">
+                    <img src="logoo.png" alt="" />
+                  </a>
+                </div>
+
+                <div class="main-menu-ex main-menu-ex1">
+                  <ul id="list-example">
+                    <li><a href="#">Home</a></li>
+
+                    <li><a class="list-group-item list-group-item-action" href="#problem">The Problem</a></li>
+                    <li><a class="list-group-item list-group-item-action" href="#detection">Falls Detection</a></li>
+                    <li><a class="list-group-item list-group-item-action" href="#analysis">Fall Analysis Tool</a></li>
+                    <li><a class="list-group-item list-group-item-action" href="#testimonials">Testimonials</a></li>
+                    <li><a class="list-group-item list-group-item-action" href="#team">Our Team</a></li>
+                  </ul>
+                </div>
+
+                <div class="header2-buttons">
+                  <div class="">
+                    <a
+                      style="background-color: #008765; border-radius: 35px; color: white; font-size: 20px"
+                      class="theme-btn3"
+                      href="mailto:info@fallyx.com?subject=Interested%20in%20Learning%20More%20About%20Fallyx&body=Hey%20Ayaan%2C%0D%0A%0D%0AI%27m%20interested%20in%20learning%20more%20about%20Fallyx%20and%20how%20your%20technology%20works.%20What%20times%20would%20work%20for%20you%20to%20chat%20next%20week%20about%20this%3F%0D%0A%0D%0AThank%20you%2C%0D%0A%5BYour%20Name%5D"
+                      target="_blank"
+                    >
+                      Get In Contact Today! <span><i class="fa-solid fa-arrow-right"></i></span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </header>
+    <!--=====HEADER END=======-->
 
-    <main>
-      <h2>关于我</h2>
-      <p>这是我的个人简介。在这里，你可以了解我的兴趣、工作和联系方式。</p>
-    </main>
+    <style>
+      /* Add shadow under the mobile header */
+      .mobile-header {
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+      }
 
-    <footer>
-      <p>&copy; 2023 我的名字</p>
-    </footer>
+      /* Set the second page (mobile sidebar) to white background */
+      .mobile-sidebar {
+        background-color: white;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+    </style>
+
+    <!--=====Mobile header start=======-->
+    <div class="mobile-header d-block d-lg-none" style="box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1)">
+      <div class="container-fluid">
+        <div class="col-12">
+          <div class="mobile-header-elements">
+            <!-- Logo -->
+            <div class="mobile-logo">
+              <a href="index.html"><img style="width: 200px" src="logoo.png" alt="Fallyx Logo" /></a>
+            </div>
+            <!-- Mobile Menu Icon -->
+            <div style="color: #008765" class="mobile-nav-icon">
+              <i class="fa-duotone fa-bars-staggered"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Sidebar with ID -->
+    <div class="mobile-sidebar d-block d-lg-none" id="mobileSidebar" style="background-color: white">
+      <!-- Logo inside mobile menu -->
+      <div class="logo-m">
+        <br />
+        <a href="index.html"><img style="width: 200px" src="logoo.png" alt="Fallyx Logo" /></a>
+      </div>
+
+      <!-- Menu Close Icon -->
+      <div class="menu-close">
+        <i style="color: green" class="fa-solid fa-xmark"></i>
+      </div>
+
+      <!-- Mobile Menu -->
+      <div class="mobile-nav">
+        <ul>
+          <!-- Close the menu when any of these links is clicked -->
+
+          <li><a style="color: #008765" href="#problem" onclick="closeMobileMenu()">The Problem</a></li>
+          <li><a style="color: #008765" href="#detection" onclick="closeMobileMenu()">Falls Detection</a></li>
+          <li><a style="color: #008765" href="#analysis" onclick="closeMobileMenu()">Fall Analysis Tool</a></li>
+          <li><a style="color: #008765" href="#testimonials" onclick="closeMobileMenu()">Testimonials</a></li>
+          <li><a onclick="closeMobileMenu()" style="color: #008765" href="#team">Our Team</a></li>
+        </ul>
+
+        <!-- Contact Button -->
+        <div class="mobile-button">
+          <a
+            style="background-color: #008765; border-radius: 35px; color: white; font-size: 20px"
+            class="theme-btn3"
+            href="mailto:info@fallyx.com?subject=Interested%20in%20Learning%20More%20About%20Fallyx&body=Hey%20Ayaan%2C%0D%0A%0D%0AI%27m%20interested%20in%20learning%20more%20about%20Fallyx%20and%20how%20your%20technology%20works.%20What%20times%20would%20work%20for%20you%20to%20chat%20next%20week%20about%20this%3F%0D%0A%0D%0AThank%20you%2C%0D%0A%5BYour%20Name%5D"
+            target="_blank"
+          >
+            Get In Contact Today! <span><i class="fa-solid fa-arrow-right"></i></span>
+          </a>
+        </div>
+      </div>
+    </div>
+    <!--=====Mobile header end=======-->
+
+    <!--=====HERO AREA START=======-->
+
+    <div
+      class="hero1"
+      style="
+        background-color: #01725509;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: cover;
+      "
+    >
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-5">
+            <div class="main-headding">
+              <h1><y style="font-size: 50px; color: #008765; font-size: 75px">The Future of Senior Care</y></h1>
+              <div class="space16"></div>
+              <br />
+              <p style="font-size: 20px">
+                Fallyx combines a waist-worn clip-on sensor that detect falls, track activity and manages wandering,
+                with a falls analysis tool that levergaes AI to fill out falls tracking forms & help with fall
+                prevention. We are the future of falls monitoring in senior care.
+              </p>
+              <br />
+              <div class="space30"></div>
+
+              <div class="">
+                <a
+                  style="background-color: #008765; color: white; font-size: 25px"
+                  class="theme-btn3"
+                  href="mailto:info@fallyx.com?subject=Interested%20in%20Learning%20More%20About%20Fallyx&body=Hey%20Ayaan%2C%0D%0A%0D%0AI%27m%20interested%20in%20learning%20more%20about%20Fallyx%20and%20how%20your%20technology%20works.%20What%20times%20would%20work%20for%20you%20to%20chat%20next%20week%20about%20this%3F%0D%0A%0D%0AThank%20you%2C%0D%0A%5BYour%20Name%5D"
+                  >Have a Quick Chat With Us Today!<span><i class="fa-solid fa-arrow-right"></i></span
+                ></a>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-7">
+            <div class="hero1-all-images">
+              <div class="image1">
+                <img src="hero-p.png" alt="" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!--=====HERO AREA END=======-->
+
+    <!--=====PROBLEM AREA START=======-->
+
+    <div id="problem" class="solution about-solution sp">
+      <div class="container">
+        <div class="row align-items-center">
+          <div class="col-lg-6">
+            <div class="images">
+              <div class="row">
+                <div class="col-lg-12">
+                  <div class="image">
+                    <img src="problem-1.png" alt="" />
+                  </div>
+                </div>
+
+                <div class="col-lg-6">
+                  <div class="space30"></div>
+                  <div class="image">
+                    <img src="problem-2.png" alt="" />
+                  </div>
+                </div>
+
+                <div class="col-lg-6">
+                  <div class="space30"></div>
+                  <div class="image">
+                    <img src="probllm-3.png" alt="" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div class="heading1">
+              <h2>The Problem</h2>
+              <div class="space16"></div>
+              <p id="texto">There's 2 main issues that retirement homes face which we help solve:</p>
+              <br />
+              <div id="classbox" class="item-box">
+                <div class="">
+                  <h3><a style="font-size: 25px">Undetected Resident Falls & Wandering:</a></h3>
+                  <div class="space10"></div>
+                  <p style="font-size: 17px">
+                    $227,000 is the is the average amount paid for 1 undetected fall-related claim & 40.4% of all claims
+                    against retirement homes are fall-related. Currently, retirement homes don't have any way of
+                    detecting falls and the data shows this because more than 80% of falls go undetected.
+                  </p>
+                </div>
+              </div>
+
+              <div class="item-box">
+                <div class="">
+                  <h3><a style="font-size: 25px">Manual Fall Data Analysis:</a></h3>
+                  <div class="space10"></div>
+                  <p style="font-size: 17px">
+                    Nursing managers & directors of care spend hours every month analyzing their fall data to make fall
+                    tracking reports for copmliance and to help them reduce falls. This is alot of manual labour that is
+                    wasted every month and is very time consuming.
+                  </p>
+                </div>
+              </div>
+
+              <div class="space20"></div>
+              <br />
+              <div class="">
+                <b
+                  style="background-color: #008765; color: white; font-size: 25px"
+                  class="theme-btn3"
+                  href="mailto:info@fallyx.com?subject=Interested%20in%20Learning%20More%20About%20Fallyx&body=Hey%20Ayaan%2C%0D%0A%0D%0AI%27m%20interested%20in%20learning%20more%20about%20Fallyx%20and%20how%20your%20technology%20works.%20What%20times%20would%20work%20for%20you%20to%20chat%20next%20week%20about%20this%3F%0D%0A%0D%0AThank%20you%2C%0D%0A%5BYour%20Name%5D"
+                  >Learn More About This Problem!<span><i class="fa-solid fa-arrow-right"></i></span
+                ></b>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!--=====PROBLEM AREA END=======-->
+
+    <!--=====SERVICE AREA START=======-->
+
+    <div style="background-color: #01725509" class="service3 sp">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-6 m-auto text-center">
+            <div class="heading3">
+              <h2 id="detection" class="title tg-element-title">Fall Detection & Resident Monitoring</h2>
+            </div>
+            <br />
+            <p style="font-size: 20px">
+              Our team has worked on multiple fall detection systems from smartwatches to cameras to RADAR sensors. This
+              combined expertise had led to us to create what we believe is the best fall detection system.
+            </p>
+          </div>
+        </div>
+
+        <div class="space30"></div>
+        <div class="row align-items-center">
+          <div class="col-lg-4">
+            <div data-aos="fade-right" data-aos-duration="700">
+              <div style="background-color: #008765; color: white" class="service3-box">
+                <div class="">
+                  <div style="background-color: white" class="icon">
+                    <img style="width: 30px" src="assets/img/icons/icon1.png" alt="" />
+                  </div>
+                </div>
+                <div class="heading3">
+                  <h4><a style="color: white">Waist Worn Clip-on Sensors</a></h4>
+                  <div class="space16"></div>
+                  <p style="color: white">
+                    Each resident is given 1 waist worn clip-on sensor which captures motion & indoor location data to
+                    help us understand if & where a resident has fallen. The clip-on sensor also replaces your PERS
+                    system with the ability to tap it to call for help.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="" data-aos="fade-right" data-aos-duration="900">
+              <div style="background-color: #008765" class="service3-box">
+                <div class="">
+                  <div style="background-color: white" class="icon">
+                    <img style="width: 30px" src="wifi-router.png" alt="" />
+                  </div>
+                </div>
+                <div class="heading3">
+                  <h4><a style="color: white">Gateways for Data Transmission</a></h4>
+                  <div class="space16"></div>
+                  <p style="color: white">
+                    Throughout the home we place discreet gateways that receive data from our sensors and send them to a
+                    machine learning model that analyzes this data. These gateways use BLE/Bluetooth to connect with our
+                    sensors and send the data through Wi-Fi.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-4">
+            <div style="height: 350px; width: 100%" class="main-image reveal image-anime">
+              <img id="product1" src="moo.png" alt="" />
+            </div>
+            <div style="height: 350px; width: 100%" style="height: 300px" class="main-image reveal image-anime">
+              <img id="product1" src="product2.png" alt="" />
+            </div>
+          </div>
+
+          <div class="col-lg-4">
+            <div class="" data-aos="fade-left" data-aos-duration="700">
+              <div style="background-color: #008765" class="service3-box">
+                <div class="">
+                  <div style="background-color: white" class="icon">
+                    <img style="width: 30px" src="batteryy.png" alt="" />
+                  </div>
+                </div>
+                <div class="heading3">
+                  <h4><a style="color: white">3 Month Battery Life</a></h4>
+                  <div class="space16"></div>
+                  <p style="color: white">
+                    Our sensor has a 3-month battery life and we notify your staff when it needs to be changed. The
+                    battery replacement is simple and the same as the pendants, front-desk or admin staff just unscrew
+                    the bottom part of the casing and slip in a new coin cell battery.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="" data-aos="fade-left" data-aos-duration="900">
+              <div style="background-color: #008765" class="service3-box">
+                <div class="">
+                  <div style="background-color: white" class="icon">
+                    <img style="width: 30px" src="sensor%20(3).png" alt="" />
+                  </div>
+                </div>
+                <div class="heading3">
+                  <h4><a style="color: white">Added Monitoring Features</a></h4>
+                  <div class="space16"></div>
+                  <p style="color: white">
+                    Our sensors don't just detect falls, they also have the ability to: <br />
+
+                    1.) Detect when the sensor is being worn or not so that we can ensure it's effective. <br />
+
+                    2.) Monitor location 24/7, which can be helpful for wander management & activity tracking.<br />
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!--=====SERVICE AREA END=======-->
+
+    <!--=====ABOUT AREA START=======-->
+
+    <div id="analysis" class="about4 sp">
+      <div class="container">
+        <div class="row align-items-center">
+          <div class="col-lg-6">
+            <div class="imagess">
+              <div style="width: 110%; padding-right: 35px" class="img" data-aos="zoom-out" data-aos-duration="1200">
+                <img src="dashboard.png" alt="" />
+              </div>
+            </div>
+          </div>
+
+          <div style="" class="col-lg-6">
+            <div class="heading4">
+              <h2 class="title tg-element-title">Fallyx's Fall Analysis Tool</h2>
+              <div class="space16"></div>
+              <p data-aos="fade-left" data-aos-duration="700">
+                Our team realized that your care staff is spending hours manually analyzing fall data and coming up with
+                reports & tracking forms for compliance and analysis purposes. We created a tool that does all of this
+                for you automatically.
+              </p>
+
+              <br />
+              <div class="row align-items-center">
+                <div class="col-md-4">
+                  <div class="counter-box" data-aos="fade-left" data-aos-duration="900">
+                    <p>Trusted by over</p>
+                    <h3 style="color: #008765; font-size: 38px">25 homes</h3>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <ul class="list" data-aos="fade-left" data-aos-duration="800">
+                    <li>
+                      <span style="background-color: #008765"><i class="fa-solid fa-check"></i></span> PIPEDA Compliant
+                    </li>
+                    <li>
+                      <span style="background-color: #008765"><i class="fa-solid fa-check"></i></span> Ehanced
+                      Compliance
+                    </li>
+                    <li>
+                      <span style="background-color: #008765"><i class="fa-solid fa-check"></i></span> Tailored to Your
+                      Fall Forms
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <style>
+                .work4 .work4-box::after {
+                  color: green;
+                  background-color: green;
+                }
+
+                .work4 .work4-box::hover {
+                  color: green;
+                  background-color: green;
+                }
+              </style>
+              <div style="margin-top: -80px; margin-bottom: -50px" class="work4 sp">
+                <div class="row">
+                  <div class="col-lg-6" data-aos="zoom-in-up" data-aos-duration="1200">
+                    <div class="work4-box heading4">
+                      <h4><a>1.) Pulling Fall Data</a></h4>
+                      <div class="space16"></div>
+                      <p>
+                        Our tool automatically logs into your EHR and securely gathers the fall data needed to fill out
+                        your falls tracking forms & answer questions you might have about your falls. Our AI algorithim
+                        looks at both your post-fall & fall notes to understand the context behind the fall so we can
+                        gather accurate information.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div class="col-lg-6" data-aos="zoom-in-up" data-aos-duration="1200">
+                    <div class="work4-box heading4">
+                      <h4><a>2.) Displaying the Data</a></h4>
+                      <div class="space16"></div>
+                      <p>
+                        We provide each home with a dashboard that displays their fall data, and management with a
+                        dashboard that allows them to see all their homes data. Every month our tool automatically
+                        emails each home their fall tracking forms & reports filled out, along with quarterly reports
+                        for management.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="space30"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!--=====CTA AREA START=======-->
+
+      <div class="cta4">
+        <div class="container">
+          <div style="background-color: #008765" class="cta-bg-area">
+            <div class="row">
+              <div style="padding-left: 30px" class="col-lg-4">
+                <div class="heading4-w">
+                  <h2 class="title tg-element-title">Get Started With A 1 Month Free Pilot!</h2>
+                  <br />
+                  <p style="color: white; font-size: 17px">
+                    We offer a free 1-month trial of both systems to help you see the value they bring to your
+                    community. It's the easiest way to assess if we're a good fit for you.
+                  </p>
+
+                  <br />
+                  <div class="">
+                    <a
+                      style="background-color: white; color: #008765; font-size: 25px"
+                      class="theme-btn1"
+                      href="mailto:info@fallyx.com?subject=Get%20In%20Contact&body=Hello,%20I%20would%20like%20to%20get%20in%20contact%20with%20you%20to%20setup%20a%20pilot.%20When%20would%20be%20a%20good%20time%20to%20chat%20this%20week?"
+                    >
+                      Get In Contact Today!<span><i class="fa-solid fa-arrow-right"></i></span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!--=====CTA AREA END=======-->
+    </div>
+
+    <!--=====ABOUT AREA END=======-->
+
+    <!--=====TESTIMONIAL AREA START=======-->
+
+    <div style="background-color: #01725509" class="testimonial sp" id="testimonials">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 m-auto text-center">
+            <div class="heading1">
+              <h2 class="title tg-element-title">Checkout What Our Users <br />Say About Us!</h2>
+            </div>
+          </div>
+        </div>
+
+        <div class="row _relative">
+          <div class="tes1-slider" data-aos="fade-up" data-aos-duration="800">
+            <div class="tes1-single-slider">
+              <div class="row align-items-center">
+                <div class="col-lg-8">
+                  <div class="right-side">
+                    <p>
+                      "We all know how important fall detection is for our frail seniors. Especially those who
+                      experience an unwitnessed fall. This is the age of technology and innovation in the Health Care
+                      sector. What I am most impressed with Fallyx founders is their earnest commitment to learning
+                      directly from the resident themselves. Not only is Fallyx passionate about Fall Detection they
+                      have embraced a better understanding for cause of Falls and an appreciation for the need for
+                      interventions and Prevention."
+                    </p>
+                    <div class="bottom-area">
+                      <div class="heading">
+                        <h5>
+                          <a
+                            href="https://www.linkedin.com/in/marie-josee-lafontaine-0304346?lipi=urn%3Ali%3Apage%3Ad_flagship3_detail_base%3BCNapX%2FwrTDem5b4agPUhFg%3D%3D"
+                            >Marie-Josee Lafontaine</a
+                          >
+                        </h5>
+                        <p>Owner @ Scarborough Retirement Residence</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-lg-4">
+                  <div class="left-side">
+                    <img style="border-radius: 20px" src="jose.png" alt="" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="tes1-single-slider">
+              <div class="row align-items-center">
+                <div class="col-lg-8">
+                  <div class="right-side">
+                    <p>
+                      "At Generations Senior Living, we pride ourselves on being at the forefront of technology and
+                      innovation. Working with Fallyx's fall detection system will allow us to enhance the safety and
+                      well-being of our residents by quickly identifying potential falls; providing timely
+                      interventions, and ensuring peace of mind for both residents and their families. By integrating
+                      cutting-edge technology into our care approach, we continue our commitment to offering a secure,
+                      supportive environment where seniors can live independently with confidence."
+                    </p>
+                    <div class="bottom-area">
+                      <div class="heading">
+                        <h5>
+                          <a
+                            href="https://www.linkedin.com/in/marie-josee-lafontaine-0304346?lipi=urn%3Ali%3Apage%3Ad_flagship3_detail_base%3BCNapX%2FwrTDem5b4agPUhFg%3D%3D"
+                            >Safiqa Kara</a
+                          >
+                        </h5>
+                        <p>Director @ Generations Senior Living</p>
+                        <br />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-lg-4">
+                  <div class="left-side">
+                    <img style="border-radius: 20px" src="safiqa.png" alt="" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="tes1-single-slider">
+              <div class="row align-items-center">
+                <div class="col-lg-8">
+                  <div class="right-side">
+                    <p>
+                      "The fact that Fallyx was not only working on detecting falls, but also collecting data on the
+                      residents' walking pattern, to be able to predict falls before they happen, was as far as I was
+                      concerned a great selling feature.."
+                    </p>
+                    <div class="bottom-area">
+                      <div class="heading">
+                        <h5>
+                          <a
+                            href="https://www.linkedin.com/in/marie-josee-lafontaine-0304346?lipi=urn%3Ali%3Apage%3Ad_flagship3_detail_base%3BCNapX%2FwrTDem5b4agPUhFg%3D%3D"
+                            >Miri Hadas Koller</a
+                          >
+                        </h5>
+                        <p>Prev. CEO of Yee-Hong Retirement</p>
+                        <br />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-lg-4">
+                  <div class="left-side">
+                    <img style="border-radius: 20px" src="miri.png" alt="" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tes1-arrows">
+            <button style="background-color: #008765" class="testimonial-next-arrow">
+              <i style="color: white" class="fa-solid fa-arrow-left"></i>
+            </button>
+
+            <button style="background-color: #008765" class="testimonial-prev-arrow">
+              <i style="color: white" class="fa-solid fa-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!--=====TESTIMONIAL AREA END=======-->
+
+    <style>
+      .team-box .image img {
+        height: 350px;
+        object-fit: cover;
+        transition: none; /* Disables any hover transformation */
+      }
+
+      .team-box:hover .image img {
+        transform: none; /* Remove transformation on hover to prevent crooked effect */
+      }
+    </style>
+    <!--=====TEAM AREA START=======-->
+
+    <div style="background-color: white" class="team3 sp" id="team">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-6 m-auto text-center">
+            <div class="heading3">
+              <h2 class="title tg-element-title">Meet With Our Team</h2>
+            </div>
+          </div>
+        </div>
+
+        <div class="space30"></div>
+        <div class="row">
+          <!-- Second column (Ayaan Esmail) -->
+          <div class="col-lg-3 col-md-6">
+            <div class="team-box">
+              <div class="image-area">
+                <img style="border-radius: 25px; height: 300px; object-fit: cover" src="ayu.png" alt="Ayaan Esmail" />
+              </div>
+              <div class="space30"></div>
+              <div class="heading3">
+                <h4><a href="https://www.linkedin.com/in/ayaan-esmail/">Ayaan Esmail</a></h4>
+                <p>Co-Founder</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- First column (Rishi Mehta) -->
+          <div class="col-lg-3 col-md-6">
+            <div class="team-box">
+              <div class="image-area">
+                <img style="border-radius: 25px; height: 300px; object-fit: cover" src="rishi.png" alt="Rishi Mehta" />
+              </div>
+              <div class="space30"></div>
+              <div class="heading3">
+                <h4><a href="https://www.linkedin.com/in/rishi-mehta-12b569140/">Rishi Mehta</a></h4>
+                <p>Co-Founder</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- New image spanning two columns -->
+          <div class="col-lg-6 col-md-12">
+            <div class="team-box">
+              <div class="image-area">
+                <img src="imageee.png" alt="" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!--=====TEAM AREA END=======-->
+
+    <!-- </div> -->
+
+    <!--===== FOOTER AREA START =======-->
+
+    <div class="footer4 _relative">
+      <div class="container">
+        <div class="space70"></div>
+      </div>
+
+      <div class="copyright-area _relative">
+        <div class="container">
+          <div class="row align-items-center">
+            <div class="col-md-5">
+              <div class="coppyright">
+                <p>Copyright @2025 Fallyx Inc. All Rights Reserved</p>
+              </div>
+            </div>
+            <div class="col-md-7">
+              <div class="coppyright right-area">
+                <a href="#">Terms & Conditions</a>
+                <a href="#">Privacy Policy</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!--===== FOOTER AREA END =======-->
+
+    <script src="assets/js/bootstrap.min.js"></script>
+    <script src="assets/js/aos.js"></script>
+    <script src="assets/js/fontawesome.js"></script>
+    <script src="assets/js/jquery.countup.js"></script>
+    <script src="assets/js/mobile-menu.js"></script>
+    <script src="assets/js/jquery.magnific-popup.js"></script>
+    <script src="assets/js/owl.carousel.min.js"></script>
+    <script src="assets/js/slick-slider.js"></script>
+    <script src="assets/js/gsap.min.js"></script>
+    <script src="assets/js/ScrollTrigger.min.js"></script>
+    <script src="assets/js/Splitetext.js"></script>
+    <script src="assets/js/text-animation.js"></script>
+    <script src="assets/js/SmoothScroll.js"></script>
+    <script src="assets/js/jquery.lineProgressbar.js"></script>
+    <script src="assets/js/ripple-btn.js"></script>
+    <script src="assets/js/main.js"></script>
   </body>
 </html>
