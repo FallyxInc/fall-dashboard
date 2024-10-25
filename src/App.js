@@ -2,6 +2,8 @@ import './App.css';
 import React from 'react';
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Redirect } from 'react-router-dom';
+
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import ManagementDashboard from './pages/ManagementDashboard';
@@ -97,97 +99,111 @@ function App() {
   // }
 
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Navigate to="/login" />} />
-        <Route path="/login" element={<Login />}></Route>
-        <Route path="/unauthorized" element={<Unauthorized />} />
-        {/* <Route path="/test" element={<TestFirebase />} /> */}
+    <div>
+      {/* <header> */}
+      {/* <nav> */}
+      {/* <a href="/home">Home Page</a> */}
+      {/* </nav> */}
+      {/* </header> */}
+      <a href="/home" style={{ display: 'none' }}>
+        Redirecting to /home...
+      </a>
+      <Router>
+        <Routes>
+          {/* <Route path="/" element={<Navigate to="/home" />} /> */}
 
-        <Route
-          path="/update-data"
-          element={
-            <PrivateRoute rolesRequired={['update-data']}>
-              <UpdateData />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/responsive"
-          element={
-            <PrivateRoute rolesRequired={['responsive']}>
-              {/* <ManagementDashboard dataLengths={dataLengths} /> */}
-              <ManagementDashboard></ManagementDashboard>
-            </PrivateRoute>
-          }
-        ></Route>
-        <Route
-          path="/the-wellington-ltc"
-          element={
-            <PrivateRoute rolesRequired={['the-wellington-ltc', 'responsive']}>
-              <Dashboard
-                name="wellington"
-                title={'The Wellington LTC Falls Dashboard'}
-                unitSelectionValues={['allUnits', 'Gage North', 'Gage West', 'Lawrence']}
-              />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/niagara-ltc"
-          element={
-            <PrivateRoute rolesRequired={['niagara-ltc', 'responsive']}>
-              <Dashboard
-                name="niagara"
-                title="Niagara LTC Falls Dashboard"
-                // data={data.niagara}
-                // handleUpdateCSV={handleUpdateCSV}
-                unitSelectionValues={[
-                  'allUnits',
-                  'Shaw',
-                  'Shaw Two',
-                  'Shaw Three',
-                  'Pinery',
-                  'Pinery Two',
-                  'Pinery Three',
-                  'Wellington',
-                  'Lawrence',
-                  'Gage',
-                ]}
-              />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/mill-creek-care"
-          element={
-            <PrivateRoute rolesRequired={['mill-creek-care', 'responsive']}>
-              <Dashboard
-                name="millCreek"
-                title="Mill Creek Care Center Falls Dashboard"
-                // data={data.millCreek}
-                // handleUpdateCSV={handleUpdateCSV}
-                unitSelectionValues={['allUnits', 'Ground W', '2 East', '2 West', '3 East', '3 West']}
-              />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/iggh-ltc"
-          element={
-            <PrivateRoute rolesRequired={['iggh-ltc', 'responsive']}>
-              <Dashboard
-                name="iggh"
-                title="Ina Grafton Gage Home Falls Dashboard"
-                // data={data.iggh}
-                // handleUpdateCSV={handleUpdateCSV}
-                unitSelectionValues={['allUnits', '1st Floor', '2nd Floor', '3rd Floor', '4th Floor']}
-              />
-            </PrivateRoute>
-          }
-        />
-      </Routes>
-    </Router>
+          {/* <Route path="/home" element={<Navigate to="/index.html" replace />} /> */}
+
+          <Route path="/" element={<Navigate to="/home" replace />} />
+          <Route path="/login" element={<Login />}></Route>
+          <Route path="/unauthorized" element={<Unauthorized />} />
+          {/* <Route path="/test" element={<TestFirebase />} /> */}
+
+          <Route
+            path="/update-data"
+            element={
+              <PrivateRoute rolesRequired={['update-data']}>
+                <UpdateData />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/responsive"
+            element={
+              <PrivateRoute rolesRequired={['responsive']}>
+                {/* <ManagementDashboard dataLengths={dataLengths} /> */}
+                <ManagementDashboard></ManagementDashboard>
+              </PrivateRoute>
+            }
+          ></Route>
+          <Route
+            path="/the-wellington-ltc"
+            element={
+              <PrivateRoute rolesRequired={['the-wellington-ltc', 'responsive']}>
+                <Dashboard
+                  name="wellington"
+                  title={'The Wellington LTC Falls Dashboard'}
+                  unitSelectionValues={['allUnits', 'Gage North', 'Gage West', 'Lawrence']}
+                />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/niagara-ltc"
+            element={
+              <PrivateRoute rolesRequired={['niagara-ltc', 'responsive']}>
+                <Dashboard
+                  name="niagara"
+                  title="Niagara LTC Falls Dashboard"
+                  // data={data.niagara}
+                  // handleUpdateCSV={handleUpdateCSV}
+                  unitSelectionValues={[
+                    'allUnits',
+                    'Shaw',
+                    'Shaw Two',
+                    'Shaw Three',
+                    'Pinery',
+                    'Pinery Two',
+                    'Pinery Three',
+                    'Wellington',
+                    'Lawrence',
+                    'Gage',
+                  ]}
+                />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/mill-creek-care"
+            element={
+              <PrivateRoute rolesRequired={['mill-creek-care', 'responsive']}>
+                <Dashboard
+                  name="millCreek"
+                  title="Mill Creek Care Center Falls Dashboard"
+                  // data={data.millCreek}
+                  // handleUpdateCSV={handleUpdateCSV}
+                  unitSelectionValues={['allUnits', 'Ground W', '2 East', '2 West', '3 East', '3 West']}
+                />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/iggh-ltc"
+            element={
+              <PrivateRoute rolesRequired={['iggh-ltc', 'responsive']}>
+                <Dashboard
+                  name="iggh"
+                  title="Ina Grafton Gage Home Falls Dashboard"
+                  // data={data.iggh}
+                  // handleUpdateCSV={handleUpdateCSV}
+                  unitSelectionValues={['allUnits', '1st Floor', '2nd Floor', '3rd Floor', '4th Floor']}
+                />
+              </PrivateRoute>
+            }
+          />
+        </Routes>
+      </Router>
+    </div>
   );
 }
 
