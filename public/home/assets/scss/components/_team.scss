@@ -1,0 +1,224 @@
+@use '../utils' as *;
+
+  /*
+ ::::::::::::::::::::::::::
+  TEAM AREA CSS
+ ::::::::::::::::::::::::::
+ */
+
+  // === team sytle 2 ===
+
+  .team2 {
+    .team-box {
+      margin-top: 30px;
+      text-align: center;
+
+      .image-area {
+        position: relative;
+        overflow: hidden;
+        .image {
+          border-radius: 7px;
+          overflow: hidden;
+          img {
+            width: 100%;
+            border-radius: 4px;
+            transition: all .4s;
+          }
+        }
+
+        .icon-area {
+          transition: all 0.3s ease-in-out;
+          margin: 0 30px;
+          position: absolute;
+          width: 81%;
+          border-radius: 7px;
+          margin-top: -90px;
+          padding: 16px;
+          transition: all .4s;
+          transform: scale(0) translateY(60px);
+          ul {
+            li {
+              display: inline-block;
+              a {
+                display: inline-block;
+                position: relative;
+                z-index: 9;
+                height: 33px;
+                width: 33px;
+                line-height: 33px;
+                color: var(--ztc-text-text-1);
+                background-color: var(--ztc-text-text-2);
+                border-radius: 50%;
+                margin: 0px 5px;
+                transition: all .4s;
+
+                &:hover {
+                  background-color: var(--ztc-bg-main-bg-4);
+                  transition: all .4s;
+                }
+              }
+            }
+          }
+
+          &::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 100%;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.20);
+            background: rgba(255, 255, 255, 0.30);
+            backdrop-filter: blur(14.100000381469727px);
+            z-index: 1;
+            opacity: 1;
+          }
+        }
+      }
+
+      &:hover {
+        .icon-area {
+          opacity: 1;
+          transition: all .4s;
+          transform: scale(1) translateY(0);
+        }
+
+        .image-area {
+          .image {
+            img {
+              transform: scale(1.1) rotate(4deg);
+              transition: all .4s;
+            }
+          }
+        }
+      }
+    }
+
+    &.team-page {
+      .team-box {
+        .icon-area {
+          ul {
+            li {
+              a {
+                &:hover {
+                  background: var(--ztc-bg-main-bg-1);
+                  color: #fff;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // === team sytle 2 ===
+
+
+    // === team sytle 3 ===
+
+    .team3 {
+      .team-box {
+        margin-top: 30px;
+        text-align: center;
+
+        .heading3 {
+          h4 {
+            a {
+              font-size: 24px;
+              padding-bottom: 10px;
+            }
+          }
+        }
+  
+        .image-area {
+          position: relative;
+          overflow: hidden;
+          .image {
+            border-radius: 7px;
+            overflow: hidden;
+            img {
+              width: 100%;
+              border-radius: 7px;
+              transition: all .4s;
+            }
+          }
+  
+          .icon-area {
+            transition: all 0.3s ease-in-out;
+            margin: 0 30px;
+            position: absolute;
+            width: 81%;
+            border-radius: 7px;
+            margin-top: -90px;
+            padding: 16px;
+            transition: all .4s;
+            transform: scale(0) translateY(60px);
+            ul {
+              li {
+                display: inline-block;
+                a {
+                  display: inline-block;
+                  position: relative;
+                  z-index: 9;
+                  height: 33px;
+                  width: 33px;
+                  line-height: 33px;
+                  color: var(--ztc-text-text-1);
+                  background-color: var(--ztc-text-text-2);
+                  border-radius: 50%;
+                  margin: 0px 2px;
+                  transition: all .4s;
+  
+                  &:hover {
+                    background-color: var(--ztc-bg-main-bg-3);
+                    color: var(--ztc-text-text-2);
+                    transition: all .4s;
+                  }
+                }
+              }
+            }
+  
+            &::after {
+              content: "";
+              position: absolute;
+              top: 0;
+              left: 0;
+              height: 100%;
+              width: 100%;
+              background: rgba(255, 255, 255, 0.3);
+              -webkit-backdrop-filter: blur(14.1000003815px);
+              backdrop-filter: blur(14.1000003815px);
+              opacity: 1;
+              border-radius: 7px;
+            }
+          }
+        }
+  
+        &:hover {
+          .icon-area {
+            opacity: 1;
+            transition: all .4s;
+            transform: scale(1) translateY(0);
+          }
+  
+          .image-area {
+            .image {
+              img {
+                transform: scale(1.1) rotate(4deg);
+                transition: all .4s;
+              }
+            }
+          }
+        }
+      }
+    }
+  
+    // === team sytle 3 ===
+ 
+   /*
+ ::::::::::::::::::::::::::
+  TEAM AREA CSS
+ ::::::::::::::::::::::::::
+ */
