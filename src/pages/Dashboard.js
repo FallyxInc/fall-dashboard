@@ -440,19 +440,55 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     }
   };
 
-  const handleUpdateCSV = (index, newValue, name, isPhycicianRef) => {
+  // const handleUpdateCSV = (index, newValue, name, isPhycicianRef) => {
+  //   const rowRef = ref(db, `/${name}/row-${index}`);
+  //   // Create an object to hold the updates
+  //   let updates = {};
+
+  //   // Update either the "physicianRef" or "poaContacted" field based on the flag
+  //   if (isPhycicianRef) {
+  //     updates = { physicianRef: newValue };
+  //   } else {
+  //     updates = { poaContacted: newValue };
+  //   }
+
+  //   // Use Firebase's update method to update the specific field in the database
+  //   update(rowRef, updates)
+  //     .then(() => {
+  //       console.log('Data updated successfully in Firebase');
+  //     })
+  //     .catch((error) => {
+  //       console.error('Error updating data:', error);
+  //     });
+  // };
+
+  const handleUpdateCSV = (index, newValue, name, changeType) => {
     const rowRef = ref(db, `/${name}/row-${index}`);
-    // Create an object to hold the updates
     let updates = {};
 
-    // Update either the "physicianRef" or "poaContacted" field based on the flag
-    if (isPhycicianRef) {
-      updates = { physicianRef: newValue };
-    } else {
-      updates = { poaContacted: newValue };
+    switch (changeType) {
+      case 'hir':
+        updates = { hir: newValue };
+        break;
+      case 'hospital':
+        updates = { hospital: newValue };
+        break;
+      case 'ptRef':
+        updates = { ptRef: newValue };
+        break;
+      case 'poaContacted':
+        updates = { poaContacted: newValue };
+        break;
+      case 'physicianRef':
+        updates = { physicianRef: newValue };
+        break;
+      case 'incidentReport':
+        updates = { incidentReport: newValue };
+        break;
+      default:
+        break;
     }
 
-    // Use Firebase's update method to update the specific field in the database
     update(rowRef, updates)
       .then(() => {
         console.log('Data updated successfully in Firebase');
@@ -652,10 +688,42 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                 <br></br>
                 <button onClick={() => handleEditIntervention(i)}>Edit</button>
               </td>
-              <td style={{ fontSize: '16px' }}>{item.hir}</td>
+              <td style={{ fontSize: '16px' }}>
+                <select
+                  value={item.hir.toLowerCase() === 'yes' ? 'Yes' : item.hir.toLowerCase() === 'no' ? 'No' : item.hir}
+                  onChange={(e) => handleUpdateCSV(i, e.target.value, name, 'hir')}
+                >
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </select>
+              </td>
               <td style={{ fontSize: '16px' }}>{item.injury}</td>
-              <td style={{ fontSize: '16px' }}>{item.hospital}</td>
-              <td style={{ fontSize: '16px' }}>{item.ptRef}</td>
+              <td style={{ fontSize: '16px' }}>
+                <select
+                  value={
+                    item.hospital.toLowerCase() === 'yes'
+                      ? 'Yes'
+                      : item.hospital.toLowerCase() === 'no'
+                      ? 'No'
+                      : item.hospital
+                  }
+                  onChange={(e) => handleUpdateCSV(i, e.target.value, name, 'hospital')}
+                >
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </select>
+              </td>
+              <td style={{ fontSize: '16px' }}>
+                <select
+                  value={
+                    item.ptRef.toLowerCase() === 'yes' ? 'Yes' : item.ptRef.toLowerCase() === 'no' ? 'No' : item.ptRef
+                  }
+                  onChange={(e) => handleUpdateCSV(i, e.target.value, name, 'ptRef')}
+                >
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </select>
+              </td>
               <td style={{ fontSize: '16px' }}>
                 <select
                   value={
@@ -665,7 +733,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                       ? 'No'
                       : item.physicianRef
                   }
-                  onChange={(e) => handleUpdateCSV(i, e.target.value, name, true)}
+                  onChange={(e) => handleUpdateCSV(i, e.target.value, name, 'physicianRef')}
                 >
                   <option value="Yes">Yes</option>
                   <option value="No">No</option>
@@ -681,13 +749,27 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                       ? 'No'
                       : item.poaContacted
                   }
-                  onChange={(e) => handleUpdateCSV(i, e.target.value, name, false)}
+                  onChange={(e) => handleUpdateCSV(i, e.target.value, name, 'poaContacted')}
                 >
                   <option value="Yes">Yes</option>
                   <option value="No">No</option>
                 </select>
               </td>
-              <td style={{ fontSize: '16px' }}>{item.incidentReport}</td>
+              <td style={{ fontSize: '16px' }}>
+                <select
+                  value={
+                    item.incidentReport.toLowerCase() === 'yes'
+                      ? 'Yes'
+                      : item.incidentReport.toLowerCase() === 'no'
+                      ? 'No'
+                      : item.incidentReport
+                  }
+                  onChange={(e) => handleUpdateCSV(i, e.target.value, name, 'incidentReport')}
+                >
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </select>
+              </td>
               <td className={item.postFallNotes < 3 ? styles.cellRed : ''} style={{ fontSize: '16px' }}>
                 {item.postFallNotes}
               </td>
