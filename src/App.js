@@ -48,6 +48,7 @@ function App() {
                   name="wellington"
                   title={'The Wellington LTC Falls Dashboard'}
                   unitSelectionValues={['allUnits', 'Gage North', 'Gage West', 'Lawrence']}
+                  goal={10}
                 />
               </PrivateRoute>
             }
@@ -71,6 +72,7 @@ function App() {
                     'Lawrence',
                     'Gage',
                   ]}
+                  goal={28}
                 />
               </PrivateRoute>
             }
@@ -83,6 +85,7 @@ function App() {
                   name="millCreek"
                   title="Mill Creek Care Center Falls Dashboard"
                   unitSelectionValues={['allUnits', 'Ground W', '2 East', '2 West', '3 East', '3 West']}
+                  goal={30}
                 />
               </PrivateRoute>
             }
@@ -95,6 +98,7 @@ function App() {
                   name="iggh"
                   title="Ina Grafton Gage Home Falls Dashboard"
                   unitSelectionValues={['allUnits', '1st Floor', '2nd Floor', '3rd Floor', '4th Floor']}
+                  goal={10}
                 />
               </PrivateRoute>
             }

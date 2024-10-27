@@ -14,7 +14,7 @@ import Loading from './Loading';
 
 Chart.register(ArcElement, PointElement, LineElement);
 
-export default function Dashboard({ name, title, unitSelectionValues }) {
+export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   const [data, setData] = useState([]);
   // const [isLoading, setIsLoading] = useState(true);
 
@@ -53,7 +53,6 @@ export default function Dashboard({ name, title, unitSelectionValues }) {
   // State variables
   const threeMonthData = threeData;
   // const [tableData, setTableData] = useState(data);
-  const goal = 10;
 
   // console.log(tableData);
   const [gaugeChartData, setGaugeChartData] = useState({
