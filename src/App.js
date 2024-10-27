@@ -98,7 +98,7 @@ function App() {
                   name="iggh"
                   title="Ina Grafton Gage Home Falls Dashboard"
                   unitSelectionValues={['allUnits', '1st Floor', '2nd Floor', '3rd Floor', '4th Floor']}
-                  goal={10}
+                  goal={30}
                 />
               </PrivateRoute>
             }
