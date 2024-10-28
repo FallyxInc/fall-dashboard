@@ -17,7 +17,7 @@ import html2PDF from 'jspdf-html2canvas';
 
 Chart.register(ArcElement, PointElement, LineElement);
 
-export default function Dashboard({ name, title, unitSelectionValues }) {
+export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   const [data, setData] = useState([]);
   // const [isLoading, setIsLoading] = useState(true);
 
@@ -56,7 +56,6 @@ export default function Dashboard({ name, title, unitSelectionValues }) {
   // State variables
   const threeMonthData = threeData;
   // const [tableData, setTableData] = useState(data);
-  const goal = 10;
 
   // console.log(tableData);
   const [gaugeChartData, setGaugeChartData] = useState({
@@ -139,10 +138,10 @@ export default function Dashboard({ name, title, unitSelectionValues }) {
 
     const updatedData = [...data];
     updatedData[currentRowIndex].interventions = currentIntervention;
-    updatedData[currentRowIndex].isInterventionUpdated = true;
+    updatedData[currentRowIndex].isInterventionUpdated = 'Yes';
 
     const rowRef = ref(db, `/${name}/row-${currentRowIndex}`);
-    update(rowRef, { interventions: currentIntervention, isInterventionUpdated: true })
+    update(rowRef, { interventions: currentIntervention, isInterventionUpdated: 'Yes' })
       .then(() => {
         console.log('Intervention updated successfully');
         setData(updatedData);
@@ -558,7 +557,7 @@ export default function Dashboard({ name, title, unitSelectionValues }) {
       snapshot.forEach((childSnapshot) => {
         const rowKey = childSnapshot.key;
         console.log(rowKey);
-        updates[`/${name}/${rowKey}/isInterventionUpdated`] = false;
+        updates[`/${name}/${rowKey}/isInterventionUpdated`] = 'No';
       });
       console.log(updates);
       // 批量更新所有节点
@@ -567,19 +566,55 @@ export default function Dashboard({ name, title, unitSelectionValues }) {
     }
   };
 
+  // const handleUpdateCSV = (index, newValue, name, isPhycicianRef) => {
+  //   const rowRef = ref(db, `/${name}/row-${index}`);
+  //   // Create an object to hold the updates
+  //   let updates = {};
+
+  //   // Update either the "physicianRef" or "poaContacted" field based on the flag
+  //   if (isPhycicianRef) {
+  //     updates = { physicianRef: newValue };
+  //   } else {
+  //     updates = { poaContacted: newValue };
+  //   }
+
+  //   // Use Firebase's update method to update the specific field in the database
+  //   update(rowRef, updates)
+  //     .then(() => {
+  //       console.log('Data updated successfully in Firebase');
+  //     })
+  //     .catch((error) => {
+  //       console.error('Error updating data:', error);
+  //     });
+  // };
+
   const handleUpdateCSV = (index, newValue, name, changeType) => {
     const rowRef = ref(db, `/${name}/row-${index}`);
-    // Create an object to hold the updates
     let updates = {};
 
-    // Update either the "physicianRef" or "poaContacted" field based on the flag
-    if (isPhycicianRef) {
-      updates = { physicianRef: newValue };
-    } else {
-      updates = { poaContacted: newValue };
+    switch (changeType) {
+      case 'hir':
+        updates = { hir: newValue };
+        break;
+      case 'hospital':
+        updates = { hospital: newValue };
+        break;
+      case 'ptRef':
+        updates = { ptRef: newValue };
+        break;
+      case 'poaContacted':
+        updates = { poaContacted: newValue };
+        break;
+      case 'physicianRef':
+        updates = { physicianRef: newValue };
+        break;
+      case 'incidentReport':
+        updates = { incidentReport: newValue };
+        break;
+      default:
+        break;
     }
 
-    // Use Firebase's update method to update the specific field in the database
     update(rowRef, updates)
       .then(() => {
         console.log('Data updated successfully in Firebase');
@@ -730,145 +765,144 @@ export default function Dashboard({ name, title, unitSelectionValues }) {
         </div>
       </div>
 
-      <button onClick={generatePDF} style={{ marginBottom: '20px' }}>
-        Download Table as PDF
-      </button>
-
-      <div ref={tableRef}>
-        <div className={styles['table-header']}>
-          <h2>Falls Tracking Table: October 2024</h2>
-          <div>
-            <button className={styles['download-button']} onClick={handleSaveCSV}>
-              Download as CSV
-            </button>
-          </div>
+      <div className={styles['table-header']}>
+        <h2>Falls Tracking Table: October 2024</h2>
+        <div>
+          <button className={styles['download-button']} onClick={handleSaveCSV}>
+            Download as CSV
+          </button>
         </div>
-
-        <table style={{ width: '100%' }}>
-          {/* Set the table width to 100% to make it wider */}
-          <thead>
-            <tr>
-              <th style={{ fontSize: '18px' }}>Date</th> {/* Increased font size */}
-              <th style={{ fontSize: '18px' }}>Name</th>
-              <th style={{ fontSize: '18px' }}>Time</th>
-              <th style={{ fontSize: '18px' }}>Location</th>
-              <th style={{ fontSize: '18px' }}>Home Unit</th>
-              <th style={{ fontSize: '18px' }}>Nature of Fall/Cause</th>
-              <th style={{ fontSize: '18px' }}>Interventions</th>
-              <th style={{ fontSize: '18px' }}>HIR</th>
-              <th style={{ fontSize: '18px' }}>Injury</th>
-              <th style={{ fontSize: '18px' }}>Transfer to Hospital</th>
-              <th style={{ fontSize: '18px' }}>PT Ref</th>
-              <th style={{ fontSize: '18px' }}>Physician/NP Notification (If Applicable)</th>
-              <th style={{ fontSize: '18px' }}>POA Contacted</th>
-              <th style={{ fontSize: '18px' }}>Risk Management Incident Fall Written</th>
-              <th style={{ fontSize: '18px' }}>3 Post Fall Notes in 72hrs</th>
-            </tr>
-          </thead>
-          <tbody id="fallsTableBody">
-            {data.map((item, i) => (
-              <tr key={i}>
-                <td style={{ whiteSpace: 'nowrap', fontSize: '16px' }}>{item.date}</td> {/* Increased font size */}
-                <td style={{ fontSize: '16px' }}>{item.name}</td>
-                <td style={{ fontSize: '16px' }}>{item.time}</td>
-                <td style={{ fontSize: '16px' }}>{item.location}</td>
-                <td style={{ fontSize: '16px' }}>{item.homeUnit}</td>
-                <td style={{ fontSize: '16px' }}>{item.cause}</td>
-                <td style={{ fontSize: '16px', color: item.isInterventionUpdated === 'Yes' ? 'green' : 'inherit' }}>
-                  {item.interventions}
-                  <br></br>
-                  <button onClick={() => handleEditIntervention(i)}>Edit</button>
-                </td>
-                <td style={{ fontSize: '16px' }}>
-                  <select
-                    value={item.hir.toLowerCase() === 'yes' ? 'Yes' : item.hir.toLowerCase() === 'no' ? 'No' : item.hir}
-                    onChange={(e) => handleUpdateCSV(i, e.target.value, name, 'hir')}
-                  >
-                    <option value="Yes">Yes</option>
-                    <option value="No">No</option>
-                  </select>
-                </td>
-                <td style={{ fontSize: '16px' }}>{item.injury}</td>
-                <td style={{ fontSize: '16px' }}>
-                  <select
-                    value={
-                      item.hospital.toLowerCase() === 'yes'
-                        ? 'Yes'
-                        : item.hospital.toLowerCase() === 'no'
-                        ? 'No'
-                        : item.hospital
-                    }
-                    onChange={(e) => handleUpdateCSV(i, e.target.value, name, 'hospital')}
-                  >
-                    <option value="Yes">Yes</option>
-                    <option value="No">No</option>
-                  </select>
-                </td>
-                <td style={{ fontSize: '16px' }}>
-                  <select
-                    value={
-                      item.ptRef.toLowerCase() === 'yes' ? 'Yes' : item.ptRef.toLowerCase() === 'no' ? 'No' : item.ptRef
-                    }
-                    onChange={(e) => handleUpdateCSV(i, e.target.value, name, 'ptRef')}
-                  >
-                    <option value="Yes">Yes</option>
-                    <option value="No">No</option>
-                  </select>
-                </td>
-                <td style={{ fontSize: '16px' }}>
-                  <select
-                    value={
-                      item.physicianRef.toLowerCase() === 'yes'
-                        ? 'Yes'
-                        : item.physicianRef.toLowerCase() === 'no'
-                        ? 'No'
-                        : item.physicianRef
-                    }
-                    onChange={(e) => handleUpdateCSV(i, e.target.value, name, 'physicianRef')}
-                  >
-                    <option value="Yes">Yes</option>
-                    <option value="No">No</option>
-                    <option value="N/A">N/A</option>
-                  </select>
-                </td>
-                <td className={item.poaContacted === 'No' ? styles.cellRed : ''} style={{ fontSize: '16px' }}>
-                  <select
-                    value={
-                      item.poaContacted.toLowerCase() === 'yes'
-                        ? 'Yes'
-                        : item.poaContacted.toLowerCase() === 'no'
-                        ? 'No'
-                        : item.poaContacted
-                    }
-                    onChange={(e) => handleUpdateCSV(i, e.target.value, name, 'poaContacted')}
-                  >
-                    <option value="Yes">Yes</option>
-                    <option value="No">No</option>
-                  </select>
-                </td>
-                <td style={{ fontSize: '16px' }}>
-                  <select
-                    value={
-                      item.incidentReport.toLowerCase() === 'yes'
-                        ? 'Yes'
-                        : item.incidentReport.toLowerCase() === 'no'
-                        ? 'No'
-                        : item.incidentReport
-                    }
-                    onChange={(e) => handleUpdateCSV(i, e.target.value, name, 'incidentReport')}
-                  >
-                    <option value="Yes">Yes</option>
-                    <option value="No">No</option>
-                  </select>
-                </td>
-                <td className={item.postFallNotes < 3 ? styles.cellRed : ''} style={{ fontSize: '16px' }}>
-                  {item.postFallNotes}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
       </div>
+
+      {/* <di>
+        <button onClick={() => AddNoUpdate("wellington")}>Update</button>
+      </di> */}
+
+      <table style={{ width: '100%' }}>
+        {' '}
+        {/* Set the table width to 100% to make it wider */}
+        <thead>
+          <tr>
+            <th style={{ fontSize: '18px' }}>Date</th> {/* Increased font size */}
+            <th style={{ fontSize: '18px' }}>Name</th>
+            <th style={{ fontSize: '18px' }}>Time</th>
+            <th style={{ fontSize: '18px' }}>Location</th>
+            <th style={{ fontSize: '18px' }}>Home Unit</th>
+            <th style={{ fontSize: '18px' }}>Nature of Fall/Cause</th>
+            <th style={{ fontSize: '18px' }}>Interventions</th>
+            <th style={{ fontSize: '18px' }}>HIR</th>
+            <th style={{ fontSize: '18px' }}>Injury</th>
+            <th style={{ fontSize: '18px' }}>Transfer to Hospital</th>
+            <th style={{ fontSize: '18px' }}>PT Ref</th>
+            <th style={{ fontSize: '18px' }}>Physician/NP Notification (If Applicable)</th>
+            <th style={{ fontSize: '18px' }}>POA Contacted</th>
+            <th style={{ fontSize: '18px' }}>Risk Management Incident Fall Written</th>
+            <th style={{ fontSize: '18px' }}>3 Post Fall Notes in 72hrs</th>
+          </tr>
+        </thead>
+        <tbody id="fallsTableBody">
+          {data.map((item, i) => (
+            <tr key={i}>
+              <td style={{ whiteSpace: 'nowrap', fontSize: '16px' }}>{item.date}</td> {/* Increased font size */}
+              <td style={{ fontSize: '16px' }}>{item.name}</td>
+              <td style={{ fontSize: '16px' }}>{item.time}</td>
+              <td style={{ fontSize: '16px' }}>{item.location}</td>
+              <td style={{ fontSize: '16px' }}>{item.homeUnit}</td>
+              <td style={{ fontSize: '16px' }}>{item.cause}</td>
+              <td style={{ fontSize: '16px', color: item.isInterventionUpdated === 'Yes' ? 'green' : 'inherit' }}>
+                {item.interventions}
+                <br></br>
+                <button onClick={() => handleEditIntervention(i)}>Edit</button>
+              </td>
+              <td style={{ fontSize: '16px' }}>
+                <select
+                  value={item.hir.toLowerCase() === 'yes' ? 'Yes' : item.hir.toLowerCase() === 'no' ? 'No' : item.hir}
+                  onChange={(e) => handleUpdateCSV(i, e.target.value, name, 'hir')}
+                >
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </select>
+              </td>
+              <td style={{ fontSize: '16px' }}>{item.injury}</td>
+              <td style={{ fontSize: '16px' }}>
+                <select
+                  value={
+                    item.hospital.toLowerCase() === 'yes'
+                      ? 'Yes'
+                      : item.hospital.toLowerCase() === 'no'
+                      ? 'No'
+                      : item.hospital
+                  }
+                  onChange={(e) => handleUpdateCSV(i, e.target.value, name, 'hospital')}
+                >
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </select>
+              </td>
+              <td style={{ fontSize: '16px' }}>
+                <select
+                  value={
+                    item.ptRef.toLowerCase() === 'yes' ? 'Yes' : item.ptRef.toLowerCase() === 'no' ? 'No' : item.ptRef
+                  }
+                  onChange={(e) => handleUpdateCSV(i, e.target.value, name, 'ptRef')}
+                >
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </select>
+              </td>
+              <td style={{ fontSize: '16px' }}>
+                <select
+                  value={
+                    item.physicianRef.toLowerCase() === 'yes'
+                      ? 'Yes'
+                      : item.physicianRef.toLowerCase() === 'no'
+                      ? 'No'
+                      : item.physicianRef
+                  }
+                  onChange={(e) => handleUpdateCSV(i, e.target.value, name, 'physicianRef')}
+                >
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                  <option value="N/A">N/A</option>
+                </select>
+              </td>
+              <td className={item.poaContacted === 'No' ? styles.cellRed : ''} style={{ fontSize: '16px' }}>
+                <select
+                  value={
+                    item.poaContacted.toLowerCase() === 'yes'
+                      ? 'Yes'
+                      : item.poaContacted.toLowerCase() === 'no'
+                      ? 'No'
+                      : item.poaContacted
+                  }
+                  onChange={(e) => handleUpdateCSV(i, e.target.value, name, 'poaContacted')}
+                >
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </select>
+              </td>
+              <td style={{ fontSize: '16px' }}>
+                <select
+                  value={
+                    item.incidentReport.toLowerCase() === 'yes'
+                      ? 'Yes'
+                      : item.incidentReport.toLowerCase() === 'no'
+                      ? 'No'
+                      : item.incidentReport
+                  }
+                  onChange={(e) => handleUpdateCSV(i, e.target.value, name, 'incidentReport')}
+                >
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </select>
+              </td>
+              <td className={item.postFallNotes < 3 ? styles.cellRed : ''} style={{ fontSize: '16px' }}>
+                {item.postFallNotes}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
       {isModalOpen && (
         <div className={styles.modal}>
           <div className={styles.modalContent}>
