@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Doughnut, Bar, Line } from 'react-chartjs-2';
 // import "../styles/Dashboard.css"
 import styles from '../styles/Dashboard.module.css';
@@ -10,7 +10,10 @@ import { Chart, ArcElement, PointElement, LineElement } from 'chart.js';
 // import { collection, addDoc } from 'firebase/firestore';
 import { ref, onValue, off, get, update } from 'firebase/database';
 import { db } from '../firebase';
-import Loading from './Loading';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import html2PDF from 'jspdf-html2canvas';
 
 Chart.register(ArcElement, PointElement, LineElement);
 
@@ -153,14 +156,6 @@ export default function Dashboard({ name, title, unitSelectionValues }) {
   const handleCloseModal = () => {
     setIsModalOpen(false);
   };
-
-  // for debug
-  // console.log('tableData');
-  // console.log(tableData);
-  // console.log('gaugeChartData');
-  // expandedLog(gaugeChartData);
-
-  // maybe only setState can achieve
 
   const updateFallsChart = () => {
     const timeRange = fallsTimeRange;
@@ -342,6 +337,72 @@ export default function Dashboard({ name, title, unitSelectionValues }) {
     return recurringFalls;
   }
 
+  const tableData = [
+    { date: '2024-10-27', name: 'John Doe', time: '10:00', location: 'Room 1' },
+    { date: '2024-10-28', name: 'Jane Smith', time: '12:00', location: 'Room 2' },
+    { date: '2024-10-29', name: 'Alice Johnson', time: '14:00', location: 'Room 3' },
+    // 添加更多数据行...
+  ];
+
+  const generatePDF = () => {
+    const pdf = new jsPDF();
+
+    // 定义表格标题
+    const columns = [
+      { header: 'Date', dataKey: 'date' },
+      { header: 'Name', dataKey: 'name' },
+      { header: 'Time', dataKey: 'time' },
+      { header: 'Location', dataKey: 'location' },
+      { header: 'Home Unit', dataKey: 'homeUnit' },
+      { header: 'Nature of Fall/Cause', dataKey: 'cause' },
+      { header: 'Interventions', dataKey: 'interventions' },
+      { header: 'HIR', dataKey: 'hir' },
+      { header: 'Injury', dataKey: 'injury' },
+      { header: 'Transfer to Hospital', dataKey: 'hospital' },
+      { header: 'PT Ref', dataKey: 'ptRef' },
+      { header: 'Physician/NP Notification (If Applicable)', dataKey: 'physicianRef' },
+      { header: 'POA Contacted', dataKey: 'poaContacted' },
+      { header: 'Risk Management Incident Fall Written', dataKey: 'incidentReport' },
+      { header: '3 Post Fall Notes in 72hrs', dataKey: 'postFallNotes' },
+    ];
+    const rowsPerPage = 10; // 每页行数限制
+    let currentPage = 0;
+    // 填充表格数据
+    while (currentPage * rowsPerPage < tableData.length) {
+      const rows = data.slice(currentPage * rowsPerPage, (currentPage + 1) * rowsPerPage).map((row) => ({
+        date: row.date,
+        name: row.name,
+        time: row.time,
+        location: row.location,
+        homeUnit: row.homeUnit,
+        cause: row.cause,
+        interventions: row.interventions,
+        hir: row.hir,
+        injury: row.injury,
+        hospital: row.hospital,
+        ptRef: row.ptRef,
+        physicianRef: row.physicianRef,
+        poaContacted: row.poaContacted,
+        incidentReport: row.incidentReport,
+        postFallNotes: row.postFallNotes,
+      }));
+
+      pdf.autoTable({
+        columns: columns,
+        body: rows,
+        startY: 10,
+        theme: 'striped',
+        headStyles: { fillColor: [100, 100, 255] },
+        styles: { fontSize: 10, cellPadding: 2 },
+        margin: { top: 20 },
+      });
+
+      currentPage++;
+      if (currentPage * rowsPerPage < data.length) pdf.addPage();
+    }
+    pdf.save('table_data.pdf');
+  };
+
   const updateAnalysisChart = () => {
     var selectedUnit = analysisUnit;
     var filteredData = analysisTimeRange === '3months' ? threeMonthData : data;
@@ -405,15 +466,80 @@ export default function Dashboard({ name, title, unitSelectionValues }) {
     });
   };
 
-  // const logout = () => {
-  //   navigate('/login');
-  // };
+  const tableRef = useRef(null);
 
-  // const handleUpdateCSV = (index, newValue) => {
-  //   const updatedData = [...tableData];
-  //   updatedData[index].physicianRef = newValue;
-  //   setTableData(updatedData);
-  // };
+  const handleSavePDF = async () => {
+    if (tableRef.current) {
+      const canvas = await html2canvas(tableRef.current, {
+        scale: 2,
+        width: tableRef.current.scrollWidth,
+        height: tableRef.current.scrollHeight,
+      });
+      const imgData = canvas.toDataURL('image/png');
+
+      const newWindow = window.open();
+      newWindow.document.title = 'Captured Image';
+
+      // 动态创建 img 元素并设置 src
+      const imgElement = newWindow.document.createElement('img');
+      imgElement.src = imgData;
+      imgElement.alt = 'Captured Image';
+      imgElement.style.maxWidth = '100%';
+      newWindow.document.body.appendChild(imgElement);
+      // // 将 Base64 转换为 Blob 对象
+      // const byteString = atob(imgData.split(',')[1]); // 解码 Base64
+      // const mimeString = imgData.split(',')[0].split(':')[1].split(';')[0];
+      // const ab = new ArrayBuffer(byteString.length);
+      // const ia = new Uint8Array(ab);
+
+      // for (let i = 0; i < byteString.length; i++) {
+      //   ia[i] = byteString.charCodeAt(i);
+      // }
+
+      // const blob = new Blob([ab], { type: mimeString });
+
+      // // 创建下载链接
+      // const link = document.createElement('a');
+      // link.href = URL.createObjectURL(blob);
+      // link.download = 'Captured_Image.png'; // 设置下载文件名
+      // link.click();
+
+      // // 释放 URL 对象
+      // URL.revokeObjectURL(link.href);
+
+      // const pdf = new jsPDF({
+      //   orientation: 'portrait',
+      //   unit: 'px',
+      //   format: 'a4',
+      // });
+
+      // // 获取 A4 页面尺寸
+      // const pageHeight = pdf.internal.pageSize.height;
+      // const pageWidth = pdf.internal.pageSize.width;
+
+      // // 计算图像的缩放宽度和高度
+      // const imgWidth = pageWidth;
+      // const imgHeight = (canvas.height * pageWidth) / canvas.width;
+
+      // let position = 0;
+
+      // // 按页面高度分页
+      // while (position < canvas.height) {
+      //   // 在 PDF 页面上绘制图像的一部分
+      //   pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight, undefined, 'FAST', 0, -position);
+
+      //   // 更新 position，移动到下一页
+      //   position += pageHeight;
+
+      //   // 如果图片未完全展示完，添加新页面
+      //   if (position < canvas.height) {
+      //     pdf.addPage();
+      //   }
+      // }
+
+      // pdf.save('Falls_Tracking_Table.pdf');
+    }
+  };
 
   const handleSaveCSV = () => {
     const csv = Papa.unparse(data);
@@ -441,7 +567,7 @@ export default function Dashboard({ name, title, unitSelectionValues }) {
     }
   };
 
-  const handleUpdateCSV = (index, newValue, name, isPhycicianRef) => {
+  const handleUpdateCSV = (index, newValue, name, changeType) => {
     const rowRef = ref(db, `/${name}/row-${index}`);
     // Create an object to hold the updates
     let updates = {};
@@ -604,80 +730,145 @@ export default function Dashboard({ name, title, unitSelectionValues }) {
         </div>
       </div>
 
-      <div className={styles['table-header']}>
-        <h2>Falls Tracking Table: October 2024</h2>
-        <div>
-          <button className={styles['download-button']} onClick={handleSaveCSV}>
-            Download as CSV
-          </button>
+      <button onClick={generatePDF} style={{ marginBottom: '20px' }}>
+        Download Table as PDF
+      </button>
+
+      <div ref={tableRef}>
+        <div className={styles['table-header']}>
+          <h2>Falls Tracking Table: October 2024</h2>
+          <div>
+            <button className={styles['download-button']} onClick={handleSaveCSV}>
+              Download as CSV
+            </button>
+          </div>
         </div>
-      </div>
 
-      {/* <di>
-        <button onClick={() => AddNoUpdate("wellington")}>Update</button>
-      </di> */}
-
-      <table style={{ width: '100%' }}>
-        {' '}
-        {/* Set the table width to 100% to make it wider */}
-        <thead>
-          <tr>
-            <th style={{ fontSize: '18px' }}>Date</th> {/* Increased font size */}
-            <th style={{ fontSize: '18px' }}>Name</th>
-            <th style={{ fontSize: '18px' }}>Time</th>
-            <th style={{ fontSize: '18px' }}>Location</th>
-            <th style={{ fontSize: '18px' }}>Home Unit</th>
-            <th style={{ fontSize: '18px' }}>Nature of Fall/Cause</th>
-            <th style={{ fontSize: '18px' }}>Interventions</th>
-            <th style={{ fontSize: '18px' }}>HIR</th>
-            <th style={{ fontSize: '18px' }}>Injury</th>
-            <th style={{ fontSize: '18px' }}>Transfer to Hospital</th>
-            <th style={{ fontSize: '18px' }}>PT Ref</th>
-            <th style={{ fontSize: '18px' }}>Physician/NP Notification (If Applicable)</th>
-            <th style={{ fontSize: '18px' }}>POA Contacted</th>
-            <th style={{ fontSize: '18px' }}>Risk Management Incident Fall Written</th>
-            <th style={{ fontSize: '18px' }}>3 Post Fall Notes in 72hrs</th>
-          </tr>
-        </thead>
-        <tbody id="fallsTableBody">
-          {data.map((item, i) => (
-            <tr key={i}>
-              <td style={{ whiteSpace: 'nowrap', fontSize: '16px' }}>{item.date}</td> {/* Increased font size */}
-              <td style={{ fontSize: '16px' }}>{item.name}</td>
-              <td style={{ fontSize: '16px' }}>{item.time}</td>
-              <td style={{ fontSize: '16px' }}>{item.location}</td>
-              <td style={{ fontSize: '16px' }}>{item.homeUnit}</td>
-              <td style={{ fontSize: '16px' }}>{item.cause}</td>
-              <td style={{ fontSize: '16px', color: item.isInterventionUpdated ? 'green' : 'inherit' }}>
-                {item.interventions}
-                <br></br>
-                <button onClick={() => handleEditIntervention(i)}>Edit</button>
-              </td>
-              <td style={{ fontSize: '16px' }}>{item.hir}</td>
-              <td style={{ fontSize: '16px' }}>{item.injury}</td>
-              <td style={{ fontSize: '16px' }}>{item.hospital}</td>
-              <td style={{ fontSize: '16px' }}>{item.ptRef}</td>
-              <td style={{ fontSize: '16px' }}>
-                <select value={item.physicianRef} onChange={(e) => handleUpdateCSV(i, e.target.value, name, true)}>
-                  <option value="Yes">Yes</option>
-                  <option value="No">No</option>
-                  <option value="N/A">N/A</option>
-                </select>
-              </td>
-              <td className={item.poaContacted === 'No' ? styles.cellRed : ''} style={{ fontSize: '16px' }}>
-                <select value={item.poaContacted} onChange={(e) => handleUpdateCSV(i, e.target.value, name, false)}>
-                  <option value="Yes">Yes</option>
-                  <option value="No">No</option>
-                </select>
-              </td>
-              <td style={{ fontSize: '16px' }}>{item.incidentReport}</td>
-              <td className={item.postFallNotes < 3 ? styles.cellRed : ''} style={{ fontSize: '16px' }}>
-                {item.postFallNotes}
-              </td>
+        <table style={{ width: '100%' }}>
+          {/* Set the table width to 100% to make it wider */}
+          <thead>
+            <tr>
+              <th style={{ fontSize: '18px' }}>Date</th> {/* Increased font size */}
+              <th style={{ fontSize: '18px' }}>Name</th>
+              <th style={{ fontSize: '18px' }}>Time</th>
+              <th style={{ fontSize: '18px' }}>Location</th>
+              <th style={{ fontSize: '18px' }}>Home Unit</th>
+              <th style={{ fontSize: '18px' }}>Nature of Fall/Cause</th>
+              <th style={{ fontSize: '18px' }}>Interventions</th>
+              <th style={{ fontSize: '18px' }}>HIR</th>
+              <th style={{ fontSize: '18px' }}>Injury</th>
+              <th style={{ fontSize: '18px' }}>Transfer to Hospital</th>
+              <th style={{ fontSize: '18px' }}>PT Ref</th>
+              <th style={{ fontSize: '18px' }}>Physician/NP Notification (If Applicable)</th>
+              <th style={{ fontSize: '18px' }}>POA Contacted</th>
+              <th style={{ fontSize: '18px' }}>Risk Management Incident Fall Written</th>
+              <th style={{ fontSize: '18px' }}>3 Post Fall Notes in 72hrs</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody id="fallsTableBody">
+            {data.map((item, i) => (
+              <tr key={i}>
+                <td style={{ whiteSpace: 'nowrap', fontSize: '16px' }}>{item.date}</td> {/* Increased font size */}
+                <td style={{ fontSize: '16px' }}>{item.name}</td>
+                <td style={{ fontSize: '16px' }}>{item.time}</td>
+                <td style={{ fontSize: '16px' }}>{item.location}</td>
+                <td style={{ fontSize: '16px' }}>{item.homeUnit}</td>
+                <td style={{ fontSize: '16px' }}>{item.cause}</td>
+                <td style={{ fontSize: '16px', color: item.isInterventionUpdated === 'Yes' ? 'green' : 'inherit' }}>
+                  {item.interventions}
+                  <br></br>
+                  <button onClick={() => handleEditIntervention(i)}>Edit</button>
+                </td>
+                <td style={{ fontSize: '16px' }}>
+                  <select
+                    value={item.hir.toLowerCase() === 'yes' ? 'Yes' : item.hir.toLowerCase() === 'no' ? 'No' : item.hir}
+                    onChange={(e) => handleUpdateCSV(i, e.target.value, name, 'hir')}
+                  >
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                  </select>
+                </td>
+                <td style={{ fontSize: '16px' }}>{item.injury}</td>
+                <td style={{ fontSize: '16px' }}>
+                  <select
+                    value={
+                      item.hospital.toLowerCase() === 'yes'
+                        ? 'Yes'
+                        : item.hospital.toLowerCase() === 'no'
+                        ? 'No'
+                        : item.hospital
+                    }
+                    onChange={(e) => handleUpdateCSV(i, e.target.value, name, 'hospital')}
+                  >
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                  </select>
+                </td>
+                <td style={{ fontSize: '16px' }}>
+                  <select
+                    value={
+                      item.ptRef.toLowerCase() === 'yes' ? 'Yes' : item.ptRef.toLowerCase() === 'no' ? 'No' : item.ptRef
+                    }
+                    onChange={(e) => handleUpdateCSV(i, e.target.value, name, 'ptRef')}
+                  >
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                  </select>
+                </td>
+                <td style={{ fontSize: '16px' }}>
+                  <select
+                    value={
+                      item.physicianRef.toLowerCase() === 'yes'
+                        ? 'Yes'
+                        : item.physicianRef.toLowerCase() === 'no'
+                        ? 'No'
+                        : item.physicianRef
+                    }
+                    onChange={(e) => handleUpdateCSV(i, e.target.value, name, 'physicianRef')}
+                  >
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                    <option value="N/A">N/A</option>
+                  </select>
+                </td>
+                <td className={item.poaContacted === 'No' ? styles.cellRed : ''} style={{ fontSize: '16px' }}>
+                  <select
+                    value={
+                      item.poaContacted.toLowerCase() === 'yes'
+                        ? 'Yes'
+                        : item.poaContacted.toLowerCase() === 'no'
+                        ? 'No'
+                        : item.poaContacted
+                    }
+                    onChange={(e) => handleUpdateCSV(i, e.target.value, name, 'poaContacted')}
+                  >
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                  </select>
+                </td>
+                <td style={{ fontSize: '16px' }}>
+                  <select
+                    value={
+                      item.incidentReport.toLowerCase() === 'yes'
+                        ? 'Yes'
+                        : item.incidentReport.toLowerCase() === 'no'
+                        ? 'No'
+                        : item.incidentReport
+                    }
+                    onChange={(e) => handleUpdateCSV(i, e.target.value, name, 'incidentReport')}
+                  >
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                  </select>
+                </td>
+                <td className={item.postFallNotes < 3 ? styles.cellRed : ''} style={{ fontSize: '16px' }}>
+                  {item.postFallNotes}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
       {isModalOpen && (
         <div className={styles.modal}>
           <div className={styles.modalContent}>
