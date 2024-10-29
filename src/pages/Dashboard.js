@@ -13,7 +13,6 @@ import { db } from '../firebase';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
-import html2PDF from 'jspdf-html2canvas';
 
 Chart.register(ArcElement, PointElement, LineElement);
 
@@ -336,72 +335,6 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     return recurringFalls;
   }
 
-  const tableData = [
-    { date: '2024-10-27', name: 'John Doe', time: '10:00', location: 'Room 1' },
-    { date: '2024-10-28', name: 'Jane Smith', time: '12:00', location: 'Room 2' },
-    { date: '2024-10-29', name: 'Alice Johnson', time: '14:00', location: 'Room 3' },
-    // 添加更多数据行...
-  ];
-
-  const generatePDF = () => {
-    const pdf = new jsPDF();
-
-    // 定义表格标题
-    const columns = [
-      { header: 'Date', dataKey: 'date' },
-      { header: 'Name', dataKey: 'name' },
-      { header: 'Time', dataKey: 'time' },
-      { header: 'Location', dataKey: 'location' },
-      { header: 'Home Unit', dataKey: 'homeUnit' },
-      { header: 'Nature of Fall/Cause', dataKey: 'cause' },
-      { header: 'Interventions', dataKey: 'interventions' },
-      { header: 'HIR', dataKey: 'hir' },
-      { header: 'Injury', dataKey: 'injury' },
-      { header: 'Transfer to Hospital', dataKey: 'hospital' },
-      { header: 'PT Ref', dataKey: 'ptRef' },
-      { header: 'Physician/NP Notification (If Applicable)', dataKey: 'physicianRef' },
-      { header: 'POA Contacted', dataKey: 'poaContacted' },
-      { header: 'Risk Management Incident Fall Written', dataKey: 'incidentReport' },
-      { header: '3 Post Fall Notes in 72hrs', dataKey: 'postFallNotes' },
-    ];
-    const rowsPerPage = 10; // 每页行数限制
-    let currentPage = 0;
-    // 填充表格数据
-    while (currentPage * rowsPerPage < tableData.length) {
-      const rows = data.slice(currentPage * rowsPerPage, (currentPage + 1) * rowsPerPage).map((row) => ({
-        date: row.date,
-        name: row.name,
-        time: row.time,
-        location: row.location,
-        homeUnit: row.homeUnit,
-        cause: row.cause,
-        interventions: row.interventions,
-        hir: row.hir,
-        injury: row.injury,
-        hospital: row.hospital,
-        ptRef: row.ptRef,
-        physicianRef: row.physicianRef,
-        poaContacted: row.poaContacted,
-        incidentReport: row.incidentReport,
-        postFallNotes: row.postFallNotes,
-      }));
-
-      pdf.autoTable({
-        columns: columns,
-        body: rows,
-        startY: 10,
-        theme: 'striped',
-        headStyles: { fillColor: [100, 100, 255] },
-        styles: { fontSize: 10, cellPadding: 2 },
-        margin: { top: 20 },
-      });
-
-      currentPage++;
-      if (currentPage * rowsPerPage < data.length) pdf.addPage();
-    }
-    pdf.save('table_data.pdf');
-  };
-
   const updateAnalysisChart = () => {
     var selectedUnit = analysisUnit;
     var filteredData = analysisTimeRange === '3months' ? threeMonthData : data;
@@ -468,72 +401,259 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   const tableRef = useRef(null);
 
   const handleSavePDF = async () => {
+    // if (tableRef.current) {
+    //   const pdf = new jsPDF({
+    //     orientation: 'landscape',
+    //     unit: 'px',
+    //     format: 'a4',
+    //   });
+
+    //   const pageHeight = pdf.internal.pageSize.height;
+    //   const pageWidth = pdf.internal.pageSize.width;
+    //   const totalHeight = tableRef.current.scrollHeight;
+    //   let currentHeight = 0;
+    //   let accumulatedCanvasHeight = 0;
+
+    //   const canvasList = []; // 用于存储每段的 canvas 和高度
+    //   while (currentHeight < totalHeight) {
+    //     tableRef.current.scrollTop = currentHeight;
+
+    //     // 捕获当前段的内容
+    //     const canvas = await html2canvas(tableRef.current, {
+    //       scale: 2,
+    //       width: tableRef.current.scrollWidth,
+    //       height: pageHeight, // 每次捕获一页的高度
+    //     });
+
+    //     const imgData = canvas.toDataURL('image/png');
+    //     const imgWidth = pageWidth;
+    //     const imgHeight = ((canvas.height * imgWidth) / canvas.width) * 0.8; // 按比例压缩高度
+
+    //     // 保存当前段的 canvas 数据和高度
+    //     canvasList.push({ imgData, imgHeight });
+    //     accumulatedCanvasHeight += imgHeight;
+    //     currentHeight += pageHeight;
+    //   }
+
+    //   // 将累积的内容添加到 PDF，每页填满再换页
+    //   let currentY = 0;
+    //   for (let i = 0; i < canvasList.length; i++) {
+    //     const { imgData, imgHeight } = canvasList[i];
+
+    //     if (currentY + imgHeight > pageHeight) {
+    //       // 如果当前段超出页高，则添加新页，并重置 Y 位置
+    //       pdf.addPage();
+    //       currentY = 0;
+    //     }
+
+    //     // 添加图片到 PDF
+    //     pdf.addImage(imgData, 'PNG', 0, currentY, pageWidth, imgHeight);
+    //     currentY += imgHeight;
+    //   }
+
+    //   // 检查是否有剩余未添加的内容
+    //   if (currentY > 0) {
+    //     const lastSegment = canvasList[canvasList.length - 1];
+    //     pdf.addImage(lastSegment.imgData, 'PNG', 0, currentY, pageWidth, lastSegment.imgHeight);
+    //   }
+
+    //   pdf.save('Falls_Tracking_Table.pdf');
+    // }
+
+    // work no blank but last pages lack
+    // if (tableRef.current) {
+    //   const pdf = new jsPDF({
+    //     orientation: 'portrait',
+    //     unit: 'px',
+    //     format: 'a4',
+    //   });
+
+    //   const pageHeight = pdf.internal.pageSize.height;
+    //   const pageWidth = pdf.internal.pageSize.width;
+    //   const totalHeight = tableRef.current.scrollHeight;
+    //   let currentHeight = 0;
+    //   let accumulatedCanvasHeight = 0;
+
+    //   const canvasList = []; // 用于存储每段的 canvas 和高度
+    //   while (currentHeight < totalHeight) {
+    //     tableRef.current.scrollTop = currentHeight;
+
+    //     // 捕获当前段的内容
+    //     const canvas = await html2canvas(tableRef.current, {
+    //       scale: 2,
+    //       width: tableRef.current.scrollWidth,
+    //       height: pageHeight, // 每次捕获一页的高度
+    //     });
+
+    //     const imgData = canvas.toDataURL('image/png');
+    //     const imgWidth = pageWidth;
+    //     const imgHeight = (canvas.height * imgWidth) / canvas.width * 0.8; // 按比例压缩高度
+
+    //     // 保存当前段的 canvas 数据和高度
+    //     canvasList.push({ imgData, imgHeight });
+    //     accumulatedCanvasHeight += imgHeight;
+    //     currentHeight += pageHeight;
+    //   }
+
+    //   // 将累积的内容添加到 PDF，每页填满再换页
+    //   let currentY = 0;
+    //   for (let i = 0; i < canvasList.length; i++) {
+    //     const { imgData, imgHeight } = canvasList[i];
+
+    //     if (currentY + imgHeight > pageHeight) {
+    //       // 如果当前段超出页高，则添加新页，并重置 Y 位置
+    //       pdf.addPage();
+    //       currentY = 0;
+    //     }
+
+    //     // 添加图片到 PDF
+    //     pdf.addImage(imgData, 'PNG', 0, currentY, pageWidth, imgHeight);
+    //     currentY += imgHeight;
+    //   }
+
+    //   pdf.save('Falls_Tracking_Table.pdf');
+    // }
+
+    // if (tableRef.current) {
+    //   const pdf = new jsPDF({
+    //     orientation: 'landscape',
+    //     unit: 'px',
+    //     format: 'a4',
+    //   });
+
+    //   const pageHeight = pdf.internal.pageSize.height;
+    //   const totalHeight = tableRef.current.scrollHeight;
+    //   console.log("pageHeight")
+    //   console.log(pageHeight);
+    //   console.log("totalHeight")
+    //   console.log(totalHeight);
+    //   let currentHeight = 0;
+
+    //   // 遍历整个高度，以每页高度为单位分段捕获
+    //   while (currentHeight < totalHeight) {
+    //     // 调整 tableRef 的位置，使 html2canvas 只捕获当前段内容
+    //     tableRef.current.scrollTop = currentHeight;
+
+    //     // 捕获当前视图区域
+    //     const canvas = await html2canvas(tableRef.current, {
+    //       scale: 1,
+    //       width: tableRef.current.scrollWidth,
+    //       height: pageHeight,
+    //     });
+
+    //     const imgData = canvas.toDataURL('image/png');
+    //     pdf.addImage(imgData, 'PNG', 0, 0, pdf.internal.pageSize.width, pageHeight);
+
+    //     currentHeight += pageHeight;
+    //     if (currentHeight < totalHeight) pdf.addPage(); // 添加新页
+    //   }
+
+    //   pdf.save('Falls_Tracking_Table.pdf');
+    // }
+
+    // work but too many blank
+    // if (tableRef.current) {
+    //   const pdf = new jsPDF({
+    //     orientation: 'portrait',
+    //     unit: 'px',
+    //     format: 'a4',
+    //   });
+
+    //   const pageHeight = pdf.internal.pageSize.height;
+    //   const pageWidth = pdf.internal.pageSize.width;
+    //   const totalHeight = tableRef.current.scrollHeight;
+    //   let currentHeight = 0;
+
+    //   while (currentHeight < totalHeight) {
+    //     tableRef.current.scrollTop = currentHeight;
+
+    //     // 捕获当前部分内容
+    //     const canvas = await html2canvas(tableRef.current, {
+    //       scale: 2,
+    //       width: tableRef.current.scrollWidth,
+    //       height: pageHeight,
+    //     });
+
+    //     const imgData = canvas.toDataURL('image/png');
+    //     const imgWidth = pageWidth;
+    //     const imgHeight = ((canvas.height * imgWidth) / canvas.width) * 0.8; // 0.8 表示压缩 20% 的高度
+
+    //     pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+
+    //     currentHeight += pageHeight;
+    //     if (currentHeight < totalHeight) pdf.addPage();
+    //   }
+
+    //   pdf.save('Falls_Tracking_Table.pdf');
+    // }
+
     if (tableRef.current) {
+      const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'px',
+        format: 'a4',
+      });
+
+      const pageHeight = pdf.internal.pageSize.height;
+      const pageWidth = pdf.internal.pageSize.width;
+      const totalHeight = tableRef.current.scrollHeight;
+      let currentHeight = 0;
+      let accumulatedCanvasHeight = 0;
+
       const canvas = await html2canvas(tableRef.current, {
         scale: 2,
         width: tableRef.current.scrollWidth,
-        height: tableRef.current.scrollHeight,
+        height: pageHeight, // 每次捕获一页的高度
       });
       const imgData = canvas.toDataURL('image/png');
 
       const newWindow = window.open();
-      newWindow.document.title = 'Captured Image';
+      newWindow.document.write(`<img src="${imgData}" alt="Captured Image"/>`);
 
-      // 动态创建 img 元素并设置 src
-      const imgElement = newWindow.document.createElement('img');
-      imgElement.src = imgData;
-      imgElement.alt = 'Captured Image';
-      imgElement.style.maxWidth = '100%';
-      newWindow.document.body.appendChild(imgElement);
-      // // 将 Base64 转换为 Blob 对象
-      // const byteString = atob(imgData.split(',')[1]); // 解码 Base64
-      // const mimeString = imgData.split(',')[0].split(':')[1].split(';')[0];
-      // const ab = new ArrayBuffer(byteString.length);
-      // const ia = new Uint8Array(ab);
+      console.log(canvas.width);
+      console.log(pageWidth);
 
-      // for (let i = 0; i < byteString.length; i++) {
-      //   ia[i] = byteString.charCodeAt(i);
+      // const imgHeight = ((canvas.height * imgWidth) / canvas.width) * 0.8; // 按比例压缩高度
+      // pdf.addImage(imgData, 'PNG', 0, 0, pageWidth, pageHeight);
+      // pdf.save('Falls_Tracking_Table.pdf');
+      // const newWindow = window.open();
+      // newWindow.document.write(`<img src="${imgData}" alt="Captured Image"/>`);
+
+      const canvasList = []; // 用于存储每段的 canvas 和高度
+      // while (currentHeight < totalHeight) {
+      //   tableRef.current.scrollTop = currentHeight;
+
+      //   // 捕获当前段的内容
+      //   const canvas = await html2canvas(tableRef.current, {
+      //     scale: 2,
+      //     width: tableRef.current.scrollWidth,
+      //     height: pageHeight, // 每次捕获一页的高度
+      //   });
+
+      //   const imgData = canvas.toDataURL('image/png');
+      //   const imgWidth = pageWidth;
+      //   const imgHeight = (canvas.height * imgWidth) / canvas.width * 0.8; // 按比例压缩高度
+
+      //   // 保存当前段的 canvas 数据和高度
+      //   canvasList.push({ imgData, imgHeight });
+      //   accumulatedCanvasHeight += imgHeight;
+      //   currentHeight += pageHeight;
       // }
 
-      // const blob = new Blob([ab], { type: mimeString });
+      // // 将累积的内容添加到 PDF，每页填满再换页
+      // let currentY = 0;
+      // for (let i = 0; i < canvasList.length; i++) {
+      //   const { imgData, imgHeight } = canvasList[i];
 
-      // // 创建下载链接
-      // const link = document.createElement('a');
-      // link.href = URL.createObjectURL(blob);
-      // link.download = 'Captured_Image.png'; // 设置下载文件名
-      // link.click();
-
-      // // 释放 URL 对象
-      // URL.revokeObjectURL(link.href);
-
-      // const pdf = new jsPDF({
-      //   orientation: 'portrait',
-      //   unit: 'px',
-      //   format: 'a4',
-      // });
-
-      // // 获取 A4 页面尺寸
-      // const pageHeight = pdf.internal.pageSize.height;
-      // const pageWidth = pdf.internal.pageSize.width;
-
-      // // 计算图像的缩放宽度和高度
-      // const imgWidth = pageWidth;
-      // const imgHeight = (canvas.height * pageWidth) / canvas.width;
-
-      // let position = 0;
-
-      // // 按页面高度分页
-      // while (position < canvas.height) {
-      //   // 在 PDF 页面上绘制图像的一部分
-      //   pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight, undefined, 'FAST', 0, -position);
-
-      //   // 更新 position，移动到下一页
-      //   position += pageHeight;
-
-      //   // 如果图片未完全展示完，添加新页面
-      //   if (position < canvas.height) {
+      //   if (currentY + imgHeight > pageHeight) {
+      //     // 如果当前段超出页高，则添加新页，并重置 Y 位置
       //     pdf.addPage();
+      //     currentY = 0;
       //   }
+
+      //   // 添加图片到 PDF
+      //   pdf.addImage(imgData, 'PNG', 0, currentY, pageWidth, imgHeight);
+      //   currentY += imgHeight;
       // }
 
       // pdf.save('Falls_Tracking_Table.pdf');
@@ -673,7 +793,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   }, [analysisType, analysisTimeRange, analysisUnit, data]);
 
   return (
-    <div className={styles.dashboard}>
+    <div className={styles.dashboard} ref={tableRef}>
       <h1>{title}</h1>
 
       {/* <button className="logout-button" onClick={logout}>
@@ -764,7 +884,9 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
           {analysisChartData.datasets.length > 0 && <Bar data={analysisChartData} options={analysisChartOptions} />}
         </div>
       </div>
-
+      <button onClick={handleSavePDF} style={{ marginBottom: '20px' }}>
+        Download as PDF
+      </button>
       <div className={styles['table-header']}>
         <h2>Falls Tracking Table: October 2024</h2>
         <div>
@@ -790,7 +912,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
             <th style={{ fontSize: '18px' }}>Home Unit</th>
             <th style={{ fontSize: '18px' }}>Nature of Fall/Cause</th>
             <th style={{ fontSize: '18px' }}>Interventions</th>
-            <th style={{ fontSize: '18px' }}>HIR</th>
+            <th style={{ fontSize: '18px' }}>HIR intiated</th>
             <th style={{ fontSize: '18px' }}>Injury</th>
             <th style={{ fontSize: '18px' }}>Transfer to Hospital</th>
             <th style={{ fontSize: '18px' }}>PT Ref</th>
