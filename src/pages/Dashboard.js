@@ -117,7 +117,9 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   const [analysisType, setAnalysisType] = useState('timeOfDay');
   const [analysisTimeRange, setAnalysisTimeRange] = useState('current');
   const [analysisUnit, setAnalysisUnit] = useState('allUnits');
-  const [analysisHeaderText, setAnalysisHeaderText] = useState('Falls by Time of Day');
+  const [analysisHeaderText, setAnalysisHeaderText] = useState(
+    'Falls by Time of Day'
+  );
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentIntervention, setCurrentIntervention] = useState('');
@@ -140,7 +142,10 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     updatedData[currentRowIndex].isInterventionUpdated = 'Yes';
 
     const rowRef = ref(db, `/${name}/row-${currentRowIndex}`);
-    update(rowRef, { interventions: currentIntervention, isInterventionUpdated: 'Yes' })
+    update(rowRef, {
+      interventions: currentIntervention,
+      isInterventionUpdated: 'Yes',
+    })
       .then(() => {
         console.log('Intervention updated successfully');
         setData(updatedData);
@@ -166,7 +171,10 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
           datasets: [
             {
               data: [currentFalls, goal - currentFalls],
-              backgroundColor: ['rgba(76, 175, 80, 0.8)', 'rgba(200, 200, 200, 0.2)'],
+              backgroundColor: [
+                'rgba(76, 175, 80, 0.8)',
+                'rgba(200, 200, 200, 0.2)',
+              ],
               circumference: 180,
               rotation: 270,
             },
@@ -341,7 +349,9 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
 
     if (selectedUnit !== 'allUnits') {
       filteredData = filteredData.filter(
-        (fall) => fall.homeUnit.trim().toLowerCase() === selectedUnit.trim().toLowerCase()
+        (fall) =>
+          fall.homeUnit.trim().toLowerCase() ===
+          selectedUnit.trim().toLowerCase()
       );
     }
 
@@ -353,7 +363,11 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
         setAnalysisHeaderText('Falls by Time of Day');
         newLabels = ['Morning', 'Evening', 'Night'];
         var timeOfDayCounts = countFallsByTimeOfDay(filteredData);
-        newData = [timeOfDayCounts.Morning, timeOfDayCounts.Evening, timeOfDayCounts.Night];
+        newData = [
+          timeOfDayCounts.Morning,
+          timeOfDayCounts.Evening,
+          timeOfDayCounts.Night,
+        ];
         break;
 
       case 'location':
@@ -401,262 +415,57 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   const tableRef = useRef(null);
 
   const handleSavePDF = async () => {
-    // if (tableRef.current) {
-    //   const pdf = new jsPDF({
-    //     orientation: 'landscape',
-    //     unit: 'px',
-    //     format: 'a4',
-    //   });
-
-    //   const pageHeight = pdf.internal.pageSize.height;
-    //   const pageWidth = pdf.internal.pageSize.width;
-    //   const totalHeight = tableRef.current.scrollHeight;
-    //   let currentHeight = 0;
-    //   let accumulatedCanvasHeight = 0;
-
-    //   const canvasList = []; // 用于存储每段的 canvas 和高度
-    //   while (currentHeight < totalHeight) {
-    //     tableRef.current.scrollTop = currentHeight;
-
-    //     // 捕获当前段的内容
-    //     const canvas = await html2canvas(tableRef.current, {
-    //       scale: 2,
-    //       width: tableRef.current.scrollWidth,
-    //       height: pageHeight, // 每次捕获一页的高度
-    //     });
-
-    //     const imgData = canvas.toDataURL('image/png');
-    //     const imgWidth = pageWidth;
-    //     const imgHeight = ((canvas.height * imgWidth) / canvas.width) * 0.8; // 按比例压缩高度
-
-    //     // 保存当前段的 canvas 数据和高度
-    //     canvasList.push({ imgData, imgHeight });
-    //     accumulatedCanvasHeight += imgHeight;
-    //     currentHeight += pageHeight;
-    //   }
-
-    //   // 将累积的内容添加到 PDF，每页填满再换页
-    //   let currentY = 0;
-    //   for (let i = 0; i < canvasList.length; i++) {
-    //     const { imgData, imgHeight } = canvasList[i];
-
-    //     if (currentY + imgHeight > pageHeight) {
-    //       // 如果当前段超出页高，则添加新页，并重置 Y 位置
-    //       pdf.addPage();
-    //       currentY = 0;
-    //     }
-
-    //     // 添加图片到 PDF
-    //     pdf.addImage(imgData, 'PNG', 0, currentY, pageWidth, imgHeight);
-    //     currentY += imgHeight;
-    //   }
-
-    //   // 检查是否有剩余未添加的内容
-    //   if (currentY > 0) {
-    //     const lastSegment = canvasList[canvasList.length - 1];
-    //     pdf.addImage(lastSegment.imgData, 'PNG', 0, currentY, pageWidth, lastSegment.imgHeight);
-    //   }
-
-    //   pdf.save('Falls_Tracking_Table.pdf');
-    // }
-
     // work no blank but last pages lack
-    // if (tableRef.current) {
-    //   const pdf = new jsPDF({
-    //     orientation: 'portrait',
-    //     unit: 'px',
-    //     format: 'a4',
-    //   });
-
-    //   const pageHeight = pdf.internal.pageSize.height;
-    //   const pageWidth = pdf.internal.pageSize.width;
-    //   const totalHeight = tableRef.current.scrollHeight;
-    //   let currentHeight = 0;
-    //   let accumulatedCanvasHeight = 0;
-
-    //   const canvasList = []; // 用于存储每段的 canvas 和高度
-    //   while (currentHeight < totalHeight) {
-    //     tableRef.current.scrollTop = currentHeight;
-
-    //     // 捕获当前段的内容
-    //     const canvas = await html2canvas(tableRef.current, {
-    //       scale: 2,
-    //       width: tableRef.current.scrollWidth,
-    //       height: pageHeight, // 每次捕获一页的高度
-    //     });
-
-    //     const imgData = canvas.toDataURL('image/png');
-    //     const imgWidth = pageWidth;
-    //     const imgHeight = (canvas.height * imgWidth) / canvas.width * 0.8; // 按比例压缩高度
-
-    //     // 保存当前段的 canvas 数据和高度
-    //     canvasList.push({ imgData, imgHeight });
-    //     accumulatedCanvasHeight += imgHeight;
-    //     currentHeight += pageHeight;
-    //   }
-
-    //   // 将累积的内容添加到 PDF，每页填满再换页
-    //   let currentY = 0;
-    //   for (let i = 0; i < canvasList.length; i++) {
-    //     const { imgData, imgHeight } = canvasList[i];
-
-    //     if (currentY + imgHeight > pageHeight) {
-    //       // 如果当前段超出页高，则添加新页，并重置 Y 位置
-    //       pdf.addPage();
-    //       currentY = 0;
-    //     }
-
-    //     // 添加图片到 PDF
-    //     pdf.addImage(imgData, 'PNG', 0, currentY, pageWidth, imgHeight);
-    //     currentY += imgHeight;
-    //   }
-
-    //   pdf.save('Falls_Tracking_Table.pdf');
-    // }
-
-    // if (tableRef.current) {
-    //   const pdf = new jsPDF({
-    //     orientation: 'landscape',
-    //     unit: 'px',
-    //     format: 'a4',
-    //   });
-
-    //   const pageHeight = pdf.internal.pageSize.height;
-    //   const totalHeight = tableRef.current.scrollHeight;
-    //   console.log("pageHeight")
-    //   console.log(pageHeight);
-    //   console.log("totalHeight")
-    //   console.log(totalHeight);
-    //   let currentHeight = 0;
-
-    //   // 遍历整个高度，以每页高度为单位分段捕获
-    //   while (currentHeight < totalHeight) {
-    //     // 调整 tableRef 的位置，使 html2canvas 只捕获当前段内容
-    //     tableRef.current.scrollTop = currentHeight;
-
-    //     // 捕获当前视图区域
-    //     const canvas = await html2canvas(tableRef.current, {
-    //       scale: 1,
-    //       width: tableRef.current.scrollWidth,
-    //       height: pageHeight,
-    //     });
-
-    //     const imgData = canvas.toDataURL('image/png');
-    //     pdf.addImage(imgData, 'PNG', 0, 0, pdf.internal.pageSize.width, pageHeight);
-
-    //     currentHeight += pageHeight;
-    //     if (currentHeight < totalHeight) pdf.addPage(); // 添加新页
-    //   }
-
-    //   pdf.save('Falls_Tracking_Table.pdf');
-    // }
-
-    // work but too many blank
-    // if (tableRef.current) {
-    //   const pdf = new jsPDF({
-    //     orientation: 'portrait',
-    //     unit: 'px',
-    //     format: 'a4',
-    //   });
-
-    //   const pageHeight = pdf.internal.pageSize.height;
-    //   const pageWidth = pdf.internal.pageSize.width;
-    //   const totalHeight = tableRef.current.scrollHeight;
-    //   let currentHeight = 0;
-
-    //   while (currentHeight < totalHeight) {
-    //     tableRef.current.scrollTop = currentHeight;
-
-    //     // 捕获当前部分内容
-    //     const canvas = await html2canvas(tableRef.current, {
-    //       scale: 2,
-    //       width: tableRef.current.scrollWidth,
-    //       height: pageHeight,
-    //     });
-
-    //     const imgData = canvas.toDataURL('image/png');
-    //     const imgWidth = pageWidth;
-    //     const imgHeight = ((canvas.height * imgWidth) / canvas.width) * 0.8; // 0.8 表示压缩 20% 的高度
-
-    //     pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-
-    //     currentHeight += pageHeight;
-    //     if (currentHeight < totalHeight) pdf.addPage();
-    //   }
-
-    //   pdf.save('Falls_Tracking_Table.pdf');
-    // }
 
     if (tableRef.current) {
       const pdf = new jsPDF({
-        orientation: 'landscape',
+        orientation: 'portrait',
         unit: 'px',
         format: 'a4',
       });
-
       const pageHeight = pdf.internal.pageSize.height;
       const pageWidth = pdf.internal.pageSize.width;
       const totalHeight = tableRef.current.scrollHeight;
-      let currentHeight = 0;
-      let accumulatedCanvasHeight = 0;
-
+      tableRef.current.scrollTop = totalHeight - pageHeight;
+      console.log('page height');
+      console.log(pageHeight);
+      console.log('page width');
+      console.log(pageWidth);
+      console.log('total height');
+      console.log(totalHeight);
+      console.log('total width');
+      console.log(tableRef.current.scrollWidth);
       const canvas = await html2canvas(tableRef.current, {
         scale: 2,
         width: tableRef.current.scrollWidth,
-        height: pageHeight, // 每次捕获一页的高度
+        height: 1.25 * totalHeight,
       });
-      const imgData = canvas.toDataURL('image/png');
-
-      const newWindow = window.open();
-      newWindow.document.write(`<img src="${imgData}" alt="Captured Image"/>`);
-
+      console.log('canvas width');
       console.log(canvas.width);
-      console.log(pageWidth);
-
-      // const imgHeight = ((canvas.height * imgWidth) / canvas.width) * 0.8; // 按比例压缩高度
-      // pdf.addImage(imgData, 'PNG', 0, 0, pageWidth, pageHeight);
-      // pdf.save('Falls_Tracking_Table.pdf');
+      console.log('canvas height');
+      console.log(canvas.height);
+      const imgData = canvas.toDataURL('image/png');
+      const imgWidth = pageWidth;
       // const newWindow = window.open();
       // newWindow.document.write(`<img src="${imgData}" alt="Captured Image"/>`);
 
-      const canvasList = []; // 用于存储每段的 canvas 和高度
-      // while (currentHeight < totalHeight) {
-      //   tableRef.current.scrollTop = currentHeight;
+      // canvas.height / canvas.width = imgheight / imgwidth
+      // imgheight = canvas.height * imgwidth / canvas.width
+      const imgHeight = (canvas.height * imgWidth) / canvas.width; // 按比例压缩高度
+      let position = 0;
 
-      //   // 捕获当前段的内容
-      //   const canvas = await html2canvas(tableRef.current, {
-      //     scale: 2,
-      //     width: tableRef.current.scrollWidth,
-      //     height: pageHeight, // 每次捕获一页的高度
-      //   });
+      // 循环切割 canvas 并添加到每页
+      while (position < imgHeight) {
+        pdf.addImage(imgData, 'PNG', 0, -position, imgWidth, imgHeight);
 
-      //   const imgData = canvas.toDataURL('image/png');
-      //   const imgWidth = pageWidth;
-      //   const imgHeight = (canvas.height * imgWidth) / canvas.width * 0.8; // 按比例压缩高度
+        position += pageHeight;
 
-      //   // 保存当前段的 canvas 数据和高度
-      //   canvasList.push({ imgData, imgHeight });
-      //   accumulatedCanvasHeight += imgHeight;
-      //   currentHeight += pageHeight;
-      // }
-
-      // // 将累积的内容添加到 PDF，每页填满再换页
-      // let currentY = 0;
-      // for (let i = 0; i < canvasList.length; i++) {
-      //   const { imgData, imgHeight } = canvasList[i];
-
-      //   if (currentY + imgHeight > pageHeight) {
-      //     // 如果当前段超出页高，则添加新页，并重置 Y 位置
-      //     pdf.addPage();
-      //     currentY = 0;
-      //   }
-
-      //   // 添加图片到 PDF
-      //   pdf.addImage(imgData, 'PNG', 0, currentY, pageWidth, imgHeight);
-      //   currentY += imgHeight;
-      // }
-
-      // pdf.save('Falls_Tracking_Table.pdf');
+        // 如果当前高度还没有达到图片的总高度，则添加新页面
+        if (position < imgHeight) {
+          pdf.addPage();
+        }
+      }
+      pdf.save('Falls_Tracking_Table.pdf');
     }
   };
 
@@ -685,28 +494,6 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
       console.log('Successfully updated all rows');
     }
   };
-
-  // const handleUpdateCSV = (index, newValue, name, isPhycicianRef) => {
-  //   const rowRef = ref(db, `/${name}/row-${index}`);
-  //   // Create an object to hold the updates
-  //   let updates = {};
-
-  //   // Update either the "physicianRef" or "poaContacted" field based on the flag
-  //   if (isPhycicianRef) {
-  //     updates = { physicianRef: newValue };
-  //   } else {
-  //     updates = { poaContacted: newValue };
-  //   }
-
-  //   // Use Firebase's update method to update the specific field in the database
-  //   update(rowRef, updates)
-  //     .then(() => {
-  //       console.log('Data updated successfully in Firebase');
-  //     })
-  //     .catch((error) => {
-  //       console.error('Error updating data:', error);
-  //     });
-  // };
 
   const handleUpdateCSV = (index, newValue, name, changeType) => {
     const rowRef = ref(db, `/${name}/row-${index}`);
@@ -756,9 +543,14 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
 
         // End measuring fetch data time
         performance.mark('end-fetch-data');
-        performance.measure('Fetch Data Time', 'start-fetch-data', 'end-fetch-data');
+        performance.measure(
+          'Fetch Data Time',
+          'start-fetch-data',
+          'end-fetch-data'
+        );
 
-        const fetchDataTime = performance.getEntriesByName('Fetch Data Time')[0].duration;
+        const fetchDataTime =
+          performance.getEntriesByName('Fetch Data Time')[0].duration;
         console.log('Fetch Data Time: ', fetchDataTime, 'ms'); // Logs the time it took for fetching data
 
         // Object.keys(fetchedData) will give you all the keys, i.e., 'row-0', 'row-1', etc.
@@ -805,25 +597,30 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
           <div className={styles['gauge-container']}>
             <h2 style={{ paddingTop: '7.5px' }}>Falls Overview</h2>
             <select
-              id="fallsTimeRange"
+              id='fallsTimeRange'
               value={fallsTimeRange}
               onChange={(e) => {
                 setFallsTimeRange(e.target.value);
               }}
             >
-              <option value="current">This Month</option>
-              <option value="3months">Past 3 Months</option>
-              <option value="6months">Past 6 Months</option>
+              <option value='current'>This Month</option>
+              <option value='3months'>Past 3 Months</option>
+              <option value='6months'>Past 6 Months</option>
             </select>
             {gaugeChart ? (
-              <div id="gaugeContainer">
+              <div id='gaugeContainer'>
                 <div className={styles.gauge}>
-                  {gaugeChartData.datasets.length > 0 && <Doughnut data={gaugeChartData} options={gaugeChartOptions} />}
+                  {gaugeChartData.datasets.length > 0 && (
+                    <Doughnut
+                      data={gaugeChartData}
+                      options={gaugeChartOptions}
+                    />
+                  )}
                   <div className={styles['gauge-value']}>{data.length}</div>
                   <br />
                   <div className={styles['gauge-label']}>falls this month</div>
                   <div className={styles['gauge-goal']}>
-                    Goal: <span id="fallGoal">{goal}</span>
+                    Goal: <span id='fallGoal'>{goal}</span>
                   </div>
                   <br />
                   <div className={styles['gauge-scale']}>
@@ -833,8 +630,10 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                 </div>
               </div>
             ) : (
-              <div id="lineChartContainer">
-                {lineChartData.datasets.length > 0 && <Line data={lineChartData} options={lineChartOptions} />}
+              <div id='lineChartContainer'>
+                {lineChartData.datasets.length > 0 && (
+                  <Line data={lineChartData} options={lineChartOptions} />
+                )}
               </div>
             )}
           </div>
@@ -843,32 +642,32 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
         <div className={styles.chart}>
           <h2>{analysisHeaderText}</h2>
           <select
-            id="fallsAnalysisType"
+            id='fallsAnalysisType'
             value={analysisType}
             onChange={(e) => {
               setAnalysisType(e.target.value);
             }}
           >
-            <option value="timeOfDay">Time of Day</option>
-            <option value="location">Location</option>
-            <option value="injuries">Injuries</option>
-            <option value="hir">Falls by HIR</option>
-            <option value="residents">Residents w/ Recurring Falls</option>
+            <option value='timeOfDay'>Time of Day</option>
+            <option value='location'>Location</option>
+            <option value='injuries'>Injuries</option>
+            <option value='hir'>Falls by HIR</option>
+            <option value='residents'>Residents w/ Recurring Falls</option>
           </select>
 
           <select
-            id="analysisTimeRange"
+            id='analysisTimeRange'
             value={analysisTimeRange}
             onChange={(e) => {
               setAnalysisTimeRange(e.target.value);
             }}
           >
-            <option value="current">Current Month</option>
-            <option value="3months">Past 3 Months</option>
+            <option value='current'>Current Month</option>
+            <option value='3months'>Past 3 Months</option>
           </select>
 
           <select
-            id="unitSelection"
+            id='unitSelection'
             value={analysisUnit}
             onChange={(e) => {
               setAnalysisUnit(e.target.value);
@@ -881,7 +680,9 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
             ))}
           </select>
 
-          {analysisChartData.datasets.length > 0 && <Bar data={analysisChartData} options={analysisChartOptions} />}
+          {analysisChartData.datasets.length > 0 && (
+            <Bar data={analysisChartData} options={analysisChartOptions} />
+          )}
         </div>
       </div>
       <button onClick={handleSavePDF} style={{ marginBottom: '20px' }}>
@@ -901,11 +702,11 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
       </di> */}
 
       <table style={{ width: '100%' }}>
-        {' '}
         {/* Set the table width to 100% to make it wider */}
         <thead>
           <tr>
-            <th style={{ fontSize: '18px' }}>Date</th> {/* Increased font size */}
+            <th style={{ fontSize: '18px' }}>Date</th>{' '}
+            {/* Increased font size */}
             <th style={{ fontSize: '18px' }}>Name</th>
             <th style={{ fontSize: '18px' }}>Time</th>
             <th style={{ fontSize: '18px' }}>Location</th>
@@ -916,33 +717,54 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
             <th style={{ fontSize: '18px' }}>Injury</th>
             <th style={{ fontSize: '18px' }}>Transfer to Hospital</th>
             <th style={{ fontSize: '18px' }}>PT Ref</th>
-            <th style={{ fontSize: '18px' }}>Physician/NP Notification (If Applicable)</th>
+            <th style={{ fontSize: '18px' }}>
+              Physician/NP Notification (If Applicable)
+            </th>
             <th style={{ fontSize: '18px' }}>POA Contacted</th>
-            <th style={{ fontSize: '18px' }}>Risk Management Incident Fall Written</th>
+            <th style={{ fontSize: '18px' }}>
+              Risk Management Incident Fall Written
+            </th>
             <th style={{ fontSize: '18px' }}>3 Post Fall Notes in 72hrs</th>
           </tr>
         </thead>
-        <tbody id="fallsTableBody">
+        <tbody id='fallsTableBody'>
           {data.map((item, i) => (
             <tr key={i}>
-              <td style={{ whiteSpace: 'nowrap', fontSize: '16px' }}>{item.date}</td> {/* Increased font size */}
+              <td style={{ whiteSpace: 'nowrap', fontSize: '16px' }}>
+                {item.date}
+              </td>{' '}
+              {/* Increased font size */}
               <td style={{ fontSize: '16px' }}>{item.name}</td>
               <td style={{ fontSize: '16px' }}>{item.time}</td>
               <td style={{ fontSize: '16px' }}>{item.location}</td>
               <td style={{ fontSize: '16px' }}>{item.homeUnit}</td>
               <td style={{ fontSize: '16px' }}>{item.cause}</td>
-              <td style={{ fontSize: '16px', color: item.isInterventionUpdated === 'Yes' ? 'green' : 'inherit' }}>
+              <td
+                style={{
+                  fontSize: '16px',
+                  color:
+                    item.isInterventionUpdated === 'Yes' ? 'green' : 'inherit',
+                }}
+              >
                 {item.interventions}
                 <br></br>
                 <button onClick={() => handleEditIntervention(i)}>Edit</button>
               </td>
               <td style={{ fontSize: '16px' }}>
                 <select
-                  value={item.hir.toLowerCase() === 'yes' ? 'Yes' : item.hir.toLowerCase() === 'no' ? 'No' : item.hir}
-                  onChange={(e) => handleUpdateCSV(i, e.target.value, name, 'hir')}
+                  value={
+                    item.hir.toLowerCase() === 'yes'
+                      ? 'Yes'
+                      : item.hir.toLowerCase() === 'no'
+                      ? 'No'
+                      : item.hir
+                  }
+                  onChange={(e) =>
+                    handleUpdateCSV(i, e.target.value, name, 'hir')
+                  }
                 >
-                  <option value="Yes">Yes</option>
-                  <option value="No">No</option>
+                  <option value='Yes'>Yes</option>
+                  <option value='No'>No</option>
                 </select>
               </td>
               <td style={{ fontSize: '16px' }}>{item.injury}</td>
@@ -955,21 +777,29 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                       ? 'No'
                       : item.hospital
                   }
-                  onChange={(e) => handleUpdateCSV(i, e.target.value, name, 'hospital')}
+                  onChange={(e) =>
+                    handleUpdateCSV(i, e.target.value, name, 'hospital')
+                  }
                 >
-                  <option value="Yes">Yes</option>
-                  <option value="No">No</option>
+                  <option value='Yes'>Yes</option>
+                  <option value='No'>No</option>
                 </select>
               </td>
               <td style={{ fontSize: '16px' }}>
                 <select
                   value={
-                    item.ptRef.toLowerCase() === 'yes' ? 'Yes' : item.ptRef.toLowerCase() === 'no' ? 'No' : item.ptRef
+                    item.ptRef.toLowerCase() === 'yes'
+                      ? 'Yes'
+                      : item.ptRef.toLowerCase() === 'no'
+                      ? 'No'
+                      : item.ptRef
                   }
-                  onChange={(e) => handleUpdateCSV(i, e.target.value, name, 'ptRef')}
+                  onChange={(e) =>
+                    handleUpdateCSV(i, e.target.value, name, 'ptRef')
+                  }
                 >
-                  <option value="Yes">Yes</option>
-                  <option value="No">No</option>
+                  <option value='Yes'>Yes</option>
+                  <option value='No'>No</option>
                 </select>
               </td>
               <td style={{ fontSize: '16px' }}>
@@ -981,14 +811,19 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                       ? 'No'
                       : item.physicianRef
                   }
-                  onChange={(e) => handleUpdateCSV(i, e.target.value, name, 'physicianRef')}
+                  onChange={(e) =>
+                    handleUpdateCSV(i, e.target.value, name, 'physicianRef')
+                  }
                 >
-                  <option value="Yes">Yes</option>
-                  <option value="No">No</option>
-                  <option value="N/A">N/A</option>
+                  <option value='Yes'>Yes</option>
+                  <option value='No'>No</option>
+                  <option value='N/A'>N/A</option>
                 </select>
               </td>
-              <td className={item.poaContacted === 'No' ? styles.cellRed : ''} style={{ fontSize: '16px' }}>
+              <td
+                className={item.poaContacted === 'No' ? styles.cellRed : ''}
+                style={{ fontSize: '16px' }}
+              >
                 <select
                   value={
                     item.poaContacted.toLowerCase() === 'yes'
@@ -997,10 +832,12 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                       ? 'No'
                       : item.poaContacted
                   }
-                  onChange={(e) => handleUpdateCSV(i, e.target.value, name, 'poaContacted')}
+                  onChange={(e) =>
+                    handleUpdateCSV(i, e.target.value, name, 'poaContacted')
+                  }
                 >
-                  <option value="Yes">Yes</option>
-                  <option value="No">No</option>
+                  <option value='Yes'>Yes</option>
+                  <option value='No'>No</option>
                 </select>
               </td>
               <td style={{ fontSize: '16px' }}>
@@ -1012,13 +849,18 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                       ? 'No'
                       : item.incidentReport
                   }
-                  onChange={(e) => handleUpdateCSV(i, e.target.value, name, 'incidentReport')}
+                  onChange={(e) =>
+                    handleUpdateCSV(i, e.target.value, name, 'incidentReport')
+                  }
                 >
-                  <option value="Yes">Yes</option>
-                  <option value="No">No</option>
+                  <option value='Yes'>Yes</option>
+                  <option value='No'>No</option>
                 </select>
               </td>
-              <td className={item.postFallNotes < 3 ? styles.cellRed : ''} style={{ fontSize: '16px' }}>
+              <td
+                className={item.postFallNotes < 3 ? styles.cellRed : ''}
+                style={{ fontSize: '16px' }}
+              >
                 {item.postFallNotes}
               </td>
             </tr>
@@ -1030,7 +872,10 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
           <div className={styles.modalContent}>
             <div>
               <h2>Edit Interventions</h2>
-              <textarea value={currentIntervention} onChange={(e) => setCurrentIntervention(e.target.value)} />
+              <textarea
+                value={currentIntervention}
+                onChange={(e) => setCurrentIntervention(e.target.value)}
+              />
               <br />
               <button onClick={handleSubmitIntervention}>Submit</button>
               <button onClick={() => setIsModalOpen(false)}>Cancel</button>

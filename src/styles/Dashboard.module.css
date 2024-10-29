@@ -1,4 +1,4 @@
-body {
+/* body {
   font-family: 'Proxima Nova', sans-serif;
   background-color: #f0f4f0;
   color: #333;
@@ -7,7 +7,25 @@ body {
   padding-left: 20px;
   padding-right: 20px;
   padding: 20px;
+} */
+/*
+.dashboard {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-bottom: 20px;
+  position: relative;
+  overflow: scroll;
 }
+*/
+/* height: 95dvh; */
+/* height: auto; */
+/* padding: 20px; */
+/* max-width: 1400px;
+  width: 100%; */
+/* margin: 0 auto; */
 
 .dashboard {
   max-width: 1400px;
@@ -17,13 +35,14 @@ body {
   border-radius: 8px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   /* padding: 20px; */
-  padding-left: 20px;
+  /* padding-left: 20px;
   padding-right: 20px;
-  padding-bottom: 20px;
-  position: relative;
-  height: 95dvh;
+  padding-bottom: 20px; */
+  padding: 20px;
+  /* position: relative; */
+  /* height: 95dvh; */
   /* height: auto; */
-  overflow: scroll;
+  /* overflow: scroll; */
 }
 
 h1,
@@ -167,7 +186,10 @@ tr:nth-child(even) {
   position: fixed; /* Fixed positioning, does not scroll with the page */
   top: 50%; /* 50% from the top of the page */
   left: 50%; /* 50% from the left of the page */
-  transform: translate(-50%, -50%); /* Move to the center both horizontally and vertically */
+  transform: translate(
+    -50%,
+    -50%
+  ); /* Move to the center both horizontally and vertically */
   background-color: #fff; /* Background color is white */
   padding: 20px; /* Padding */
   z-index: 1000; /* Ensure the modal is above other elements */

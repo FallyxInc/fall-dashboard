@@ -18,7 +18,7 @@
 /* } */
 
 .dashboard {
-  max-width: 1200px;
+  max-width: 1400px;
   width: 100%;
   margin: 0 auto;
   background-color: white;
@@ -26,7 +26,7 @@
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   padding: 20px;
   position: relative;
-  overflow: hidden;
+  /* overflow: hidden; */
 }
 .dashboard,
 .h1 {
