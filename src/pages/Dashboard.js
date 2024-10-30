@@ -117,9 +117,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   const [analysisType, setAnalysisType] = useState('timeOfDay');
   const [analysisTimeRange, setAnalysisTimeRange] = useState('current');
   const [analysisUnit, setAnalysisUnit] = useState('allUnits');
-  const [analysisHeaderText, setAnalysisHeaderText] = useState(
-    'Falls by Time of Day'
-  );
+  const [analysisHeaderText, setAnalysisHeaderText] = useState('Falls by Time of Day');
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentIntervention, setCurrentIntervention] = useState('');
@@ -171,10 +169,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
           datasets: [
             {
               data: [currentFalls, goal - currentFalls],
-              backgroundColor: [
-                'rgba(76, 175, 80, 0.8)',
-                'rgba(200, 200, 200, 0.2)',
-              ],
+              backgroundColor: ['rgba(76, 175, 80, 0.8)', 'rgba(200, 200, 200, 0.2)'],
               circumference: 180,
               rotation: 270,
             },
@@ -349,9 +344,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
 
     if (selectedUnit !== 'allUnits') {
       filteredData = filteredData.filter(
-        (fall) =>
-          fall.homeUnit.trim().toLowerCase() ===
-          selectedUnit.trim().toLowerCase()
+        (fall) => fall.homeUnit.trim().toLowerCase() === selectedUnit.trim().toLowerCase()
       );
     }
 
@@ -363,11 +356,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
         setAnalysisHeaderText('Falls by Time of Day');
         newLabels = ['Morning', 'Evening', 'Night'];
         var timeOfDayCounts = countFallsByTimeOfDay(filteredData);
-        newData = [
-          timeOfDayCounts.Morning,
-          timeOfDayCounts.Evening,
-          timeOfDayCounts.Night,
-        ];
+        newData = [timeOfDayCounts.Morning, timeOfDayCounts.Evening, timeOfDayCounts.Night];
         break;
 
       case 'location':
@@ -427,23 +416,23 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
       const pageWidth = pdf.internal.pageSize.width;
       const totalHeight = tableRef.current.scrollHeight;
       tableRef.current.scrollTop = totalHeight - pageHeight;
-      console.log('page height');
-      console.log(pageHeight);
-      console.log('page width');
-      console.log(pageWidth);
-      console.log('total height');
-      console.log(totalHeight);
-      console.log('total width');
-      console.log(tableRef.current.scrollWidth);
+      // console.log('page height');
+      // console.log(pageHeight);
+      // console.log('page width');
+      // console.log(pageWidth);
+      // console.log('total height');
+      // console.log(totalHeight);
+      // console.log('total width');
+      // console.log(tableRef.current.scrollWidth);
       const canvas = await html2canvas(tableRef.current, {
         scale: 2,
         width: tableRef.current.scrollWidth,
         height: 1.25 * totalHeight,
       });
-      console.log('canvas width');
-      console.log(canvas.width);
-      console.log('canvas height');
-      console.log(canvas.height);
+      // console.log('canvas width');
+      // console.log(canvas.width);
+      // console.log('canvas height');
+      // console.log(canvas.height);
       const imgData = canvas.toDataURL('image/png');
       const imgWidth = pageWidth;
       // const newWindow = window.open();
@@ -454,13 +443,13 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
       const imgHeight = (canvas.height * imgWidth) / canvas.width; // 按比例压缩高度
       let position = 0;
 
-      // 循环切割 canvas 并添加到每页
+      // Loop to split the canvas and add to each page
       while (position < imgHeight) {
-        pdf.addImage(imgData, 'PNG', 0, -position, imgWidth, imgHeight);
+        pdf.addImage(imgData, 'PNG', 0, -position, imgWidth, imgHeight, 'FAST');
 
         position += pageHeight;
 
-        // 如果当前高度还没有达到图片的总高度，则添加新页面
+        // If the current height has not reached the total image height, add a new page
         if (position < imgHeight) {
           pdf.addPage();
         }
@@ -543,14 +532,9 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
 
         // End measuring fetch data time
         performance.mark('end-fetch-data');
-        performance.measure(
-          'Fetch Data Time',
-          'start-fetch-data',
-          'end-fetch-data'
-        );
+        performance.measure('Fetch Data Time', 'start-fetch-data', 'end-fetch-data');
 
-        const fetchDataTime =
-          performance.getEntriesByName('Fetch Data Time')[0].duration;
+        const fetchDataTime = performance.getEntriesByName('Fetch Data Time')[0].duration;
         console.log('Fetch Data Time: ', fetchDataTime, 'ms'); // Logs the time it took for fetching data
 
         // Object.keys(fetchedData) will give you all the keys, i.e., 'row-0', 'row-1', etc.
@@ -597,30 +581,25 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
           <div className={styles['gauge-container']}>
             <h2 style={{ paddingTop: '7.5px' }}>Falls Overview</h2>
             <select
-              id='fallsTimeRange'
+              id="fallsTimeRange"
               value={fallsTimeRange}
               onChange={(e) => {
                 setFallsTimeRange(e.target.value);
               }}
             >
-              <option value='current'>This Month</option>
-              <option value='3months'>Past 3 Months</option>
-              <option value='6months'>Past 6 Months</option>
+              <option value="current">This Month</option>
+              <option value="3months">Past 3 Months</option>
+              <option value="6months">Past 6 Months</option>
             </select>
             {gaugeChart ? (
-              <div id='gaugeContainer'>
+              <div id="gaugeContainer">
                 <div className={styles.gauge}>
-                  {gaugeChartData.datasets.length > 0 && (
-                    <Doughnut
-                      data={gaugeChartData}
-                      options={gaugeChartOptions}
-                    />
-                  )}
+                  {gaugeChartData.datasets.length > 0 && <Doughnut data={gaugeChartData} options={gaugeChartOptions} />}
                   <div className={styles['gauge-value']}>{data.length}</div>
                   <br />
                   <div className={styles['gauge-label']}>falls this month</div>
                   <div className={styles['gauge-goal']}>
-                    Goal: <span id='fallGoal'>{goal}</span>
+                    Goal: <span id="fallGoal">{goal}</span>
                   </div>
                   <br />
                   <div className={styles['gauge-scale']}>
@@ -630,10 +609,8 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                 </div>
               </div>
             ) : (
-              <div id='lineChartContainer'>
-                {lineChartData.datasets.length > 0 && (
-                  <Line data={lineChartData} options={lineChartOptions} />
-                )}
+              <div id="lineChartContainer">
+                {lineChartData.datasets.length > 0 && <Line data={lineChartData} options={lineChartOptions} />}
               </div>
             )}
           </div>
@@ -642,32 +619,32 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
         <div className={styles.chart}>
           <h2>{analysisHeaderText}</h2>
           <select
-            id='fallsAnalysisType'
+            id="fallsAnalysisType"
             value={analysisType}
             onChange={(e) => {
               setAnalysisType(e.target.value);
             }}
           >
-            <option value='timeOfDay'>Time of Day</option>
-            <option value='location'>Location</option>
-            <option value='injuries'>Injuries</option>
-            <option value='hir'>Falls by HIR</option>
-            <option value='residents'>Residents w/ Recurring Falls</option>
+            <option value="timeOfDay">Time of Day</option>
+            <option value="location">Location</option>
+            <option value="injuries">Injuries</option>
+            <option value="hir">Falls by HIR</option>
+            <option value="residents">Residents w/ Recurring Falls</option>
           </select>
 
           <select
-            id='analysisTimeRange'
+            id="analysisTimeRange"
             value={analysisTimeRange}
             onChange={(e) => {
               setAnalysisTimeRange(e.target.value);
             }}
           >
-            <option value='current'>Current Month</option>
-            <option value='3months'>Past 3 Months</option>
+            <option value="current">Current Month</option>
+            <option value="3months">Past 3 Months</option>
           </select>
 
           <select
-            id='unitSelection'
+            id="unitSelection"
             value={analysisUnit}
             onChange={(e) => {
               setAnalysisUnit(e.target.value);
@@ -680,19 +657,17 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
             ))}
           </select>
 
-          {analysisChartData.datasets.length > 0 && (
-            <Bar data={analysisChartData} options={analysisChartOptions} />
-          )}
+          {analysisChartData.datasets.length > 0 && <Bar data={analysisChartData} options={analysisChartOptions} />}
         </div>
       </div>
-      <button onClick={handleSavePDF} style={{ marginBottom: '20px' }}>
-        Download as PDF
-      </button>
       <div className={styles['table-header']}>
         <h2>Falls Tracking Table: October 2024</h2>
         <div>
           <button className={styles['download-button']} onClick={handleSaveCSV}>
             Download as CSV
+          </button>
+          <button className={styles['download-button']} onClick={handleSavePDF}>
+            Download as PDF
           </button>
         </div>
       </div>
@@ -705,8 +680,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
         {/* Set the table width to 100% to make it wider */}
         <thead>
           <tr>
-            <th style={{ fontSize: '18px' }}>Date</th>{' '}
-            {/* Increased font size */}
+            <th style={{ fontSize: '18px' }}>Date</th> {/* Increased font size */}
             <th style={{ fontSize: '18px' }}>Name</th>
             <th style={{ fontSize: '18px' }}>Time</th>
             <th style={{ fontSize: '18px' }}>Location</th>
@@ -717,23 +691,16 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
             <th style={{ fontSize: '18px' }}>Injury</th>
             <th style={{ fontSize: '18px' }}>Transfer to Hospital</th>
             <th style={{ fontSize: '18px' }}>PT Ref</th>
-            <th style={{ fontSize: '18px' }}>
-              Physician/NP Notification (If Applicable)
-            </th>
+            <th style={{ fontSize: '18px' }}>Physician/NP Notification (If Applicable)</th>
             <th style={{ fontSize: '18px' }}>POA Contacted</th>
-            <th style={{ fontSize: '18px' }}>
-              Risk Management Incident Fall Written
-            </th>
+            <th style={{ fontSize: '18px' }}>Risk Management Incident Fall Written</th>
             <th style={{ fontSize: '18px' }}>3 Post Fall Notes in 72hrs</th>
           </tr>
         </thead>
-        <tbody id='fallsTableBody'>
+        <tbody id="fallsTableBody">
           {data.map((item, i) => (
             <tr key={i}>
-              <td style={{ whiteSpace: 'nowrap', fontSize: '16px' }}>
-                {item.date}
-              </td>{' '}
-              {/* Increased font size */}
+              <td style={{ whiteSpace: 'nowrap', fontSize: '16px' }}>{item.date}</td> {/* Increased font size */}
               <td style={{ fontSize: '16px' }}>{item.name}</td>
               <td style={{ fontSize: '16px' }}>{item.time}</td>
               <td style={{ fontSize: '16px' }}>{item.location}</td>
@@ -742,8 +709,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
               <td
                 style={{
                   fontSize: '16px',
-                  color:
-                    item.isInterventionUpdated === 'Yes' ? 'green' : 'inherit',
+                  color: item.isInterventionUpdated === 'Yes' ? 'green' : 'inherit',
                 }}
               >
                 {item.interventions}
@@ -752,19 +718,11 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
               </td>
               <td style={{ fontSize: '16px' }}>
                 <select
-                  value={
-                    item.hir.toLowerCase() === 'yes'
-                      ? 'Yes'
-                      : item.hir.toLowerCase() === 'no'
-                      ? 'No'
-                      : item.hir
-                  }
-                  onChange={(e) =>
-                    handleUpdateCSV(i, e.target.value, name, 'hir')
-                  }
+                  value={item.hir.toLowerCase() === 'yes' ? 'Yes' : item.hir.toLowerCase() === 'no' ? 'No' : item.hir}
+                  onChange={(e) => handleUpdateCSV(i, e.target.value, name, 'hir')}
                 >
-                  <option value='Yes'>Yes</option>
-                  <option value='No'>No</option>
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
                 </select>
               </td>
               <td style={{ fontSize: '16px' }}>{item.injury}</td>
@@ -777,29 +735,21 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                       ? 'No'
                       : item.hospital
                   }
-                  onChange={(e) =>
-                    handleUpdateCSV(i, e.target.value, name, 'hospital')
-                  }
+                  onChange={(e) => handleUpdateCSV(i, e.target.value, name, 'hospital')}
                 >
-                  <option value='Yes'>Yes</option>
-                  <option value='No'>No</option>
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
                 </select>
               </td>
               <td style={{ fontSize: '16px' }}>
                 <select
                   value={
-                    item.ptRef.toLowerCase() === 'yes'
-                      ? 'Yes'
-                      : item.ptRef.toLowerCase() === 'no'
-                      ? 'No'
-                      : item.ptRef
+                    item.ptRef.toLowerCase() === 'yes' ? 'Yes' : item.ptRef.toLowerCase() === 'no' ? 'No' : item.ptRef
                   }
-                  onChange={(e) =>
-                    handleUpdateCSV(i, e.target.value, name, 'ptRef')
-                  }
+                  onChange={(e) => handleUpdateCSV(i, e.target.value, name, 'ptRef')}
                 >
-                  <option value='Yes'>Yes</option>
-                  <option value='No'>No</option>
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
                 </select>
               </td>
               <td style={{ fontSize: '16px' }}>
@@ -811,19 +761,14 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                       ? 'No'
                       : item.physicianRef
                   }
-                  onChange={(e) =>
-                    handleUpdateCSV(i, e.target.value, name, 'physicianRef')
-                  }
+                  onChange={(e) => handleUpdateCSV(i, e.target.value, name, 'physicianRef')}
                 >
-                  <option value='Yes'>Yes</option>
-                  <option value='No'>No</option>
-                  <option value='N/A'>N/A</option>
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                  <option value="N/A">N/A</option>
                 </select>
               </td>
-              <td
-                className={item.poaContacted === 'No' ? styles.cellRed : ''}
-                style={{ fontSize: '16px' }}
-              >
+              <td className={item.poaContacted === 'No' ? styles.cellRed : ''} style={{ fontSize: '16px' }}>
                 <select
                   value={
                     item.poaContacted.toLowerCase() === 'yes'
@@ -832,12 +777,10 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                       ? 'No'
                       : item.poaContacted
                   }
-                  onChange={(e) =>
-                    handleUpdateCSV(i, e.target.value, name, 'poaContacted')
-                  }
+                  onChange={(e) => handleUpdateCSV(i, e.target.value, name, 'poaContacted')}
                 >
-                  <option value='Yes'>Yes</option>
-                  <option value='No'>No</option>
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
                 </select>
               </td>
               <td style={{ fontSize: '16px' }}>
@@ -849,18 +792,13 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                       ? 'No'
                       : item.incidentReport
                   }
-                  onChange={(e) =>
-                    handleUpdateCSV(i, e.target.value, name, 'incidentReport')
-                  }
+                  onChange={(e) => handleUpdateCSV(i, e.target.value, name, 'incidentReport')}
                 >
-                  <option value='Yes'>Yes</option>
-                  <option value='No'>No</option>
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
                 </select>
               </td>
-              <td
-                className={item.postFallNotes < 3 ? styles.cellRed : ''}
-                style={{ fontSize: '16px' }}
-              >
+              <td className={item.postFallNotes < 3 ? styles.cellRed : ''} style={{ fontSize: '16px' }}>
                 {item.postFallNotes}
               </td>
             </tr>
@@ -872,10 +810,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
           <div className={styles.modalContent}>
             <div>
               <h2>Edit Interventions</h2>
-              <textarea
-                value={currentIntervention}
-                onChange={(e) => setCurrentIntervention(e.target.value)}
-              />
+              <textarea value={currentIntervention} onChange={(e) => setCurrentIntervention(e.target.value)} />
               <br />
               <button onClick={handleSubmitIntervention}>Submit</button>
               <button onClick={() => setIsModalOpen(false)}>Cancel</button>
