@@ -19,6 +19,10 @@ Chart.register(ArcElement, PointElement, LineElement);
 export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   const [data, setData] = useState([]);
   const [threeMonthData, setThreeMonthData] = useState({});
+  const [desiredMonth, setDesiredMonth] = useState('October');
+  // console.log('data');
+  // console.log(data);
+  // console.log(currentMonth);
   // const [isLoading, setIsLoading] = useState(true);
   // console.log(threeMonthData);
   function expandedLog(item, maxDepth = 100, depth = 0) {
@@ -38,7 +42,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   }
 
   const navigate = useNavigate();
-  const months = {
+  const months_forward = {
     10: 'October',
     11: 'November',
     12: 'December',
@@ -52,6 +56,22 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     '08': 'August',
     '09': 'September',
   };
+
+  const months_backword = {
+    October: '10',
+    November: '11',
+    December: '12',
+    January: '01',
+    February: '02',
+    March: '03',
+    April: '04',
+    May: '05',
+    June: '06',
+    July: '07',
+    August: '08',
+    September: '09',
+  };
+
   const years = Array.from({ length: 5 }, (_, i) => (new Date().getFullYear() - i).toString());
 
   // State variables
@@ -128,6 +148,11 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   const [currentIntervention, setCurrentIntervention] = useState('');
   const [currentRowIndex, setCurrentRowIndex] = useState(null);
 
+  const handleMonthChange = (event) => {
+    const selectedMonth = event.target.value === '10' ? 'October' : 'November';
+    setDesiredMonth(selectedMonth);
+  };
+
   const handleEditIntervention = (index) => {
     setCurrentIntervention(data[index].interventions);
     setCurrentRowIndex(index);
@@ -184,7 +209,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
       case '3months':
         setGaugeChart(false);
         setLineChartData({
-          labels: Object.keys(threeMonthData).map((key) => months[key]),
+          labels: Object.keys(threeMonthData).map((key) => months_forward[key]),
           datasets: [
             {
               label: 'Number of Falls',
@@ -262,7 +287,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     var hirCount = 0;
 
     data.forEach((fall) => {
-      if (fall.hir.toLowerCase() === 'yes') {
+      if (fall.hir?.toLowerCase() === 'yes') {
         hirCount++;
       }
     });
@@ -334,7 +359,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
 
     if (selectedUnit !== 'allUnits') {
       filteredData = filteredData.filter(
-        (fall) => fall.homeUnit.trim().toLowerCase() === selectedUnit.trim().toLowerCase()
+        (fall) => fall.homeUnit.trim()?.toLowerCase() === selectedUnit.trim().toLowerCase()
       );
     }
 
@@ -427,7 +452,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
 
       // Loop to split the canvas and add to each page
       while (position < imgHeight) {
-        pdf.addImage(imgData, 'PNG', 0, -position, imgWidth, imgHeight, 'FAST');
+        pdf.addImage(imgData, 'PNG', 0, -position, imgWidth, imgHeight);
 
         position += pageHeight;
 
@@ -485,10 +510,10 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   useEffect(() => {
     // Start measuring fetch data time
     performance.mark('start-fetch-data');
-    const dataRef = ref(db, `/${name}/2024/10`); // Firebase ref for this specific dashboard
+    const dataRef = ref(db, `/${name}/2024/${months_backword[desiredMonth]}`); // Firebase ref for this specific dashboard
     // const dataRef = ref(db, name);
     const currentYear = 2024;
-    const currentMonth = 10; // current month 
+    const currentMonth = 10; // current month
     const pastThreeMonths = [];
 
     for (let i = 1; i <= 3; i++) {
@@ -561,7 +586,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     return () => {
       off(dataRef, listener); // Cleanup listener on unmount
     };
-  }, []);
+  }, [desiredMonth]);
 
   useEffect(() => {
     updateFallsChart();
@@ -666,7 +691,13 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
         </div>
       </div>
       <div className={styles['table-header']}>
-        <h2>Falls Tracking Table: October 2024</h2>
+        <div className={styles['header']}>
+          <h2>Falls Tracking Table: {desiredMonth} 2024</h2>
+          <select onChange={handleMonthChange}>
+            <option value="10">October</option>
+            <option value="11"> November</option>
+          </select>
+        </div>
         <div>
           <button className={styles['download-button']} onClick={handleSaveCSV}>
             Download as CSV
@@ -723,7 +754,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
               </td>
               <td style={{ fontSize: '16px' }}>
                 <select
-                  value={item.hir.toLowerCase() === 'yes' ? 'Yes' : item.hir.toLowerCase() === 'no' ? 'No' : item.hir}
+                  value={item.hir?.toLowerCase() === 'yes' ? 'Yes' : item.hir?.toLowerCase() === 'no' ? 'No' : item.hir}
                   onChange={(e) => handleUpdateCSV(i, e.target.value, name, 'hir')}
                 >
                   <option value="Yes">Yes</option>
@@ -734,9 +765,9 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
               <td style={{ fontSize: '16px' }}>
                 <select
                   value={
-                    item.hospital.toLowerCase() === 'yes'
+                    item.hospital?.toLowerCase() === 'yes'
                       ? 'Yes'
-                      : item.hospital.toLowerCase() === 'no'
+                      : item.hospital?.toLowerCase() === 'no'
                       ? 'No'
                       : item.hospital
                   }
@@ -749,7 +780,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
               <td style={{ fontSize: '16px' }}>
                 <select
                   value={
-                    item.ptRef.toLowerCase() === 'yes' ? 'Yes' : item.ptRef.toLowerCase() === 'no' ? 'No' : item.ptRef
+                    item.ptRef?.toLowerCase() === 'yes' ? 'Yes' : item.ptRef?.toLowerCase() === 'no' ? 'No' : item.ptRef
                   }
                   onChange={(e) => handleUpdateCSV(i, e.target.value, name, 'ptRef')}
                 >
@@ -760,9 +791,9 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
               <td style={{ fontSize: '16px' }}>
                 <select
                   value={
-                    item.physicianRef.toLowerCase() === 'yes'
+                    item.physicianRef?.toLowerCase() === 'yes'
                       ? 'Yes'
-                      : item.physicianRef.toLowerCase() === 'no'
+                      : item.physicianRef?.toLowerCase() === 'no'
                       ? 'No'
                       : item.physicianRef
                   }
@@ -776,9 +807,9 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
               <td className={item.poaContacted === 'No' ? styles.cellRed : ''} style={{ fontSize: '16px' }}>
                 <select
                   value={
-                    item.poaContacted.toLowerCase() === 'yes'
+                    item.poaContacted?.toLowerCase() === 'yes'
                       ? 'Yes'
-                      : item.poaContacted.toLowerCase() === 'no'
+                      : item.poaContacted?.toLowerCase() === 'no'
                       ? 'No'
                       : item.poaContacted
                   }
@@ -791,9 +822,9 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
               <td style={{ fontSize: '16px' }}>
                 <select
                   value={
-                    item.incidentReport.toLowerCase() === 'yes'
+                    item.incidentReport?.toLowerCase() === 'yes'
                       ? 'Yes'
-                      : item.incidentReport.toLowerCase() === 'no'
+                      : item.incidentReport?.toLowerCase() === 'no'
                       ? 'No'
                       : item.incidentReport
                   }
