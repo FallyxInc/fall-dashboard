@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 // import { threeData } from '../data/TableData';
 import * as Papa from 'papaparse';
 import { saveAs } from 'file-saver';
-import { Chart, ArcElement, PointElement, LineElement } from 'chart.js';
+import { Chart, ArcElement, PointElement, LineElement, plugins } from 'chart.js';
 // import { collection, addDoc } from 'firebase/firestore';
 import { ref, onValue, off, get, update } from 'firebase/database';
 import { db } from '../firebase';
@@ -38,20 +38,20 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   }
 
   const navigate = useNavigate();
-  const months = [
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December',
-  ];
+  const months = {
+    10: 'October',
+    11: 'November',
+    12: 'December',
+    '01': 'January',
+    '02': 'February',
+    '03': 'March',
+    '04': 'April',
+    '05': 'May',
+    '06': 'June',
+    '07': 'July',
+    '08': 'August',
+    '09': 'September',
+  };
   const years = Array.from({ length: 5 }, (_, i) => (new Date().getFullYear() - i).toString());
 
   // State variables
@@ -89,6 +89,9 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
           stepSize: 5,
         },
       },
+    },
+    plugins: {
+      legend: { display: false },
     },
   };
   const [analysisChartData, setAnalysisChartData] = useState({
@@ -180,17 +183,12 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
         break;
       case '3months':
         setGaugeChart(false);
-        const newData = [
-          threeMonthData['07']?.length || 0, // 7月的数据长度
-          threeMonthData['08']?.length || 0, // 8月的数据长度
-          threeMonthData['09']?.length || 0, // 9月的数据长度
-        ];
         setLineChartData({
-          labels: ['July', 'August', 'September'],
+          labels: Object.keys(threeMonthData).map((key) => months[key]),
           datasets: [
             {
               label: 'Number of Falls',
-              data: newData,
+              data: Object.values(threeMonthData).map((data) => data.length),
               borderColor: 'rgb(76, 175, 80)',
               tension: 0.1,
             },
@@ -200,10 +198,11 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
       case '6months':
         setGaugeChart(false);
         setLineChartData({
-          labels: months.slice(2, 8),
+          // labels: months.slice(2, 8),
+          labels: ['April', 'May', 'June', 'July', 'August', 'September'],
           datasets: [
             {
-              label: ['April', 'May', 'June', 'July', 'August', 'September'],
+              // label: ['April', 'May', 'June', 'July', 'August', 'September'],
               data: [, , , threeMonthData['07'].length, threeMonthData['08'].length, threeMonthData['09'].length],
               borderColor: 'rgb(76, 175, 80)',
               tension: 0.1,
