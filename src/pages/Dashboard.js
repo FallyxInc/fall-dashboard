@@ -488,7 +488,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     const dataRef = ref(db, `/${name}/2024/10`); // Firebase ref for this specific dashboard
     // const dataRef = ref(db, name);
     const currentYear = 2024;
-    const currentMonth = 10; // 当前月份是 10 月
+    const currentMonth = 10; // current month 
     const pastThreeMonths = [];
 
     for (let i = 1; i <= 3; i++) {
@@ -496,7 +496,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
       if (month > 0) {
         pastThreeMonths.push({ year: currentYear, month: String(month).padStart(2, '0') });
       } else {
-        // 如果月份小于 1，则退到上一年
+        // if month less than one, return last year
         pastThreeMonths.push({ year: currentYear - 1, month: String(12 + month).padStart(2, '0') });
       }
     }
@@ -594,7 +594,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
             >
               <option value="current">This Month</option>
               <option value="3months">Past 3 Months</option>
-              <option value="6months">Past 6 Months</option>
+              {/* <option value="6months">Past 6 Months</option> */}
             </select>
             {gaugeChart ? (
               <div id="gaugeContainer">
