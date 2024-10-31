@@ -3,7 +3,7 @@ import { Doughnut, Bar, Line } from 'react-chartjs-2';
 // import "../styles/Dashboard.css"
 import styles from '../styles/Dashboard.module.css';
 import { useNavigate } from 'react-router-dom';
-import { threeData } from '../data/TableData';
+// import { threeData } from '../data/TableData';
 import * as Papa from 'papaparse';
 import { saveAs } from 'file-saver';
 import { Chart, ArcElement, PointElement, LineElement } from 'chart.js';
@@ -18,8 +18,10 @@ Chart.register(ArcElement, PointElement, LineElement);
 
 export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   const [data, setData] = useState([]);
+  const [threeMonthData, setThreeMonthData] = useState({});
+  console.log(data);
   // const [isLoading, setIsLoading] = useState(true);
-
+  // console.log(threeMonthData);
   function expandedLog(item, maxDepth = 100, depth = 0) {
     if (depth > maxDepth) {
       console.log(item);
@@ -51,9 +53,10 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     'November',
     'December',
   ];
+  const years = Array.from({ length: 5 }, (_, i) => (new Date().getFullYear() - i).toString());
 
   // State variables
-  const threeMonthData = threeData;
+  // const threeMonthData = threeData;
   // const [tableData, setTableData] = useState(data);
 
   // console.log(tableData);
@@ -178,22 +181,11 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
         break;
       case '3months':
         setGaugeChart(false);
-        let newData = [0, 0, 0];
-        // Aggregate falls counts for the past three months
-        threeMonthData.forEach((item) => {
-          const month = item.date.split('-')[1];
-          switch (month) {
-            case 'Jul':
-              newData[0]++;
-              break;
-            case 'Aug':
-              newData[1]++;
-              break;
-            case 'Sep':
-              newData[2]++;
-              break;
-          }
-        });
+        const newData = [
+          threeMonthData['07']?.length || 0, // 7月的数据长度
+          threeMonthData['08']?.length || 0, // 8月的数据长度
+          threeMonthData['09']?.length || 0, // 9月的数据长度
+        ];
         setLineChartData({
           labels: ['July', 'August', 'September'],
           datasets: [
@@ -340,7 +332,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
 
   const updateAnalysisChart = () => {
     var selectedUnit = analysisUnit;
-    var filteredData = analysisTimeRange === '3months' ? threeMonthData : data;
+    var filteredData = analysisTimeRange === '3months' ? Object.values(threeMonthData).flat() : data;
 
     if (selectedUnit !== 'allUnits') {
       filteredData = filteredData.filter(
@@ -416,14 +408,6 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
       const pageWidth = pdf.internal.pageSize.width;
       const totalHeight = tableRef.current.scrollHeight;
       tableRef.current.scrollTop = totalHeight - pageHeight;
-      // console.log('page height');
-      // console.log(pageHeight);
-      // console.log('page width');
-      // console.log(pageWidth);
-      // console.log('total height');
-      // console.log(totalHeight);
-      // console.log('total width');
-      // console.log(tableRef.current.scrollWidth);
       const canvas = await html2canvas(tableRef.current, {
         scale: 2,
         width: tableRef.current.scrollWidth,
@@ -462,26 +446,6 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     const csv = Papa.unparse(data);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     saveAs(blob, 'updated_fall_data.csv');
-  };
-
-  const AddNoUpdate = async (name) => {
-    const igghRef = ref(db, `/${name}`);
-    const snapshot = await get(igghRef);
-
-    if (snapshot.val()) {
-      const updates = {};
-
-      // 遍历所有的 row-X 节点
-      snapshot.forEach((childSnapshot) => {
-        const rowKey = childSnapshot.key;
-        console.log(rowKey);
-        updates[`/${name}/${rowKey}/isInterventionUpdated`] = 'No';
-      });
-      console.log(updates);
-      // 批量更新所有节点
-      await update(ref(db), updates);
-      console.log('Successfully updated all rows');
-    }
   };
 
   const handleUpdateCSV = (index, newValue, name, changeType) => {
@@ -523,8 +487,49 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   useEffect(() => {
     // Start measuring fetch data time
     performance.mark('start-fetch-data');
-    const dataRef = ref(db, `/${name}`); // Firebase ref for this specific dashboard
+    const dataRef = ref(db, `/${name}/2024/10`); // Firebase ref for this specific dashboard
     // const dataRef = ref(db, name);
+    const currentYear = 2024;
+    const currentMonth = 10; // 当前月份是 10 月
+    const pastThreeMonths = [];
+
+    for (let i = 1; i <= 3; i++) {
+      const month = currentMonth - i;
+      if (month > 0) {
+        pastThreeMonths.push({ year: currentYear, month: String(month).padStart(2, '0') });
+      } else {
+        // 如果月份小于 1，则退到上一年
+        pastThreeMonths.push({ year: currentYear - 1, month: String(12 + month).padStart(2, '0') });
+      }
+    }
+
+    console.log('pastThreeMonths');
+    console.log(pastThreeMonths);
+
+    const allFallsData = { '07': [], '08': [], '09': [] };
+
+    pastThreeMonths.forEach(({ year, month }) => {
+      const monthRef = ref(db, `/${name}/${year}/${month}`);
+
+      const listener = onValue(monthRef, (snapshot) => {
+        if (snapshot.exists()) {
+          const fallsData = snapshot.val();
+          const monthData = Object.keys(fallsData).map((key) => fallsData[key]);
+          // console.log('month data');
+          // console.log(monthData);
+          // console.log('month');
+          // console.log(month);
+          allFallsData[month] = monthData; // 存储每个月的数据
+          // console.log('allFallsData');
+          // console.log(allFallsData);
+          setThreeMonthData({ ...allFallsData });
+        } else {
+          allFallsData[month] = []; // 没有数据时设为空数组
+        }
+      });
+
+      return () => off(monthRef, listener);
+    });
 
     const listener = onValue(dataRef, (snapshot) => {
       if (snapshot.exists()) {
@@ -539,6 +544,8 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
 
         // Object.keys(fetchedData) will give you all the keys, i.e., 'row-0', 'row-1', etc.
         // Sort the keys and then map them to the corresponding values
+        // console.log(Object.keys(fetchedData))
+        console.log(fetchedData);
         const sortedData = Object.keys(fetchedData)
           .sort((a, b) => {
             const rowA = parseInt(a.split('-')[1], 10); // Extract number from 'row-x'
