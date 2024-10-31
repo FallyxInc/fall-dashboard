@@ -19,7 +19,6 @@ Chart.register(ArcElement, PointElement, LineElement);
 export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   const [data, setData] = useState([]);
   const [threeMonthData, setThreeMonthData] = useState({});
-  console.log(data);
   // const [isLoading, setIsLoading] = useState(true);
   // console.log(threeMonthData);
   function expandedLog(item, maxDepth = 100, depth = 0) {
@@ -205,7 +204,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
           datasets: [
             {
               label: ['April', 'May', 'June', 'July', 'August', 'September'],
-              data: [45, 36, 30, 46, 43, 43],
+              data: [, , , threeMonthData['07'].length, threeMonthData['08'].length, threeMonthData['09'].length],
               borderColor: 'rgb(76, 175, 80)',
               tension: 0.1,
             },
