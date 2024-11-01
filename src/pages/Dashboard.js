@@ -186,13 +186,20 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
       });
   };
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-  };
+  // const handleCloseModal = () => {
+  //   setIsModalOpen(false);
+  // };
 
   const updateFallsChart = () => {
     const timeRange = fallsTimeRange;
     const currentFalls = countTotalFalls();
+    let newData;
+
+    if (currentFalls >= goal) {
+      newData = [goal, 0];
+    } else {
+      newData = [currentFalls, goal - currentFalls];
+    }
 
     switch (timeRange) {
       case 'current':
@@ -200,7 +207,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
         setGaugeChartData({
           datasets: [
             {
-              data: [currentFalls, goal - currentFalls],
+              data: newData,
               backgroundColor: ['rgba(76, 175, 80, 0.8)', 'rgba(200, 200, 200, 0.2)'],
               circumference: 180,
               rotation: 270,
