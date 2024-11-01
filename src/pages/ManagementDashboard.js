@@ -56,7 +56,7 @@ export default function ManagementDashboard() {
     await Promise.all(
       homes.map((home) => {
         return new Promise((resolve) => {
-          const homeRef = ref(db, `/${home}/2024/10`); // Reference to the home in Firebase
+          const homeRef = ref(db, `/${home}/2024/11`); // Reference to the home in Firebase
 
           onValue(homeRef, (snapshot) => {
             const data = snapshot.val();
@@ -108,7 +108,7 @@ export default function ManagementDashboard() {
       let popupData = [];
 
       homes.forEach((home) => {
-        const fallsRef = ref(db, `/${home}/2024/10`);
+        const fallsRef = ref(db, `/${home}/2024/11`);
         onValue(fallsRef, (snapshot) => {
           const data = snapshot.val();
           if (data) {
@@ -163,7 +163,7 @@ export default function ManagementDashboard() {
       };
 
       homes.forEach((home) => {
-        const fallsRef = ref(db, `/${home}/2024/10`);
+        const fallsRef = ref(db, `/${home}/2024/11`);
         onValue(fallsRef, (snapshot) => {
           const data = snapshot.val();
           if (data) {

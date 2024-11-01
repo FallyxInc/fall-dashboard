@@ -20,11 +20,13 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   const [data, setData] = useState([]);
   const [threeMonthData, setThreeMonthData] = useState({});
   const [desiredMonth, setDesiredMonth] = useState('October');
+
   // console.log('data');
   // console.log(data);
   // console.log(currentMonth);
   // const [isLoading, setIsLoading] = useState(true);
   // console.log(threeMonthData);
+
   function expandedLog(item, maxDepth = 100, depth = 0) {
     if (depth > maxDepth) {
       console.log(item);
@@ -209,11 +211,15 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
       case '3months':
         setGaugeChart(false);
         setLineChartData({
-          labels: Object.keys(threeMonthData).map((key) => months_forward[key]),
+          labels: Object.keys(threeMonthData)
+            .sort()
+            .map((key) => months_forward[key]),
           datasets: [
             {
               label: 'Number of Falls',
-              data: Object.values(threeMonthData).map((data) => data.length),
+              data: Object.values(threeMonthData)
+                .sort()
+                .map((data) => data.length),
               borderColor: 'rgb(76, 175, 80)',
               tension: 0.1,
             },
@@ -513,10 +519,10 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     const dataRef = ref(db, `/${name}/2024/${months_backword[desiredMonth]}`); // Firebase ref for this specific dashboard
     // const dataRef = ref(db, name);
     const currentYear = 2024;
-    const currentMonth = 10; // current month
+    const currentMonth = parseInt(months_backword[desiredMonth]); // current month
     const pastThreeMonths = [];
 
-    for (let i = 1; i <= 3; i++) {
+    for (let i = 3; i >= 1; i--) {
       const month = currentMonth - i;
       if (month > 0) {
         pastThreeMonths.push({ year: currentYear, month: String(month).padStart(2, '0') });
@@ -526,10 +532,15 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
       }
     }
 
-    console.log('pastThreeMonths');
-    console.log(pastThreeMonths);
+    // console.log('pastThreeMonths');
+    // console.log(pastThreeMonths);
 
-    const allFallsData = { '07': [], '08': [], '09': [] };
+    const allFallsData = pastThreeMonths.sort().reduce((acc, pair) => {
+      acc[pair.month] = [];
+      return acc;
+    }, {});
+    // console.log('allfalldata');
+    // console.log(allFallsData);
 
     pastThreeMonths.forEach(({ year, month }) => {
       const monthRef = ref(db, `/${name}/${year}/${month}`);
@@ -538,11 +549,11 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
         if (snapshot.exists()) {
           const fallsData = snapshot.val();
           const monthData = Object.keys(fallsData).map((key) => fallsData[key]);
+          allFallsData[month] = monthData; // 存储每个月的数据
           // console.log('month data');
           // console.log(monthData);
           // console.log('month');
           // console.log(month);
-          allFallsData[month] = monthData; // 存储每个月的数据
           // console.log('allFallsData');
           // console.log(allFallsData);
           setThreeMonthData({ ...allFallsData });
@@ -555,6 +566,8 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     });
 
     const listener = onValue(dataRef, (snapshot) => {
+      console.log('snapshot');
+
       if (snapshot.exists()) {
         const fetchedData = snapshot.val();
 
@@ -568,7 +581,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
         // Object.keys(fetchedData) will give you all the keys, i.e., 'row-0', 'row-1', etc.
         // Sort the keys and then map them to the corresponding values
         // console.log(Object.keys(fetchedData))
-        console.log(fetchedData);
+        // console.log(fetchedData);
         const sortedData = Object.keys(fetchedData)
           .sort((a, b) => {
             const rowA = parseInt(a.split('-')[1], 10); // Extract number from 'row-x'
@@ -579,6 +592,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
 
         setData(sortedData); // Update state with the sorted data
       } else {
+        setData([]);
         console.log(`${name} data not found.`);
       }
     });
@@ -591,7 +605,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   useEffect(() => {
     updateFallsChart();
     // console.log('Falls Chart');
-  }, [fallsTimeRange, data]);
+  }, [fallsTimeRange, data, desiredMonth]);
 
   useEffect(() => {
     updateAnalysisChart();
