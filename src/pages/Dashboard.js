@@ -13,6 +13,15 @@ import { db } from '../firebase';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import {
+  markPostFallNotes,
+  countFallsByExactInjury,
+  countFallsByLocation,
+  countFallsByHIR,
+  getMonthFromTimeRange,
+  getTimeShift,
+  countResidentsWithRecurringFalls,
+} from '../utils/DashboardUtils';
 
 Chart.register(ArcElement, PointElement, LineElement);
 
@@ -171,7 +180,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     updatedData[currentRowIndex].interventions = currentIntervention;
     updatedData[currentRowIndex].isInterventionUpdated = 'Yes';
 
-    const rowRef = ref(db, `/${name}/row-${currentRowIndex}`);
+    const rowRef = ref(db, `/${name}/2024/${months_backword[desiredMonth]}/row-${currentRowIndex}`);
     update(rowRef, {
       interventions: currentIntervention,
       isInterventionUpdated: 'Yes',
@@ -185,10 +194,6 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
         console.error('Error updating intervention:', error);
       });
   };
-
-  // const handleCloseModal = () => {
-  //   setIsModalOpen(false);
-  // };
 
   const updateFallsChart = () => {
     const timeRange = fallsTimeRange;
@@ -266,104 +271,6 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     });
 
     return timeOfDayCounts;
-  }
-
-  function countFallsByExactInjury(data) {
-    var injuryCounts = {};
-
-    data.forEach((fall) => {
-      var injury = fall.injury;
-
-      if (injuryCounts[injury]) {
-        injuryCounts[injury]++;
-      } else {
-        injuryCounts[injury] = 1;
-      }
-    });
-
-    return injuryCounts;
-  }
-
-  function countFallsByLocation(data) {
-    var locationCounts = {};
-    data.forEach((fall) => {
-      if (locationCounts[fall.location]) {
-        locationCounts[fall.location]++;
-      } else {
-        locationCounts[fall.location] = 1;
-      }
-    });
-    return locationCounts;
-  }
-
-  function countFallsByHIR(data) {
-    var hirCount = 0;
-
-    data.forEach((fall) => {
-      if (fall.hir?.toLowerCase() === 'yes') {
-        hirCount++;
-      }
-    });
-
-    return hirCount;
-  }
-
-  function getMonthFromTimeRange(timeRange) {
-    // Example logic for determining the month label
-    // Replace this logic with the actual month logic you are using
-    var currentMonth = 'August 2024'; // You can dynamically determine this based on the current time or input data
-    if (timeRange === '3months') {
-      return 'June - August 2024';
-    } else if (timeRange === '6months') {
-      return 'March - August 2024';
-    } else {
-      return currentMonth;
-    }
-  }
-
-  function getTimeShift(fallTime) {
-    var parts = fallTime.split(':');
-    var hours = parseInt(parts[0], 10);
-    var minutes = parseInt(parts[1], 10);
-
-    // Convert time to minutes since midnight for easier comparison
-    var totalMinutes = hours * 60 + minutes;
-
-    // Determine the shift based on time ranges
-    if (totalMinutes >= 390 && totalMinutes <= 870) {
-      // 6:30 AM to 2:30 PM
-      return 'Morning';
-    } else if (totalMinutes >= 871 && totalMinutes <= 1350) {
-      // 2:31 PM to 10:30 PM
-      return 'Evening';
-    } else {
-      // 10:31 PM to 6:30 AM
-      return 'Night';
-    }
-  }
-
-  function countResidentsWithRecurringFalls(data) {
-    var residentFallCounts = {};
-
-    // Count falls for each resident
-    data.forEach((fall) => {
-      var residentName = fall.name;
-      if (residentFallCounts[residentName]) {
-        residentFallCounts[residentName]++;
-      } else {
-        residentFallCounts[residentName] = 1;
-      }
-    });
-
-    // Only include residents with more than one fall
-    var recurringFalls = {};
-    for (var resident in residentFallCounts) {
-      if (residentFallCounts[resident] > 1) {
-        recurringFalls[resident] = residentFallCounts[resident];
-      }
-    }
-
-    return recurringFalls;
   }
 
   const updateAnalysisChart = () => {
@@ -485,7 +392,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   };
 
   const handleUpdateCSV = (index, newValue, name, changeType) => {
-    const rowRef = ref(db, `/${name}/row-${index}`);
+    const rowRef = ref(db, `/${name}/2024/${months_backword[desiredMonth]}/row-${index}`);
     let updates = {};
 
     switch (changeType) {
@@ -597,7 +504,9 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
           })
           .map((key) => fetchedData[key]); // Map sorted keys to the values
 
-        setData(sortedData); // Update state with the sorted data
+        const updatedData = markPostFallNotes(sortedData);
+
+        setData(updatedData); // Update state with the sorted data
       } else {
         setData([]);
         console.log(`${name} data not found.`);
@@ -728,11 +637,6 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
           </button>
         </div>
       </div>
-
-      {/* <di>
-        <button onClick={() => AddNoUpdate("wellington")}>Update</button>
-      </di> */}
-
       <table style={{ width: '100%' }}>
         {/* Set the table width to 100% to make it wider */}
         <thead>
@@ -855,7 +759,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                   <option value="No">No</option>
                 </select>
               </td>
-              <td className={item.postFallNotes < 3 ? styles.cellRed : ''} style={{ fontSize: '16px' }}>
+              <td className={item.postFallNotesColor === 'red' ? styles.cellRed : ''} style={{ fontSize: '16px' }}>
                 {item.postFallNotes}
               </td>
             </tr>
