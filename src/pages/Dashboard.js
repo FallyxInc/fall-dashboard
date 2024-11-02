@@ -21,6 +21,7 @@ import {
   getMonthFromTimeRange,
   getTimeShift,
   countResidentsWithRecurringFalls,
+  countFallsByTimeOfDay,
 } from '../utils/DashboardUtils';
 
 Chart.register(ArcElement, PointElement, LineElement);
@@ -159,6 +160,10 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   const [currentIntervention, setCurrentIntervention] = useState('');
   const [currentRowIndex, setCurrentRowIndex] = useState(null);
 
+  const [currentCauseOfFall, setCurrentCauseOfFall] = useState('');
+  const [currentCauseRowIndex, setCurrentCauseRowIndex] = useState(null);
+  const [isCauseModalOpen, setIsCauseModalOpen] = useState(false);
+
   const handleMonthChange = (event) => {
     const selectedMonth = event.target.value === '10' ? 'October' : 'November';
     setDesiredMonth(selectedMonth);
@@ -192,6 +197,34 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
       })
       .catch((error) => {
         console.error('Error updating intervention:', error);
+      });
+  };
+
+  const handleEditCauseOfFall = (index) => {
+    setCurrentCauseOfFall(data[index].cause);
+    setCurrentCauseRowIndex(index);
+    setIsCauseModalOpen(true);
+  };
+
+  const handleSubmitCauseOfFall = () => {
+    if (currentCauseOfFall === data[currentCauseRowIndex].cause) {
+      setIsCauseModalOpen(false);
+      return;
+    }
+
+    const updatedData = [...data];
+    updatedData[currentCauseRowIndex].cause = currentCauseOfFall;
+    updatedData[currentCauseRowIndex].isCauseUpdated = 'Yes';
+
+    const rowRef = ref(db, `/${name}/2024/${months_backword[desiredMonth]}/row-${currentCauseRowIndex}`);
+    update(rowRef, { cause: currentCauseOfFall, isCauseUpdated: 'Yes' })
+      .then(() => {
+        console.log('Cause of fall updated successfully');
+        setData(updatedData);
+        setIsCauseModalOpen(false);
+      })
+      .catch((error) => {
+        console.error('Error updating cause of fall:', error);
       });
   };
 
@@ -262,16 +295,16 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     return data.length;
   }
 
-  function countFallsByTimeOfDay(data) {
-    var timeOfDayCounts = { Morning: 0, Evening: 0, Night: 0 };
+  // function countFallsByTimeOfDay(data) {
+  //   var timeOfDayCounts = { Morning: 0, Evening: 0, Night: 0 };
 
-    data.forEach((fall) => {
-      var shift = getTimeShift(fall.time);
-      timeOfDayCounts[shift]++;
-    });
+  //   data.forEach((fall) => {
+  //     var shift = getTimeShift(fall.time);
+  //     timeOfDayCounts[shift]++;
+  //   });
 
-    return timeOfDayCounts;
-  }
+  //   return timeOfDayCounts;
+  // }
 
   const updateAnalysisChart = () => {
     var selectedUnit = analysisUnit;
@@ -666,7 +699,12 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
               <td style={{ fontSize: '16px' }}>{item.time}</td>
               <td style={{ fontSize: '16px' }}>{item.location}</td>
               <td style={{ fontSize: '16px' }}>{item.homeUnit}</td>
-              <td style={{ fontSize: '16px' }}>{item.cause}</td>
+              {/* <td style={{ fontSize: '16px' }}>{item.cause}</td> */}
+              <td style={{ fontSize: '16px', color: item.isCauseUpdated === 'Yes' ? 'green' : 'inherit' }}>
+                {item.cause}
+                <br />
+                <button onClick={() => handleEditCauseOfFall(i)}>Edit</button>
+              </td>
               <td
                 style={{
                   fontSize: '16px',
@@ -775,6 +813,19 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
               <br />
               <button onClick={handleSubmitIntervention}>Submit</button>
               <button onClick={() => setIsModalOpen(false)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {isCauseModalOpen && (
+        <div className={styles.modal}>
+          <div className={styles.modalContent}>
+            <div>
+              <h2>Edit Cause of Falls</h2>
+              <textarea value={currentCauseOfFall} onChange={(e) => setCurrentCauseOfFall(e.target.value)} />
+              <br />
+              <button onClick={handleSubmitCauseOfFall}>Submit</button>
+              <button onClick={() => setIsCauseModalOpen(false)}>Cancel</button>
             </div>
           </div>
         </div>

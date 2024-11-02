@@ -124,3 +124,15 @@ export function countResidentsWithRecurringFalls(data) {
 
   return recurringFalls;
 }
+
+export function countFallsByTimeOfDay(data) {
+  var timeOfDayCounts = { Morning: 0, Evening: 0, Night: 0 };
+
+  data.forEach((fall) => {
+    var shift = getTimeShift(fall.time);
+    timeOfDayCounts[shift]++;
+    
+  });
+
+  return timeOfDayCounts;
+}
