@@ -29,7 +29,7 @@ Chart.register(ArcElement, PointElement, LineElement);
 export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   const [data, setData] = useState([]);
   const [threeMonthData, setThreeMonthData] = useState({});
-  const [desiredMonth, setDesiredMonth] = useState('October');
+  const [desiredMonth, setDesiredMonth] = useState('November');
 
   // console.log('data');
   // console.log(data);
