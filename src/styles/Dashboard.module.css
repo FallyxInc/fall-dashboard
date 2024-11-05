@@ -43,6 +43,7 @@
   /* height: 95dvh; */
   /* height: auto; */
   /* overflow: scroll; */
+  overflow-x: auto;
 }
 
 h1,
@@ -106,7 +107,6 @@ h2 {
   margin-top: 20px;
   cursor: pointer;
   margin-right: 10px;
-
 }
 
 .buttons {
@@ -188,10 +188,7 @@ tr:nth-child(even) {
   position: fixed; /* Fixed positioning, does not scroll with the page */
   top: 50%; /* 50% from the top of the page */
   left: 50%; /* 50% from the left of the page */
-  transform: translate(
-    -50%,
-    -50%
-  ); /* Move to the center both horizontally and vertically */
+  transform: translate(-50%, -50%); /* Move to the center both horizontally and vertically */
   background-color: #fff; /* Background color is white */
   padding: 20px; /* Padding */
   z-index: 1000; /* Ensure the modal is above other elements */
@@ -249,6 +246,6 @@ tr:nth-child(even) {
 
 .header {
   display: flex;
-  flex-direction: column; 
-  align-items: flex-start; 
+  flex-direction: column;
+  align-items: flex-start;
 }
