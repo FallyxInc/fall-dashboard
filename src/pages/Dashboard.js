@@ -31,8 +31,8 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   const [threeMonthData, setThreeMonthData] = useState({});
   const [desiredMonth, setDesiredMonth] = useState('November');
 
-  // console.log('data');
-  // console.log(data);
+  console.log('data');
+  console.log(data);
   // console.log(currentMonth);
   // const [isLoading, setIsLoading] = useState(true);
   // console.log(threeMonthData);
@@ -165,7 +165,9 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   const [isCauseModalOpen, setIsCauseModalOpen] = useState(false);
 
   const handleMonthChange = (event) => {
-    const selectedMonth = event.target.value === '10' ? 'October' : 'November';
+    // const selectedMonth = event.target.value === '10' ? 'October' : 'November';
+    // setDesiredMonth(selectedMonth);
+    const selectedMonth = event.target.value;
     setDesiredMonth(selectedMonth);
   };
 
@@ -656,9 +658,9 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
       <div className={styles['table-header']}>
         <div className={styles['header']}>
           <h2>Falls Tracking Table: {desiredMonth} 2024</h2>
-          <select onChange={handleMonthChange}>
-            <option value="10">October</option>
-            <option value="11"> November</option>
+          <select onChange={handleMonthChange} value={desiredMonth}>
+            <option value="October">October</option>
+            <option value="November">November</option>
           </select>
         </div>
         <div>
