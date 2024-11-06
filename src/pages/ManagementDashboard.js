@@ -41,38 +41,6 @@ export default function ManagementDashboard() {
 
   const [homesPopUpData, setHomesPopUpData] = useState([]);
 
-  const data_for_three_months_falls = [
-    { name: 'Niagara LTC', value: 8, headInjury: 3, fracture: 2, skinTear: 3 },
-    {
-      name: 'Mill Creek LTC',
-      value: 12,
-      headInjury: 4,
-      fracture: 3,
-      skinTear: 5,
-    },
-    {
-      name: 'The Wellington LTC',
-      value: 15,
-      headInjury: 5,
-      fracture: 4,
-      skinTear: 6,
-    },
-    {
-      name: 'Ina Grafton LTC',
-      value: 14,
-      headInjury: 4,
-      fracture: 5,
-      skinTear: 5,
-    },
-  ];
-
-  const data_for_three_months_non_compliance = [
-    { name: 'Niagara LTC', poaNotNotified: 5, unwrittenNotes: 3 },
-    { name: 'Mill Creek LTC', poaNotNotified: 6, unwrittenNotes: 4 },
-    { name: 'The Wellington LTC', poaNotNotified: 10, unwrittenNotes: 7 },
-    { name: 'Ina Grafton LTC', poaNotNotified: 8, unwrittenNotes: 6 },
-  ];
-
   const [dataLengths, setDataLengths] = useState({});
 
   const getDataLengths = async () => {
@@ -181,6 +149,7 @@ export default function ManagementDashboard() {
               nonComplianceCounts[homeName].unwrittenNotes += 1;
             }
           });
+          
           updateHomesChart(nonComplianceCounts);
         } else {
           console.warn(`No data found in Firebase for ${home}`);

@@ -84,13 +84,6 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     September: '09',
   };
 
-  const years = Array.from({ length: 5 }, (_, i) => (new Date().getFullYear() - i).toString());
-
-  // State variables
-  // const threeMonthData = threeData;
-  // const [tableData, setTableData] = useState(data);
-
-  // console.log(tableData);
   const [gaugeChartData, setGaugeChartData] = useState({
     labels: [],
     datasets: [],
@@ -297,17 +290,6 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     return data.length;
   }
 
-  // function countFallsByTimeOfDay(data) {
-  //   var timeOfDayCounts = { Morning: 0, Evening: 0, Night: 0 };
-
-  //   data.forEach((fall) => {
-  //     var shift = getTimeShift(fall.time);
-  //     timeOfDayCounts[shift]++;
-  //   });
-
-  //   return timeOfDayCounts;
-  // }
-
   const updateAnalysisChart = () => {
     var selectedUnit = analysisUnit;
     var filteredData = analysisTimeRange === '3months' ? Object.values(threeMonthData).flat() : data;
@@ -382,6 +364,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
         unit: 'px',
         format: 'a4',
       });
+      tableRef.current.style.overflowX = 'visible';
       const pageHeight = pdf.internal.pageSize.height;
       const pageWidth = pdf.internal.pageSize.width;
       const totalHeight = tableRef.current.scrollHeight;
@@ -416,6 +399,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
           pdf.addPage();
         }
       }
+      tableRef.current.style.overflowX = 'auto';
       pdf.save('Falls_Tracking_Table.pdf');
     }
   };
