@@ -4,7 +4,15 @@ import styles from '../styles/ManagementDashboard.module.css';
 import { useNavigate } from 'react-router-dom';
 import SummaryCard from './SummaryCard';
 import Modal from './Modal';
-import { Chart, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
+import {
+  Chart,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
 import { ref, onValue } from 'firebase/database';
 import { db } from '../firebase';
 
@@ -16,8 +24,8 @@ export default function ManagementDashboard() {
   const [showModal, setShowModal] = useState(false);
   const [modalContent, setModalContent] = useState([]);
   const [modalTitle, setModalTitle] = useState('');
-  const [fallsTimeRange, setFallsTimeRange] = useState('current');
-  const [homesTimeRange, setHomesTimeRange] = useState('current');
+  const [fallsTimeRange, setFallsTimeRange] = useState('11');
+  const [homesTimeRange, setHomesTimeRange] = useState('11');
 
   const [fallsChartData, setFallsChartData] = useState({
     labels: [],
@@ -35,9 +43,27 @@ export default function ManagementDashboard() {
 
   const data_for_three_months_falls = [
     { name: 'Niagara LTC', value: 8, headInjury: 3, fracture: 2, skinTear: 3 },
-    { name: 'Mill Creek LTC', value: 12, headInjury: 4, fracture: 3, skinTear: 5 },
-    { name: 'The Wellington LTC', value: 15, headInjury: 5, fracture: 4, skinTear: 6 },
-    { name: 'Ina Grafton LTC', value: 14, headInjury: 4, fracture: 5, skinTear: 5 },
+    {
+      name: 'Mill Creek LTC',
+      value: 12,
+      headInjury: 4,
+      fracture: 3,
+      skinTear: 5,
+    },
+    {
+      name: 'The Wellington LTC',
+      value: 15,
+      headInjury: 5,
+      fracture: 4,
+      skinTear: 6,
+    },
+    {
+      name: 'Ina Grafton LTC',
+      value: 14,
+      headInjury: 4,
+      fracture: 5,
+      skinTear: 5,
+    },
   ];
 
   const data_for_three_months_non_compliance = [
@@ -82,114 +108,85 @@ export default function ManagementDashboard() {
 
   useEffect(() => {
     const homes = ['iggh', 'millCreek', 'niagara', 'wellington'];
+    let injuryCounts = {
+      'Niagara LTC': 0,
+      'Mill Creek LTC': 0,
+      'The Wellington LTC': 0,
+      'Ina Grafton LTC': 0,
+    };
+    let popupData = [];
+    homes.forEach((home) => {
+      const fallsRef = ref(db, `/${home}/2024/${fallsTimeRange}`);
+      onValue(fallsRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          const fallsData = Object.values(data).map((item) => {
+            const hasHeadInjury = item.injury
+              .toLowerCase()
+              .includes('head injury');
+            const hasFracture = item.injury.toLowerCase().includes('fracture');
+            const hasSkinTear = item.injury.toLowerCase().includes('skin tear');
+            const homeName = homeToName(home);
 
-    if (fallsTimeRange === '3months') {
-      const popupData = data_for_three_months_falls.map((item) => ({
-        name: item.name,
-        headInjury: item.headInjury,
-        fracture: item.fracture,
-        skinTear: item.skinTear,
-      }));
+            if (hasHeadInjury || hasFracture || hasSkinTear) {
+              injuryCounts[homeName] += 1;
+            }
 
-      setFallsPopUpData(popupData);
-      updateFallsChart(
-        data_for_three_months_falls.reduce((acc, item) => {
-          acc[item.name] = item.headInjury + item.fracture + item.skinTear;
-          return acc;
-        }, {})
-      );
-    } else {
-      let injuryCounts = {
-        'Niagara LTC': 0,
-        'Mill Creek LTC': 0,
-        'The Wellington LTC': 0,
-        'Ina Grafton LTC': 0,
-      };
-      let popupData = [];
+            return {
+              name: homeName,
+              headInjury: hasHeadInjury ? 1 : 0,
+              fracture: hasFracture ? 1 : 0,
+              skinTear: hasSkinTear ? 1 : 0,
+            };
+          });
 
-      homes.forEach((home) => {
-        const fallsRef = ref(db, `/${home}/2024/11`);
-        onValue(fallsRef, (snapshot) => {
-          const data = snapshot.val();
-          if (data) {
-            const fallsData = Object.values(data).map((item) => {
-              const hasHeadInjury = item.injury.toLowerCase().includes('head injury');
-              const hasFracture = item.injury.toLowerCase().includes('fracture');
-              const hasSkinTear = item.injury.toLowerCase().includes('skin tear');
-              const homeName = homeToName(home);
-
-              if (hasHeadInjury || hasFracture || hasSkinTear) {
-                injuryCounts[homeName] += 1;
-              }
-
-              return {
-                name: homeName,
-                headInjury: hasHeadInjury ? 1 : 0,
-                fracture: hasFracture ? 1 : 0,
-                skinTear: hasSkinTear ? 1 : 0,
-              };
-            });
-
-            popupData = [...popupData, ...fallsData];
-            setFallsPopUpData(popupData);
-            updateFallsChart(injuryCounts);
-          } else {
-            console.warn(`No data found in Firebase for ${home}`);
-          }
-        });
+          popupData = [...popupData, ...fallsData];
+          setFallsPopUpData(popupData);
+          updateFallsChart(injuryCounts);
+        } else {
+          console.warn(`No data found in Firebase for ${home}`);
+        }
       });
-    }
+    });
   }, [fallsTimeRange]);
 
   useEffect(() => {
     const homes = ['iggh', 'millCreek', 'niagara', 'wellington'];
+    let nonComplianceCounts = {
+      'Niagara LTC': { poaNotNotified: 0, unwrittenNotes: 0 },
+      'Mill Creek LTC': { poaNotNotified: 0, unwrittenNotes: 0 },
+      'The Wellington LTC': { poaNotNotified: 0, unwrittenNotes: 0 },
+      'Ina Grafton LTC': { poaNotNotified: 0, unwrittenNotes: 0 },
+    };
 
-    if (homesTimeRange === '3months') {
-      updateHomesChart(
-        data_for_three_months_non_compliance.reduce((acc, item) => {
-          acc[item.name] = {
-            poaNotNotified: item.poaNotNotified,
-            unwrittenNotes: item.unwrittenNotes,
-          };
-          return acc;
-        }, {})
-      );
-    } else {
-      let nonComplianceCounts = {
-        'Niagara LTC': { poaNotNotified: 0, unwrittenNotes: 0 },
-        'Mill Creek LTC': { poaNotNotified: 0, unwrittenNotes: 0 },
-        'The Wellington LTC': { poaNotNotified: 0, unwrittenNotes: 0 },
-        'Ina Grafton LTC': { poaNotNotified: 0, unwrittenNotes: 0 },
-      };
+    homes.forEach((home) => {
+      const fallsRef = ref(db, `/${home}/2024/${homesTimeRange}`);
+      onValue(fallsRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          Object.values(data).forEach((item) => {
+            const homeName = homeToName(home);
+            const fallDate = new Date(item.date);
+            const currentDate = new Date();
+            const daysDifference =
+              Math.abs(currentDate - fallDate) / (1000 * 60 * 60 * 24);
 
-      homes.forEach((home) => {
-        const fallsRef = ref(db, `/${home}/2024/11`);
-        onValue(fallsRef, (snapshot) => {
-          const data = snapshot.val();
-          if (data) {
-            Object.values(data).forEach((item) => {
-              const homeName = homeToName(home);
-              const fallDate = new Date(item.date);
-              const currentDate = new Date();
-              const daysDifference = Math.abs(currentDate - fallDate) / (1000 * 60 * 60 * 24);
+            //count POAs not contacted
+            if (item.poaContacted.toLowerCase() !== 'yes') {
+              nonComplianceCounts[homeName].poaNotNotified += 1;
+            }
 
-              //count POAs not contacted
-              if (item.poaContacted.toLowerCase() !== 'yes') {
-                nonComplianceCounts[homeName].poaNotNotified += 1;
-              }
-
-              //count unwritten post-fall notes (if more than 3 days after the fall and postFallNotes < 3)
-              if (daysDifference > 3 && parseInt(item.postFallNotes) < 3) {
-                nonComplianceCounts[homeName].unwrittenNotes += 1;
-              }
-            });
-            updateHomesChart(nonComplianceCounts);
-          } else {
-            console.warn(`No data found in Firebase for ${home}`);
-          }
-        });
+            //count unwritten post-fall notes (if more than 3 days after the fall and postFallNotes < 3)
+            if (daysDifference > 3 && parseInt(item.postFallNotes) < 3) {
+              nonComplianceCounts[homeName].unwrittenNotes += 1;
+            }
+          });
+          updateHomesChart(nonComplianceCounts);
+        } else {
+          console.warn(`No data found in Firebase for ${home}`);
+        }
       });
-    }
+    });
   }, [homesTimeRange]);
 
   const homeToName = (home) => {
@@ -208,7 +205,10 @@ export default function ManagementDashboard() {
   };
 
   const updateFallsChart = (injuryCounts) => {
-    const newData = Object.entries(injuryCounts).map(([name, value]) => ({ name, value }));
+    const newData = Object.entries(injuryCounts).map(([name, value]) => ({
+      name,
+      value,
+    }));
 
     newData.sort((a, b) => b.value - a.value);
 
@@ -228,12 +228,14 @@ export default function ManagementDashboard() {
   };
 
   const updateHomesChart = (nonComplianceCounts) => {
-    const newData = Object.entries(nonComplianceCounts).map(([name, values]) => ({
-      name,
-      totalNonCompliance: values.poaNotNotified + values.unwrittenNotes,
-      poaNotNotified: values.poaNotNotified,
-      unwrittenNotes: values.unwrittenNotes,
-    }));
+    const newData = Object.entries(nonComplianceCounts).map(
+      ([name, values]) => ({
+        name,
+        totalNonCompliance: values.poaNotNotified + values.unwrittenNotes,
+        poaNotNotified: values.poaNotNotified,
+        unwrittenNotes: values.unwrittenNotes,
+      })
+    );
 
     newData.sort((a, b) => b.totalNonCompliance - a.totalNonCompliance);
 
@@ -259,13 +261,22 @@ export default function ManagementDashboard() {
 
     const index = elements[0].index;
     const locationName = fallsChartData.labels[index];
-    const fallsData = fallsPopUpData.filter((item) => item.name === locationName);
+    const fallsData = fallsPopUpData.filter(
+      (item) => item.name === locationName
+    );
 
-    const headInjury = fallsData.reduce((acc, item) => acc + item.headInjury, 0);
+    const headInjury = fallsData.reduce(
+      (acc, item) => acc + item.headInjury,
+      0
+    );
     const fracture = fallsData.reduce((acc, item) => acc + item.fracture, 0);
     const skinTear = fallsData.reduce((acc, item) => acc + item.skinTear, 0);
 
-    const content = [`Head injuries: ${headInjury}`, `Fractures: ${fracture}`, `Skin tears: ${skinTear}`];
+    const content = [
+      `Head injuries: ${headInjury}`,
+      `Fractures: ${fracture}`,
+      `Skin tears: ${skinTear}`,
+    ];
 
     openModal(locationName, content);
   };
@@ -322,10 +333,26 @@ export default function ManagementDashboard() {
 
   useEffect(() => {
     const updatedSummaryData = [
-      { value: dataLengths['niagara'], subtitle: 'Niagara LTC', linkTo: '/niagara-ltc' },
-      { value: dataLengths['millCreek'], subtitle: 'Mill Creek LTC', linkTo: '/mill-creek-care' },
-      { value: dataLengths['wellington'], subtitle: 'The Wellington LTC', linkTo: '/the-wellington-ltc' },
-      { value: dataLengths['iggh'], subtitle: 'Ina Grafton LTC', linkTo: '/iggh-ltc' },
+      {
+        value: dataLengths['niagara'],
+        subtitle: 'Niagara LTC',
+        linkTo: '/niagara-ltc',
+      },
+      {
+        value: dataLengths['millCreek'],
+        subtitle: 'Mill Creek LTC',
+        linkTo: '/mill-creek-care',
+      },
+      {
+        value: dataLengths['wellington'],
+        subtitle: 'The Wellington LTC',
+        linkTo: '/the-wellington-ltc',
+      },
+      {
+        value: dataLengths['iggh'],
+        subtitle: 'Ina Grafton LTC',
+        linkTo: '/iggh-ltc',
+      },
     ];
 
     setSummaryData(updatedSummaryData);
@@ -344,35 +371,39 @@ export default function ManagementDashboard() {
 
       <div className={styles['chart-container']}>
         <div className={styles['chart']}>
-          <h2 id="fallsHeader">Falls with significant injury</h2>
+          <h2 id='fallsHeader'>Falls with significant injury</h2>
           <select
-            id="fallsTimeRange"
+            id='fallsTimeRange'
             value={fallsTimeRange}
             className={styles.select}
             onChange={(e) => {
               setFallsTimeRange(e.target.value);
             }}
           >
-            <option value="current">Current Month</option>
-            {/* <option value="3months">Past 3 Months</option> */}
+            <option value='11'>Current Month</option>
+            <option value='10'>October 2024</option>
           </select>
-          {fallsChartData.datasets.length > 0 && <Bar data={fallsChartData} options={createOptions(onClickFalls)} />}
+          {fallsChartData.datasets.length > 0 && (
+            <Bar data={fallsChartData} options={createOptions(onClickFalls)} />
+          )}
         </div>
 
         <div className={styles['chart']}>
-          <h2 id="homesHeader">Number of incidents of non-compliance</h2>
+          <h2 id='homesHeader'>Number of incidents of non-compliance</h2>
           <select
-            id="homesTimeRange"
+            id='homesTimeRange'
             value={homesTimeRange}
             onChange={(e) => {
               setHomesTimeRange(e.target.value);
             }}
           >
-            <option value="current">Current Month</option>
-            {/* <option value="3months">Past 3 Months</option> */}
+            <option value='11'>Current Month</option>
+            <option value='10'>October 2024</option>
           </select>
 
-          {homesChartData.datasets.length > 0 && <Bar data={homesChartData} options={createOptions(onClickHomes)} />}
+          {homesChartData.datasets.length > 0 && (
+            <Bar data={homesChartData} options={createOptions(onClickHomes)} />
+          )}
         </div>
       </div>
 
@@ -380,12 +411,22 @@ export default function ManagementDashboard() {
         <h2>Fall Summary</h2>
         <div className={styles['summary-cards']}>
           {summaryData.map((item, index) => (
-            <SummaryCard key={index} value={item.value} subtitle={item.subtitle} linkTo={item.linkTo} />
+            <SummaryCard
+              key={index}
+              value={item.value}
+              subtitle={item.subtitle}
+              linkTo={item.linkTo}
+            />
           ))}
         </div>
       </div>
 
-      <Modal showModal={showModal} handleClose={closeModal} modalContent={modalContent} title={modalTitle} />
+      <Modal
+        showModal={showModal}
+        handleClose={closeModal}
+        modalContent={modalContent}
+        title={modalTitle}
+      />
     </div>
   );
 }
