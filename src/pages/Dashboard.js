@@ -31,8 +31,8 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   const [threeMonthData, setThreeMonthData] = useState({});
   const [desiredMonth, setDesiredMonth] = useState('November');
 
-  console.log('data');
-  console.log(data);
+  // console.log('data');
+  // console.log(data);
   // console.log(currentMonth);
   // const [isLoading, setIsLoading] = useState(true);
   // console.log(threeMonthData);
@@ -482,7 +482,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
         if (snapshot.exists()) {
           const fallsData = snapshot.val();
           const monthData = Object.keys(fallsData).map((key) => fallsData[key]);
-          allFallsData[month] = monthData; // 存储每个月的数据
+          allFallsData[month] = monthData;
           // console.log('month data');
           // console.log(monthData);
           // console.log('month');
@@ -491,7 +491,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
           // console.log(allFallsData);
           setThreeMonthData({ ...allFallsData });
         } else {
-          allFallsData[month] = []; // 没有数据时设为空数组
+          allFallsData[month] = []; 
         }
       });
 
@@ -499,7 +499,6 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     });
 
     const listener = onValue(dataRef, (snapshot) => {
-      console.log('snapshot');
 
       if (snapshot.exists()) {
         const fetchedData = snapshot.val();

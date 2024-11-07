@@ -425,10 +425,17 @@ export default function ManagementDashboard() {
 
   return (
     <div className={styles.dashboard}>
-      <h1 className={styles.h1}>Responsive Management Falls</h1>
-      <button className={styles['logout-button']} onClick={logout}>
-        Log Out
-      </button>
+      <header className={styles.header}>
+        <h1 className={styles.h1}>Responsive Management Falls</h1>
+        <div className={styles['button-container']}>
+          <button className={styles['download-button']} onClick={downloadCSV}>
+            Download CSV
+          </button>
+          <button className={styles['logout-button']} onClick={logout}>
+            Log Out
+          </button>
+        </div>
+      </header>
       <div className={styles['chart-container']}>
         <div className={styles['chart']}>
           <h2 id="fallsHeader">Falls with significant injury</h2>
@@ -464,7 +471,6 @@ export default function ManagementDashboard() {
       </div>
 
       <div className={styles['summary-container']}>
-        <button onClick={downloadCSV}>Download CSV</button>
         <h2>Fall Summary</h2>
         <div className={styles['summary-cards']}>
           {summaryData.map((item, index) => (

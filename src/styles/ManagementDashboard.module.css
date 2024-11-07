@@ -26,12 +26,12 @@
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   padding: 20px;
   position: relative;
-  /* overflow: hidden; */
 }
-.dashboard,
+
+/* .dashboard,
 .h1 {
-  text-align: center;
-}
+  margin: 0;
+} */
 
 h1,
 h2 {
@@ -126,19 +126,13 @@ tr:nth-child(even) {
   background-color: #f2f2f2;
 }
 .logout-button {
-  position: absolute;
-  top: 20px;
-  right: 20px;
   background-color: #4caf50;
-  border: none;
   color: white;
+  border: none;
   padding: 10px 20px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
+  border-radius: 4px;
   font-size: 16px;
   cursor: pointer;
-  border-radius: 4px;
 }
 
 .summary-container {
@@ -150,4 +144,29 @@ tr:nth-child(even) {
   display: flex;
   justify-content: center;
   gap: 20px;
+}
+
+.download-button {
+  background-color: #000;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 0;
+}
+
+.button-container {
+  position: absolute;
+  right: 20px;
+  display: flex;
+  gap: 10px;
 }
