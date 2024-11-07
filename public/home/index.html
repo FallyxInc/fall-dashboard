@@ -5,6 +5,67 @@
     
 <style>
     
+    /* Popup background */
+.popup {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* Popup content */
+.popup-content {
+  background-color: white;
+  padding: 20px;
+  width: 90%;
+  max-width: 500px;
+  border-radius: 8px;
+  position: relative;
+}
+
+/* Close button */
+.close {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+/* Form styles */
+#contactForm label {
+  display: block;
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+#contactForm input,
+#contactForm textarea {
+  width: 100%;
+  padding: 8px;
+  margin-top: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+#contactForm button {
+  background-color: green;
+  color: white;
+  padding: 10px;
+  border: none;
+  border-radius: 4px;
+  margin-top: 15px;
+  cursor: pointer;
+  width: 100%;
+}
+    
     #hero{
         
         padding-top: 90px;
@@ -176,11 +237,11 @@
 
 
 
-                 <div class="header2-buttons">
+            <div class="header2-buttons">
                     <div class="">
                         <a style="background-color: #008765; border-radius: 35px; color: white; font-size: 20px;" 
-                           class="theme-btn3" href="mailto:info@fallyx.com?subject=Interested%20in%20Learning%20More%20About%20Fallyx&body=Hey%20Ayaan%2C%0D%0A%0D%0AI%27m%20interested%20in%20learning%20more%20about%20Fallyx%20and%20how%20your%20technology%20works.%20What%20times%20would%20work%20for%20you%20to%20chat%20next%20week%20about%20this%3F%0D%0A%0D%0AThank%20you%2C%0D%0A%5BYour%20Name%5D" target="_blank">
-                            Get In Contact Today <span><i class="fa-solid fa-arrow-right"></i></span>
+                           class="theme-btn3" href="https://calendly.com/rishi-mehta-fallyx/fallyx-product-demo" target="_blank">
+                            Setup a Time to Chat! <span><i class="fa-solid fa-arrow-right"></i></span>
                         </a>
                     </div>
                 </div>
@@ -257,10 +318,7 @@
 
         <!-- Contact Button -->
         <div class="mobile-button">
-            <a style="background-color: #008765; border-radius: 35px; color: white; font-size: 20px;" 
-               class="theme-btn3" href="mailto:info@fallyx.com?subject=Interested%20in%20Learning%20More%20About%20Fallyx&body=Hey%20Ayaan%2C%0D%0A%0D%0AI%27m%20interested%20in%20learning%20more%20about%20Fallyx%20and%20how%20your%20technology%20works.%20What%20times%20would%20work%20for%20you%20to%20chat%20next%20week%20about%20this%3F%0D%0A%0D%0AThank%20you%2C%0D%0A%5BYour%20Name%5D" target="_blank">
-                Get In Contact Today! <span><i class="fa-solid fa-arrow-right"></i></span>
-            </a>
+             <a style="background-color: #008765; color: white; font-size: 25px; border-radius: 50px" class="theme-btn3" href="https://calendly.com/rishi-mehta-fallyx/fallyx-product-demo" target="_blank">Book A Demo <span><i class="fa-solid fa-arrow-right"></i></span></a>
         </div>
     </div>
 </div>
@@ -284,7 +342,10 @@
                   <div class="space30"></div>
                   
                      <div class="">
-                            <a style="background-color: #008765; color: white; font-size: 25px; border-radius: 50px" class="theme-btn3" href="https://calendly.com/rishi-mehta-fallyx/fallyx-product-demo" target="_blank">Book A Demo <span><i class="fa-solid fa-arrow-right"></i></span></a>
+                            <a style="background-color: #008765; border-radius: 35px; color: white; font-size: 27px;" 
+                           class="theme-btn3" href="javascript:void(0);" onclick="openForm()">
+                            Get In Contact Today <span><i class="fa-solid fa-arrow-right"></i></span>
+                        </a>
                           </div>
                     
                     
@@ -636,14 +697,14 @@
                          
                             
                          
-                            <div style="width: 110%; padding-right: 35px;" class="img" data-aos="zoom-out" data-aos-duration="1200">
-                                <img src="dashboard.png" alt="">
+                            <div style="width: 120%; padding-right: 100px;" class="img" data-aos="zoom-out" data-aos-duration="1200">
+                                <img src="backz.png" alt="">
                             </div>
                           
                         </div>
                     </div>
 
-                    <div style="" class="col-lg-6">
+                    <div style="padding-left: -100px;" class="col-lg-6">
                         <div class="heading4">
                            
                             <h2 class="title tg-element-title">Fallyx's Fall Analysis Tool</h2>
@@ -915,7 +976,7 @@
                 <div class="team-box">
                     <div class="image-area">
                        
-                            <img style="border-radius: 25px; height: 300px; object-fit: cover;" src="rishi.png" alt="Rishi Mehta">
+                            <img style="border-radius: 25px; height: 300px; object-fit: cover;" src="rishi-cutie.png" alt="Rishi Mehta">
                   
                     </div>
                     <div class="space30"></div>
@@ -976,6 +1037,79 @@
 
   <!--===== FOOTER AREA END =======-->
 
+<script>
+  // Open popup form
+  function openForm() {
+    document.getElementById("contactPopup").style.display = "flex";
+  }
+
+  // Close popup form
+  function closeForm() {
+    document.getElementById("contactPopup").style.display = "none";
+  }
+
+
+
+  // Submit form data to Google Sheets
+  function submitForm() {
+    const name = document.getElementById("name").value;
+    const email = document.getElementById("email").value;
+    const reason = document.getElementById("reason").value;
+
+    // Construct URL with query parameters
+    const url = `https://script.google.com/macros/s/AKfycbwjwiHR3qDckiqQ0a3IZyhqxHTSkYM6rSlBVqrUfcKJCr_e9pLl_D4qgPRBPcemDTUS/exec?name=${encodeURIComponent(name)}&email=${encodeURIComponent(email)}&reason=${encodeURIComponent(reason)}`;
+
+    fetch(url, {
+        method: "GET",  // Use GET to easily include query parameters
+        mode: "no-cors"  // Bypass CORS issues
+    })
+    .then(() => {
+        // Hide the form content and show the thank-you message
+        document.getElementById("formContent").style.display = "none";
+        document.getElementById("thankYouMessage").style.display = "block";
+        
+    })
+    .catch(error => {
+        console.error("Fetch error:", error);
+        alert("Failed to send message. Please try again.");
+    });
+}
+
+
+
+</script>
+
+    
+    
+<!-- Popup Form -->
+<div id="contactPopup" class="popup">
+    <div class="popup-content">
+        <span class="close" onclick="closeForm()">&times;</span>
+        
+        <!-- Form Content -->
+        <div id="formContent">
+            <h2>Get in Contact</h2>
+            <form id="contactForm" onsubmit="submitForm(); return false;">
+                <label for="name">Name</label>
+                <input type="text" id="name" name="name" required>
+
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required>
+
+                <label for="reason">Reason for Reaching Out</label>
+                <textarea id="reason" name="reason" required></textarea>
+
+                <button style="background-color: #008765;" type="submit">Submit</button>
+            </form>
+        </div>
+
+        <!-- Thank-You Message Content -->
+        <div id="thankYouMessage" style="display: none; text-align: center;">
+            <h2>Thanks for reaching out!</h2>
+            <p>We'll be in touch in the next few days.</p>
+        </div>
+    </div>
+</div>
 
 
 
