@@ -4,23 +4,15 @@ import styles from '../styles/ManagementDashboard.module.css';
 import { useNavigate } from 'react-router-dom';
 import SummaryCard from './SummaryCard';
 import Modal from './Modal';
-import {
-  Chart,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-} from 'chart.js';
+import { Chart, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
 import { ref, onValue } from 'firebase/database';
 import { db } from '../firebase';
-
+import { saveAs } from 'file-saver';
 Chart.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 export default function ManagementDashboard() {
   const navigate = useNavigate();
-
+  const months = ['10', '11'];
   const [showModal, setShowModal] = useState(false);
   const [modalContent, setModalContent] = useState([]);
   const [modalTitle, setModalTitle] = useState('');
@@ -38,7 +30,6 @@ export default function ManagementDashboard() {
   });
 
   const [fallsPopUpData, setFallsPopUpData] = useState([]);
-
   const [homesPopUpData, setHomesPopUpData] = useState([]);
 
   const [dataLengths, setDataLengths] = useState({});
@@ -89,9 +80,7 @@ export default function ManagementDashboard() {
         const data = snapshot.val();
         if (data) {
           const fallsData = Object.values(data).map((item) => {
-            const hasHeadInjury = item.injury
-              .toLowerCase()
-              .includes('head injury');
+            const hasHeadInjury = item.injury.toLowerCase().includes('head injury');
             const hasFracture = item.injury.toLowerCase().includes('fracture');
             const hasSkinTear = item.injury.toLowerCase().includes('skin tear');
             const homeName = homeToName(home);
@@ -136,8 +125,7 @@ export default function ManagementDashboard() {
             const homeName = homeToName(home);
             const fallDate = new Date(item.date);
             const currentDate = new Date();
-            const daysDifference =
-              Math.abs(currentDate - fallDate) / (1000 * 60 * 60 * 24);
+            const daysDifference = Math.abs(currentDate - fallDate) / (1000 * 60 * 60 * 24);
 
             //count POAs not contacted
             if (item.poaContacted.toLowerCase() !== 'yes') {
@@ -149,7 +137,7 @@ export default function ManagementDashboard() {
               nonComplianceCounts[homeName].unwrittenNotes += 1;
             }
           });
-          
+
           updateHomesChart(nonComplianceCounts);
         } else {
           console.warn(`No data found in Firebase for ${home}`);
@@ -197,14 +185,12 @@ export default function ManagementDashboard() {
   };
 
   const updateHomesChart = (nonComplianceCounts) => {
-    const newData = Object.entries(nonComplianceCounts).map(
-      ([name, values]) => ({
-        name,
-        totalNonCompliance: values.poaNotNotified + values.unwrittenNotes,
-        poaNotNotified: values.poaNotNotified,
-        unwrittenNotes: values.unwrittenNotes,
-      })
-    );
+    const newData = Object.entries(nonComplianceCounts).map(([name, values]) => ({
+      name,
+      totalNonCompliance: values.poaNotNotified + values.unwrittenNotes,
+      poaNotNotified: values.poaNotNotified,
+      unwrittenNotes: values.unwrittenNotes,
+    }));
 
     newData.sort((a, b) => b.totalNonCompliance - a.totalNonCompliance);
 
@@ -230,22 +216,13 @@ export default function ManagementDashboard() {
 
     const index = elements[0].index;
     const locationName = fallsChartData.labels[index];
-    const fallsData = fallsPopUpData.filter(
-      (item) => item.name === locationName
-    );
+    const fallsData = fallsPopUpData.filter((item) => item.name === locationName);
 
-    const headInjury = fallsData.reduce(
-      (acc, item) => acc + item.headInjury,
-      0
-    );
+    const headInjury = fallsData.reduce((acc, item) => acc + item.headInjury, 0);
     const fracture = fallsData.reduce((acc, item) => acc + item.fracture, 0);
     const skinTear = fallsData.reduce((acc, item) => acc + item.skinTear, 0);
 
-    const content = [
-      `Head injuries: ${headInjury}`,
-      `Fractures: ${fracture}`,
-      `Skin tears: ${skinTear}`,
-    ];
+    const content = [`Head injuries: ${headInjury}`, `Fractures: ${fracture}`, `Skin tears: ${skinTear}`];
 
     openModal(locationName, content);
   };
@@ -331,71 +308,148 @@ export default function ManagementDashboard() {
     navigate('/login');
   };
 
+  const getMonthName = (month) => {
+    const monthNames = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+    return monthNames[month - 1]; // Subtract 1 because array is 0-indexed
+  };
+
+  const downloadCSV = async () => {
+    const homes = ['niagara', 'millCreek', 'wellington', 'iggh'];
+    const fallsData = [];
+
+    await Promise.all(
+      months.map((month) =>
+        Promise.all(
+          homes.map((home) => {
+            return new Promise((resolve) => {
+              const fallsRef = ref(db, `/${home}/2024/${month}`);
+              onValue(fallsRef, (snapshot) => {
+                const data = snapshot.val();
+                const homeName = homeToName(home);
+                const monthYear = `${getMonthName(month)} 2024`; // Format month as two digits
+                const fallsCount = data ? Object.keys(data).length : 0;
+                let poaNotNotified = 0;
+                let unwrittenNotes = 0;
+                let significantInjury = 0;
+
+                if (data) {
+                  Object.values(data).forEach((item) => {
+                    const fallDate = new Date(item.date);
+                    const currentDate = new Date();
+                    const daysDifference = Math.abs(currentDate - fallDate) / (1000 * 60 * 60 * 24);
+
+                    // Non-compliance calculations
+                    if (item.poaContacted.toLowerCase() !== 'yes') {
+                      poaNotNotified += 1;
+                    }
+                    if (daysDifference > 3 && parseInt(item.postFallNotes) < 3) {
+                      unwrittenNotes += 1;
+                    }
+
+                    // Significant injury calculations
+                    const hasHeadInjury = item.injury.toLowerCase().includes('head injury');
+                    const hasFracture = item.injury.toLowerCase().includes('fracture');
+                    const hasSkinTear = item.injury.toLowerCase().includes('skin tear');
+
+                    if (hasHeadInjury || hasFracture || hasSkinTear) {
+                      significantInjury += 1;
+                    }
+                  });
+                }
+
+                // Append data for each home and month to fallsData
+                fallsData.push({
+                  Community: homeName,
+                  MonthYear: monthYear,
+                  Falls: fallsCount,
+                  Incidents: poaNotNotified + unwrittenNotes,
+                  SignificantInjury: significantInjury,
+                });
+
+                resolve();
+              });
+            });
+          })
+        )
+      )
+    );
+
+    // Generate CSV content
+    const headers = 'Community,Month/Year,Falls,Incidents of non-compliance,Falls w/ significant injury\n';
+    const rows = fallsData
+      .map((row) => `${row.Community},${row.MonthYear},${row.Falls},${row.Incidents},${row.SignificantInjury}`)
+      .join('\n');
+    const csvContent = headers + rows;
+
+    // Save CSV using file-saver
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    saveAs(blob, 'falls_data_all_months.csv');
+  };
+
   return (
     <div className={styles.dashboard}>
       <h1 className={styles.h1}>Responsive Management Falls</h1>
       <button className={styles['logout-button']} onClick={logout}>
         Log Out
       </button>
-
       <div className={styles['chart-container']}>
         <div className={styles['chart']}>
-          <h2 id='fallsHeader'>Falls with significant injury</h2>
+          <h2 id="fallsHeader">Falls with significant injury</h2>
           <select
-            id='fallsTimeRange'
+            id="fallsTimeRange"
             value={fallsTimeRange}
             className={styles.select}
             onChange={(e) => {
               setFallsTimeRange(e.target.value);
             }}
           >
-            <option value='11'>Current Month</option>
-            <option value='10'>October 2024</option>
+            <option value="11">Current Month</option>
+            <option value="10">October 2024</option>
           </select>
-          {fallsChartData.datasets.length > 0 && (
-            <Bar data={fallsChartData} options={createOptions(onClickFalls)} />
-          )}
+          {fallsChartData.datasets.length > 0 && <Bar data={fallsChartData} options={createOptions(onClickFalls)} />}
         </div>
 
         <div className={styles['chart']}>
-          <h2 id='homesHeader'>Number of incidents of non-compliance</h2>
+          <h2 id="homesHeader">Number of incidents of non-compliance</h2>
           <select
-            id='homesTimeRange'
+            id="homesTimeRange"
             value={homesTimeRange}
             onChange={(e) => {
               setHomesTimeRange(e.target.value);
             }}
           >
-            <option value='11'>Current Month</option>
-            <option value='10'>October 2024</option>
+            <option value="11">Current Month</option>
+            <option value="10">October 2024</option>
           </select>
 
-          {homesChartData.datasets.length > 0 && (
-            <Bar data={homesChartData} options={createOptions(onClickHomes)} />
-          )}
+          {homesChartData.datasets.length > 0 && <Bar data={homesChartData} options={createOptions(onClickHomes)} />}
         </div>
       </div>
 
       <div className={styles['summary-container']}>
+        <button onClick={downloadCSV}>Download CSV</button>
         <h2>Fall Summary</h2>
         <div className={styles['summary-cards']}>
           {summaryData.map((item, index) => (
-            <SummaryCard
-              key={index}
-              value={item.value}
-              subtitle={item.subtitle}
-              linkTo={item.linkTo}
-            />
+            <SummaryCard key={index} value={item.value} subtitle={item.subtitle} linkTo={item.linkTo} />
           ))}
         </div>
       </div>
 
-      <Modal
-        showModal={showModal}
-        handleClose={closeModal}
-        modalContent={modalContent}
-        title={modalTitle}
-      />
+      <Modal showModal={showModal} handleClose={closeModal} modalContent={modalContent} title={modalTitle} />
     </div>
   );
 }
