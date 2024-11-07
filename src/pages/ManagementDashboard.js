@@ -31,7 +31,9 @@ export default function ManagementDashboard() {
 
   const [fallsPopUpData, setFallsPopUpData] = useState([]);
   const [homesPopUpData, setHomesPopUpData] = useState([]);
-
+  // console.log('hello');
+  // console.log('homesPopUpData');
+  // console.log(homesPopUpData);
   const [dataLengths, setDataLengths] = useState({});
 
   const getDataLengths = async () => {
@@ -65,88 +67,7 @@ export default function ManagementDashboard() {
     fetchData();
   }, []);
 
-  useEffect(() => {
-    const homes = ['iggh', 'millCreek', 'niagara', 'wellington'];
-    let injuryCounts = {
-      'Niagara LTC': 0,
-      'Mill Creek LTC': 0,
-      'The Wellington LTC': 0,
-      'Ina Grafton LTC': 0,
-    };
-    let popupData = [];
-    homes.forEach((home) => {
-      const fallsRef = ref(db, `/${home}/2024/${fallsTimeRange}`);
-      onValue(fallsRef, (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-          const fallsData = Object.values(data).map((item) => {
-            const hasHeadInjury = item.injury.toLowerCase().includes('head injury');
-            const hasFracture = item.injury.toLowerCase().includes('fracture');
-            const hasSkinTear = item.injury.toLowerCase().includes('skin tear');
-            const homeName = homeToName(home);
-
-            if (hasHeadInjury || hasFracture || hasSkinTear) {
-              injuryCounts[homeName] += 1;
-            }
-
-            return {
-              name: homeName,
-              headInjury: hasHeadInjury ? 1 : 0,
-              fracture: hasFracture ? 1 : 0,
-              skinTear: hasSkinTear ? 1 : 0,
-            };
-          });
-
-          popupData = [...popupData, ...fallsData];
-          setFallsPopUpData(popupData);
-          updateFallsChart(injuryCounts);
-        } else {
-          console.warn(`No data found in Firebase for ${home}`);
-        }
-      });
-    });
-  }, [fallsTimeRange]);
-
-  useEffect(() => {
-    const homes = ['iggh', 'millCreek', 'niagara', 'wellington'];
-    let nonComplianceCounts = {
-      'Niagara LTC': { poaNotNotified: 0, unwrittenNotes: 0 },
-      'Mill Creek LTC': { poaNotNotified: 0, unwrittenNotes: 0 },
-      'The Wellington LTC': { poaNotNotified: 0, unwrittenNotes: 0 },
-      'Ina Grafton LTC': { poaNotNotified: 0, unwrittenNotes: 0 },
-    };
-
-    homes.forEach((home) => {
-      const fallsRef = ref(db, `/${home}/2024/${homesTimeRange}`);
-      onValue(fallsRef, (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-          Object.values(data).forEach((item) => {
-            const homeName = homeToName(home);
-            const fallDate = new Date(item.date);
-            const currentDate = new Date();
-            const daysDifference = Math.abs(currentDate - fallDate) / (1000 * 60 * 60 * 24);
-
-            //count POAs not contacted
-            if (item.poaContacted.toLowerCase() !== 'yes') {
-              nonComplianceCounts[homeName].poaNotNotified += 1;
-            }
-
-            //count unwritten post-fall notes (if more than 3 days after the fall and postFallNotes < 3)
-            if (daysDifference > 3 && parseInt(item.postFallNotes) < 3) {
-              nonComplianceCounts[homeName].unwrittenNotes += 1;
-            }
-          });
-
-          updateHomesChart(nonComplianceCounts);
-        } else {
-          console.warn(`No data found in Firebase for ${home}`);
-        }
-      });
-    });
-  }, [homesTimeRange]);
-
-  const homeToName = (home) => {
+  const shortToFull = (home) => {
     switch (home) {
       case 'iggh':
         return 'Ina Grafton LTC';
@@ -161,16 +82,29 @@ export default function ManagementDashboard() {
     }
   };
 
+  const onClickFalls = (event, elements) => {
+    if (!elements.length) return;
+
+    const index = elements[0].index;
+    const locationName = fallsChartData.labels[index];
+
+    const fallsData = fallsPopUpData[locationName];
+
+    const { headInjury, fracture, skinTear } = fallsData;
+    const content = [`Head injuries: ${headInjury}`, `Fractures: ${fracture}`, `Skin tears: ${skinTear}`];
+    openModal(locationName, content);
+  };
+
   const updateFallsChart = (injuryCounts) => {
-    const newData = Object.entries(injuryCounts).map(([name, value]) => ({
-      name,
-      value,
+    const newData = Object.entries(injuryCounts).map(([home, counts]) => ({
+      name: home,
+      value: counts.significantInjury,
     }));
 
     newData.sort((a, b) => b.value - a.value);
 
     setFallsChartData({
-      labels: newData.map((item) => item.name),
+      labels: newData.map((item) => shortToFull(item.name)),
       datasets: [
         {
           label: 'Total Significant Injuries',
@@ -184,18 +118,72 @@ export default function ManagementDashboard() {
     });
   };
 
+  useEffect(() => {
+    const homes = ['iggh', 'millCreek', 'niagara', 'wellington'];
+
+    const injuryCounts = {
+      iggh: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0 },
+      millCreek: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0 },
+      niagara: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0 },
+      wellington: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0 },
+    };
+
+    const fetchDataForHome = async (home) => {
+      const fallsRef = ref(db, `/${home}/2024/${fallsTimeRange}`);
+      return new Promise((resolve) => {
+        onValue(fallsRef, (snapshot) => {
+          const data = snapshot.val();
+          if (data) {
+            Object.values(data).forEach((item) => {
+              const lowerCaseInjury = item.injury.toLowerCase();
+              const hasHeadInjury = lowerCaseInjury.includes('head injury');
+              const hasFracture = lowerCaseInjury.includes('fracture');
+              const hasSkinTear = lowerCaseInjury.includes('skin tear');
+
+              if (hasHeadInjury) injuryCounts[home].headInjury += 1;
+              if (hasFracture) injuryCounts[home].fracture += 1;
+              if (hasSkinTear) injuryCounts[home].skinTear += 1;
+
+              if (hasHeadInjury || hasFracture || hasSkinTear) {
+                injuryCounts[home].significantInjury += 1;
+              }
+            });
+            resolve();
+          } else {
+            console.warn(`No data found in Firebase for ${home}`);
+            resolve();
+          }
+        });
+      });
+    };
+
+    const fetchAllData = async () => {
+      const allDataPromises = homes.map(fetchDataForHome);
+      await Promise.all(allDataPromises);
+
+      const popupData = {};
+      for (const key in injuryCounts) {
+        const newKey = shortToFull(key);
+        popupData[newKey] = injuryCounts[key];
+      }
+
+      setFallsPopUpData(popupData);
+      updateFallsChart(injuryCounts);
+    };
+
+    fetchAllData();
+  }, [fallsTimeRange]);
+
   const updateHomesChart = (nonComplianceCounts) => {
-    const newData = Object.entries(nonComplianceCounts).map(([name, values]) => ({
-      name,
-      totalNonCompliance: values.poaNotNotified + values.unwrittenNotes,
-      poaNotNotified: values.poaNotNotified,
-      unwrittenNotes: values.unwrittenNotes,
+    const newData = Object.entries(nonComplianceCounts).map(([home, counts]) => ({
+      name: home,
+      totalNonCompliance: counts.poaNotNotified + counts.unwrittenNotes,
     }));
 
     newData.sort((a, b) => b.totalNonCompliance - a.totalNonCompliance);
 
     setHomesChartData({
-      labels: newData.map((item) => item.name),
+      labels: newData.map((item) => shortToFull(item.name)),
       datasets: [
         {
           label: 'Total Non-Compliance',
@@ -207,24 +195,6 @@ export default function ManagementDashboard() {
         },
       ],
     });
-
-    setHomesPopUpData([...newData]);
-  };
-
-  const onClickFalls = (event, elements) => {
-    if (!elements.length) return;
-
-    const index = elements[0].index;
-    const locationName = fallsChartData.labels[index];
-    const fallsData = fallsPopUpData.filter((item) => item.name === locationName);
-
-    const headInjury = fallsData.reduce((acc, item) => acc + item.headInjury, 0);
-    const fracture = fallsData.reduce((acc, item) => acc + item.fracture, 0);
-    const skinTear = fallsData.reduce((acc, item) => acc + item.skinTear, 0);
-
-    const content = [`Head injuries: ${headInjury}`, `Fractures: ${fracture}`, `Skin tears: ${skinTear}`];
-
-    openModal(locationName, content);
   };
 
   const onClickHomes = (event, elements) => {
@@ -232,7 +202,7 @@ export default function ManagementDashboard() {
 
     const index = elements[0].index;
     const locationName = homesChartData.labels[index];
-    const homeData = homesPopUpData.find((item) => item.name === locationName);
+    const homeData = homesPopUpData[locationName];
 
     const content = [
       `Number of POAs not notified: ${homeData.poaNotNotified}`,
@@ -240,6 +210,60 @@ export default function ManagementDashboard() {
     ];
     openModal(locationName, content);
   };
+
+  useEffect(() => {
+    const homes = ['iggh', 'millCreek', 'niagara', 'wellington'];
+    let nonComplianceCounts = {
+      niagara: { poaNotNotified: 0, unwrittenNotes: 0 },
+      millCreek: { poaNotNotified: 0, unwrittenNotes: 0 },
+      wellington: { poaNotNotified: 0, unwrittenNotes: 0 },
+      iggh: { poaNotNotified: 0, unwrittenNotes: 0 },
+    };
+
+    const fetchDataForHome = (home) => {
+      const fallsRef = ref(db, `/${home}/2024/${homesTimeRange}`);
+      return new Promise((resolve) => {
+        onValue(fallsRef, (snapshot) => {
+          const data = snapshot.val();
+          if (data) {
+            Object.values(data).forEach((item) => {
+              const fallDate = new Date(item.date);
+              const currentDate = new Date();
+              const daysDifference = Math.abs(currentDate - fallDate) / (1000 * 60 * 60 * 24);
+
+              // Count POAs not contacted
+              if (item.poaContacted.toLowerCase() !== 'yes') {
+                nonComplianceCounts[home].poaNotNotified += 1;
+              }
+
+              // Count unwritten post-fall notes (if more than 3 days after the fall and postFallNotes < 3)
+              if (daysDifference > 3 && parseInt(item.postFallNotes) < 3) {
+                nonComplianceCounts[home].unwrittenNotes += 1;
+              }
+            });
+          } else {
+            console.warn(`No data found in Firebase for ${home}`);
+          }
+          resolve();
+        });
+      });
+    };
+
+    const fetchAllData = async () => {
+      const allDataPromises = homes.map(fetchDataForHome);
+      await Promise.all(allDataPromises);
+
+      updateHomesChart(nonComplianceCounts);
+      const popupData = {};
+      for (const key in nonComplianceCounts) {
+        const newKey = shortToFull(key);
+        popupData[newKey] = nonComplianceCounts[key];
+      }
+      setHomesPopUpData(popupData);
+    };
+
+    fetchAllData();
+  }, [homesTimeRange]);
 
   const openModal = (title, content) => {
     setModalTitle(title);
@@ -338,7 +362,7 @@ export default function ManagementDashboard() {
               const fallsRef = ref(db, `/${home}/2024/${month}`);
               onValue(fallsRef, (snapshot) => {
                 const data = snapshot.val();
-                const homeName = homeToName(home);
+                const homeName = shortToFull(home);
                 const monthYear = `${getMonthName(month)} 2024`; // Format month as two digits
                 const fallsCount = data ? Object.keys(data).length : 0;
                 let poaNotNotified = 0;
