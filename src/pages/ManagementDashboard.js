@@ -4,7 +4,15 @@ import styles from '../styles/ManagementDashboard.module.css';
 import { useNavigate } from 'react-router-dom';
 import SummaryCard from './SummaryCard';
 import Modal from './Modal';
-import { Chart, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
+import {
+  Chart,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
 import { ref, onValue } from 'firebase/database';
 import { db } from '../firebase';
 import { saveAs } from 'file-saver';
@@ -91,7 +99,11 @@ export default function ManagementDashboard() {
     const fallsData = fallsPopUpData[locationName];
 
     const { headInjury, fracture, skinTear } = fallsData;
-    const content = [`Head injuries: ${headInjury}`, `Fractures: ${fracture}`, `Skin tears: ${skinTear}`];
+    const content = [
+      `Head injuries: ${headInjury}`,
+      `Fractures: ${fracture}`,
+      `Skin tears: ${skinTear}`,
+    ];
     openModal(locationName, content);
   };
 
@@ -123,9 +135,24 @@ export default function ManagementDashboard() {
 
     const injuryCounts = {
       iggh: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0 },
-      millCreek: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0 },
-      niagara: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0 },
-      wellington: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0 },
+      millCreek: {
+        headInjury: 0,
+        fracture: 0,
+        skinTear: 0,
+        significantInjury: 0,
+      },
+      niagara: {
+        headInjury: 0,
+        fracture: 0,
+        skinTear: 0,
+        significantInjury: 0,
+      },
+      wellington: {
+        headInjury: 0,
+        fracture: 0,
+        skinTear: 0,
+        significantInjury: 0,
+      },
     };
 
     const fetchDataForHome = async (home) => {
@@ -175,10 +202,12 @@ export default function ManagementDashboard() {
   }, [fallsTimeRange]);
 
   const updateHomesChart = (nonComplianceCounts) => {
-    const newData = Object.entries(nonComplianceCounts).map(([home, counts]) => ({
-      name: home,
-      totalNonCompliance: counts.poaNotNotified + counts.unwrittenNotes,
-    }));
+    const newData = Object.entries(nonComplianceCounts).map(
+      ([home, counts]) => ({
+        name: home,
+        totalNonCompliance: counts.poaNotNotified + counts.unwrittenNotes,
+      })
+    );
 
     newData.sort((a, b) => b.totalNonCompliance - a.totalNonCompliance);
 
@@ -229,7 +258,8 @@ export default function ManagementDashboard() {
             Object.values(data).forEach((item) => {
               const fallDate = new Date(item.date);
               const currentDate = new Date();
-              const daysDifference = Math.abs(currentDate - fallDate) / (1000 * 60 * 60 * 24);
+              const daysDifference =
+                Math.abs(currentDate - fallDate) / (1000 * 60 * 60 * 24);
 
               // Count POAs not contacted
               if (item.poaContacted.toLowerCase() !== 'yes') {
@@ -306,24 +336,30 @@ export default function ManagementDashboard() {
       {
         value: dataLengths['niagara'],
         subtitle: 'Niagara LTC',
+        fallrate: (dataLengths['niagara'] / 103) * 100,
         linkTo: '/niagara-ltc',
       },
       {
         value: dataLengths['millCreek'],
         subtitle: 'Mill Creek LTC',
+        fallrate: (dataLengths['millCreek'] / 160) * 100,
         linkTo: '/mill-creek-care',
       },
       {
         value: dataLengths['wellington'],
         subtitle: 'The Wellington LTC',
+        fallrate: (dataLengths['wellington'] / 78) * 100,
         linkTo: '/the-wellington-ltc',
       },
       {
         value: dataLengths['iggh'],
         subtitle: 'Ina Grafton LTC',
+        fallrate: (dataLengths['iggh'] / 128) * 100,
         linkTo: '/iggh-ltc',
       },
     ];
+
+    updatedSummaryData.sort((a, b) => b.fallrate - a.fallrate);
 
     setSummaryData(updatedSummaryData);
   }, [dataLengths]);
@@ -373,20 +409,30 @@ export default function ManagementDashboard() {
                   Object.values(data).forEach((item) => {
                     const fallDate = new Date(item.date);
                     const currentDate = new Date();
-                    const daysDifference = Math.abs(currentDate - fallDate) / (1000 * 60 * 60 * 24);
+                    const daysDifference =
+                      Math.abs(currentDate - fallDate) / (1000 * 60 * 60 * 24);
 
                     // Non-compliance calculations
                     if (item.poaContacted.toLowerCase() !== 'yes') {
                       poaNotNotified += 1;
                     }
-                    if (daysDifference > 3 && parseInt(item.postFallNotes) < 3) {
+                    if (
+                      daysDifference > 3 &&
+                      parseInt(item.postFallNotes) < 3
+                    ) {
                       unwrittenNotes += 1;
                     }
 
                     // Significant injury calculations
-                    const hasHeadInjury = item.injury.toLowerCase().includes('head injury');
-                    const hasFracture = item.injury.toLowerCase().includes('fracture');
-                    const hasSkinTear = item.injury.toLowerCase().includes('skin tear');
+                    const hasHeadInjury = item.injury
+                      .toLowerCase()
+                      .includes('head injury');
+                    const hasFracture = item.injury
+                      .toLowerCase()
+                      .includes('fracture');
+                    const hasSkinTear = item.injury
+                      .toLowerCase()
+                      .includes('skin tear');
 
                     if (hasHeadInjury || hasFracture || hasSkinTear) {
                       significantInjury += 1;
@@ -412,9 +458,13 @@ export default function ManagementDashboard() {
     );
 
     // Generate CSV content
-    const headers = 'Community,Month/Year,Falls,Incidents of non-compliance,Falls w/ significant injury\n';
+    const headers =
+      'Community,Month/Year,Falls,Incidents of non-compliance,Falls w/ significant injury\n';
     const rows = fallsData
-      .map((row) => `${row.Community},${row.MonthYear},${row.Falls},${row.Incidents},${row.SignificantInjury}`)
+      .map(
+        (row) =>
+          `${row.Community},${row.MonthYear},${row.Falls},${row.Incidents},${row.SignificantInjury}`
+      )
       .join('\n');
     const csvContent = headers + rows;
 
@@ -438,35 +488,39 @@ export default function ManagementDashboard() {
       </header>
       <div className={styles['chart-container']}>
         <div className={styles['chart']}>
-          <h2 id="fallsHeader">Falls with significant injury</h2>
+          <h2 id='fallsHeader'>Falls with significant injury</h2>
           <select
-            id="fallsTimeRange"
+            id='fallsTimeRange'
             value={fallsTimeRange}
             className={styles.select}
             onChange={(e) => {
               setFallsTimeRange(e.target.value);
             }}
           >
-            <option value="11">Current Month</option>
-            <option value="10">October 2024</option>
+            <option value='11'>Current Month</option>
+            <option value='10'>October 2024</option>
           </select>
-          {fallsChartData.datasets.length > 0 && <Bar data={fallsChartData} options={createOptions(onClickFalls)} />}
+          {fallsChartData.datasets.length > 0 && (
+            <Bar data={fallsChartData} options={createOptions(onClickFalls)} />
+          )}
         </div>
 
         <div className={styles['chart']}>
-          <h2 id="homesHeader">Number of incidents of non-compliance</h2>
+          <h2 id='homesHeader'>Number of incidents of non-compliance</h2>
           <select
-            id="homesTimeRange"
+            id='homesTimeRange'
             value={homesTimeRange}
             onChange={(e) => {
               setHomesTimeRange(e.target.value);
             }}
           >
-            <option value="11">Current Month</option>
-            <option value="10">October 2024</option>
+            <option value='11'>Current Month</option>
+            <option value='10'>October 2024</option>
           </select>
 
-          {homesChartData.datasets.length > 0 && <Bar data={homesChartData} options={createOptions(onClickHomes)} />}
+          {homesChartData.datasets.length > 0 && (
+            <Bar data={homesChartData} options={createOptions(onClickHomes)} />
+          )}
         </div>
       </div>
 
@@ -474,12 +528,23 @@ export default function ManagementDashboard() {
         <h2>Fall Summary</h2>
         <div className={styles['summary-cards']}>
           {summaryData.map((item, index) => (
-            <SummaryCard key={index} value={item.value} subtitle={item.subtitle} linkTo={item.linkTo} />
+            <SummaryCard
+              key={index}
+              value={item.value}
+              subtitle={item.subtitle}
+              linkTo={item.linkTo}
+              fallrate={item.fallrate}
+            />
           ))}
         </div>
       </div>
 
-      <Modal showModal={showModal} handleClose={closeModal} modalContent={modalContent} title={modalTitle} />
+      <Modal
+        showModal={showModal}
+        handleClose={closeModal}
+        modalContent={modalContent}
+        title={modalTitle}
+      />
     </div>
   );
 }
