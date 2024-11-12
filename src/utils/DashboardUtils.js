@@ -22,7 +22,9 @@ export function markPostFallNotes(data) {
         break;
       }
     }
-    currentRecord.postFallNotesColor = currentRecord.postFallNotes < 3 && !hasFallWithin72Hours ? 'red' : 'default';
+    console.log(currentRecord.hospital);
+    currentRecord.postFallNotesColor =
+      currentRecord.postFallNotes < 3 && !hasFallWithin72Hours && (currentRecord.hospital.toLowerCase() === 'no') ? 'red' : 'default';
   }
   return data;
 }
@@ -131,7 +133,6 @@ export function countFallsByTimeOfDay(data) {
   data.forEach((fall) => {
     var shift = getTimeShift(fall.time);
     timeOfDayCounts[shift]++;
-    
   });
 
   return timeOfDayCounts;
