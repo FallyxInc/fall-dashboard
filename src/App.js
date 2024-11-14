@@ -1,6 +1,6 @@
 import './App.css';
 import React from 'react';
-import {  useEffect } from 'react';
+import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
@@ -9,6 +9,7 @@ import ManagementDashboard from './pages/ManagementDashboard';
 import PrivateRoute from './components/PrivateRoute';
 import Unauthorized from './pages/Unauthorized';
 import UpdateData from './pages/UpdateData';
+import UpdatePasswordPage from './pages/ResetPassword';
 
 function App() {
   useEffect(() => {
@@ -23,6 +24,7 @@ function App() {
       <Router>
         <Routes>
           <Route path="/login" element={<Login />}></Route>
+          <Route path="/reset-password" element={<UpdatePasswordPage />}></Route>
           <Route path="/unauthorized" element={<Unauthorized />} />
           <Route
             path="/update-data"

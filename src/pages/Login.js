@@ -18,30 +18,30 @@ export default function Login() {
   const handleLogin = async (event) => {
     if (event) event.preventDefault();
 
-    performance.clearMarks();
-    performance.clearMeasures();
+    // performance.clearMarks();
+    // performance.clearMeasures();
 
     const fakeEmail = `${username}@example.com`;
 
-    performance.mark('start-signin');
+    // performance.mark('start-signin');
     try {
       const userCredential = await signInWithEmailAndPassword(auth, fakeEmail, password);
-      performance.mark('end-signin');
-      performance.measure('Sign-in Time', 'start-signin', 'end-signin');
+      // performance.mark('end-signin');
+      // performance.measure('Sign-in Time', 'start-signin', 'end-signin');
 
-      const signInEntries = performance.getEntriesByName('Sign-in Time');
-      const signInTime = signInEntries[signInEntries.length - 1].duration;
-      console.log('Sign-in Time:', signInTime, 'ms');
+      // const signInEntries = performance.getEntriesByName('Sign-in Time');
+      // const signInTime = signInEntries[signInEntries.length - 1].duration;
+      // console.log('Sign-in Time:', signInTime, 'ms');
 
       // Now measure the get(userRef) operation
-      performance.mark('start-getUser');
+      // performance.mark('start-getUser');
       const userSnapshot = await get(ref(db, `users/${userCredential.user.uid}`));
-      performance.mark('end-getUser');
-      performance.measure('Get User Time', 'start-getUser', 'end-getUser');
+      // performance.mark('end-getUser');
+      // performance.measure('Get User Time', 'start-getUser', 'end-getUser');
 
-      const getUserEntries = performance.getEntriesByName('Get User Time');
-      const getUserTime = getUserEntries[getUserEntries.length - 1].duration;
-      console.log('Get User Time:', getUserTime, 'ms');
+      // const getUserEntries = performance.getEntriesByName('Get User Time');
+      // const getUserTime = getUserEntries[getUserEntries.length - 1].duration;
+      // console.log('Get User Time:', getUserTime, 'ms');
 
       // Proceed with navigation
       if (userSnapshot.exists()) {
@@ -96,6 +96,9 @@ export default function Login() {
       <button className="login-button" onClick={handleLogin}>
         Login
       </button>
+      <div className="resetPasswordLink">
+        <Link to="/reset-password">Forgot Password? Reset here</Link>
+      </div>
     </div>
   );
 }
