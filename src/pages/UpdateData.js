@@ -14,6 +14,10 @@ const UpdateData = () => {
     { name: 'niagara', label: 'Niagara LTC' },
     { name: 'millCreek', label: 'Mill Creek Care Center' },
     { name: 'iggh', label: 'Ina Grafton Gage Home' },
+    // { name: 'home1', label: 'Homes1' },
+    // { name: 'home2', label: 'Homes2' },
+    // { name: 'home3', label: 'Homes3' },
+    // { name: 'home4', label: 'Homes4' },
   ];
 
   const months = [

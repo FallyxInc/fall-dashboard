@@ -54,6 +54,10 @@ export default function Login() {
     }
   };
 
+  const handleDemoLogin = () => {
+    navigate('/demo-responsive');
+  };
+
   return (
     <div className="login-container">
       <img src={fallyxLogo} alt="Logo" className="logoLogin" />
@@ -96,6 +100,11 @@ export default function Login() {
       <button className="login-button" onClick={handleLogin}>
         Login
       </button>
+
+      <button className="login-button" onClick={handleDemoLogin}>
+        Demo Login
+      </button>
+
       <div className="resetPasswordLink">
         <Link to="/reset-password">Forgot Password? Reset here</Link>
       </div>

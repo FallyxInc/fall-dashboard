@@ -10,12 +10,12 @@ import PrivateRoute from './components/PrivateRoute';
 import Unauthorized from './pages/Unauthorized';
 import UpdateData from './pages/UpdateData';
 import UpdatePasswordPage from './pages/ResetPassword';
+import DemoManagementDashboard from './pages/DemoManagementDashboard';
 
 function App() {
   useEffect(() => {
-    // 在首次加载时检测是否处于根路径，如果是，则重定向到 /home
     if (window.location.pathname === '/') {
-      window.location.replace('/home'); // 使用 window.location.href 强制刷新
+      window.location.replace('/home');
     }
   }, []);
 
@@ -40,6 +40,51 @@ function App() {
               <PrivateRoute rolesRequired={['responsive']}>
                 <ManagementDashboard></ManagementDashboard>
               </PrivateRoute>
+            }
+          ></Route>
+          <Route path="/demo-responsive" element={<DemoManagementDashboard></DemoManagementDashboard>}></Route>
+          <Route
+            path="/home1"
+            element={
+              <Dashboard
+                name="home1"
+                title={'The Home 1 Falls dashboard'}
+                unitSelectionValues={['allUnits', 'unit 1', 'unit 2', 'unit 3']}
+                goal={10}
+              ></Dashboard>
+            }
+          ></Route>
+          <Route
+            path="/home2"
+            element={
+              <Dashboard
+                name="home2"
+                title={'The Home 2 Falls dashboard'}
+                unitSelectionValues={['allUnits', 'unit 1', 'unit 2', 'unit 3']}
+                goal={18}
+              ></Dashboard>
+            }
+          ></Route>
+          <Route
+            path="/home3"
+            element={
+              <Dashboard
+                name="home3"
+                title={'The Home 3 Falls dashboard'}
+                unitSelectionValues={['allUnits', 'unit 1', 'unit 2', 'unit 3']}
+                goal={15}
+              ></Dashboard>
+            }
+          ></Route>
+          <Route
+            path="/home4"
+            element={
+              <Dashboard
+                name="home4"
+                title={'The Home 4 Falls dashboard'}
+                unitSelectionValues={['allUnits', 'unit 1', 'unit 2', 'unit 3']}
+                goal={20}
+              ></Dashboard>
             }
           ></Route>
           <Route
