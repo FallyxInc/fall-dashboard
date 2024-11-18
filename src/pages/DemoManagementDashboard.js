@@ -5,12 +5,14 @@ import { useNavigate } from 'react-router-dom';
 import SummaryCard from './SummaryCard';
 import Modal from './Modal';
 import { Chart, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
-import { ref, onValue } from 'firebase/database';
+import { ref, onValue, off } from 'firebase/database';
 import { db } from '../firebase';
 import { saveAs } from 'file-saver';
 Chart.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 export default function DemoManagementDashboard() {
+  console.log('render again');
+
   const navigate = useNavigate();
   const months = ['10', '11'];
   const [showModal, setShowModal] = useState(false);
@@ -445,7 +447,7 @@ export default function DemoManagementDashboard() {
   return (
     <div className={styles.dashboard}>
       <header className={styles.header}>
-        <h1 className={styles.h1}>Responsive Management Falls</h1>
+        <h1 className={styles.h1}>Aspira Retirement Living</h1>
         <div className={styles['button-container']}>
           <button className={styles['download-button']} onClick={downloadCSV}>
             Download CSV
