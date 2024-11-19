@@ -447,7 +447,7 @@ export default function DemoManagementDashboard() {
   return (
     <div className={styles.dashboard}>
       <header className={styles.header}>
-        <h1 className={styles.h1}>Aspira Retirement Living</h1>
+        <h1 className={styles.h1}>Aspira Management Dashboard</h1>
         <div className={styles['button-container']}>
           <button className={styles['download-button']} onClick={downloadCSV}>
             Download CSV
