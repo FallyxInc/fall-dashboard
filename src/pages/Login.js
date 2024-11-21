@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, signInAnonymously } from 'firebase/auth';
 import { ref, get } from 'firebase/database';
 import { db, auth } from '../firebase';
 import '../styles/Login.css';
@@ -54,8 +54,16 @@ export default function Login() {
     }
   };
 
-  const handleDemoLogin = () => {
-    navigate('/demo-responsive');
+  const handleDemoLogin = async () => {
+    setErrorMessage('');
+    try {
+      await signInAnonymously(auth);
+      // console.log('Anonymous login successful.');
+      navigate('/demo-responsive');
+    } catch (error) {
+      console.error('Error during anonymous login:', error);
+      setErrorMessage('Demo login failed. Please try again later.');
+    }
   };
 
   return (
@@ -89,7 +97,7 @@ export default function Login() {
           placeholder="Enter your password"
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
-              handleLogin(); // 当按下Enter时直接登录
+              handleLogin();
             }
           }}
         />
