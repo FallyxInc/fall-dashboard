@@ -3,7 +3,6 @@ import { Doughnut, Bar, Line } from 'react-chartjs-2';
 // import "../styles/Dashboard.css"
 import styles from '../styles/Dashboard.module.css';
 import { useNavigate } from 'react-router-dom';
-// import { threeData } from '../data/TableData';
 import * as Papa from 'papaparse';
 import { saveAs } from 'file-saver';
 import { Chart, ArcElement, PointElement, LineElement, plugins } from 'chart.js';
