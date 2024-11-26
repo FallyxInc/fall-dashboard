@@ -148,13 +148,17 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   const [analysisUnit, setAnalysisUnit] = useState('allUnits');
   const [analysisHeaderText, setAnalysisHeaderText] = useState('Falls by Time of Day');
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentIntervention, setCurrentIntervention] = useState('');
   const [currentRowIndex, setCurrentRowIndex] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [currentCauseOfFall, setCurrentCauseOfFall] = useState('');
   const [currentCauseRowIndex, setCurrentCauseRowIndex] = useState(null);
   const [isCauseModalOpen, setIsCauseModalOpen] = useState(false);
+
+  const [currentPostFallNotes, setCurrentPostFallNotes] = useState('');
+  const [currentPostFallNotesRowIndex, setCurrentPostFallNotesRowIndex] = useState(null);
+  const [isPostFallNotesModalOpen, setIsPostFallNotesModalOpen] = useState(false);
 
   const handleMonthChange = (event) => {
     // const selectedMonth = event.target.value === '10' ? 'October' : 'November';
@@ -219,6 +223,33 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
       })
       .catch((error) => {
         console.error('Error updating cause of fall:', error);
+      });
+  };
+
+  const handleEditPostFallNotes = (index) => {
+    setCurrentPostFallNotes(data[index].postFallNotes);
+    setCurrentPostFallNotesRowIndex(index);
+    setIsPostFallNotesModalOpen(true);
+  };
+
+  const handleSubmitPostFallNotes = () => {
+    if (currentPostFallNotes === data[currentPostFallNotesRowIndex].postFallNotes) {
+      setIsPostFallNotesModalOpen(false);
+      return;
+    }
+
+    let updatedData = [...data];
+    updatedData[currentPostFallNotesRowIndex].postFallNotes = currentPostFallNotes;
+    updatedData = markPostFallNotes(updatedData);
+    const rowRef = ref(db, `/${name}/2024/${months_backword[desiredMonth]}/row-${currentPostFallNotesRowIndex}`);
+    update(rowRef, { postFallNotes: currentPostFallNotes })
+      .then(() => {
+        console.log('Post Fall Notes updated successfully');
+        setData(updatedData);
+        setIsPostFallNotesModalOpen(false);
+      })
+      .catch((error) => {
+        console.error('Error updating post fall notes:', error);
       });
   };
 
@@ -490,7 +521,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
           // console.log(allFallsData);
           setThreeMonthData({ ...allFallsData });
         } else {
-          allFallsData[month] = []; 
+          allFallsData[month] = [];
         }
       });
 
@@ -498,7 +529,6 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     });
 
     const listener = onValue(dataRef, (snapshot) => {
-
       if (snapshot.exists()) {
         const fetchedData = snapshot.val();
 
@@ -781,8 +811,13 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                   <option value="No">No</option>
                 </select>
               </td>
+              {/* <td className={item.postFallNotesColor === 'red' ? styles.cellRed : ''} style={{ fontSize: '16px' }}>
+                {item.postFallNotes}
+              </td> */}
               <td className={item.postFallNotesColor === 'red' ? styles.cellRed : ''} style={{ fontSize: '16px' }}>
                 {item.postFallNotes}
+                <br />
+                <button onClick={() => handleEditPostFallNotes(i)}>Edit</button>
               </td>
             </tr>
           ))}
@@ -810,6 +845,19 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
               <br />
               <button onClick={handleSubmitCauseOfFall}>Submit</button>
               <button onClick={() => setIsCauseModalOpen(false)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {isPostFallNotesModalOpen && (
+        <div className={styles.modal}>
+          <div className={styles.modalContent}>
+            <div>
+              <h2>Edit Post Fall Notes</h2>
+              <textarea value={currentPostFallNotes} onChange={(e) => setCurrentPostFallNotes(e.target.value)} />
+              <br />
+              <button onClick={handleSubmitPostFallNotes}>Submit</button>
+              <button onClick={() => setIsPostFallNotesModalOpen(false)}>Cancel</button>
             </div>
           </div>
         </div>
