@@ -1,10 +1,11 @@
 .dashboard {
-  max-width: 95vw;
-  width: 100%;
+  margin: auto;
+  width: 95%; /* 不再限制宽度，允许其在视口中占满空间 */
   background-color: white;
   border-radius: 8px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   padding: 20px;
+  overflow-x: auto;
 }
 
 h1,
@@ -12,10 +13,11 @@ h2 {
   color: #2c3e50;
 }
 .chart-container {
+  width: 100%;
   display: flex;
   justify-content: space-between;
   margin-bottom: 20px;
-  gap: 35px; /* Add gap between charts */
+  gap: 35px; 
 }
 .chart {
   flex: 1; /* Make charts grow equally */
