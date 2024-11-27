@@ -4,18 +4,49 @@ const db = require('../db');
 
 // 获取所有事件
 router.get('/', (req, res) => {
+  const { home_id, year, month } = req.query;
+
+  if (!home_id || !year || !month) {
+    return res.status(400).send({ error: 'home_id, year, and month are required' });
+  }
+
   const query = `
-    SELECT fe.*, rh.name AS home_name
-    FROM fall_events fe
-    JOIN retirement_homes rh ON fe.home_id = rh.id
-    ORDER BY fe.date DESC, fe.time DESC;
-  `;
-  db.query(query, (err, results) => {
+        SELECT fall_events.*, retirement_homes.name
+        FROM fall_events
+        JOIN retirement_homes ON fall_events.home_id = retirement_homes.id
+        WHERE fall_events.home_id = ? AND LEFT(date, 4) = ? AND SUBSTRING(date, 6, 2) = ?
+        ORDER BY fall_events.date DESC, fall_events.time DESC;
+    `;
+
+  db.query(query, [home_id, year, month], (err, results) => {
     if (err) {
-      res.status(500).send({ error: 'Failed to fetch fall events' });
-    } else {
-      res.status(200).json(results);
+      console.error('Error fetching fall events:', err);
+      return res.status(500).send({ error: 'Failed to fetch fall events' });
     }
+    console.log(results);
+
+    const mappedResults = results.map((item) => ({
+      'Day of the Week': item.day_of_week,
+      cause: item.cause,
+      date: item.date,
+      hir: item.hir,
+      homeUnit: item.home_unit,
+      hospital: item.hospital,
+      incidentReport: item.incident_report,
+      injury: item.injury,
+      interventions: item.interventions,
+      isInterventionUpdated: item.is_intervention_updated,
+      location: item.location,
+      name: item.name,
+      physicianRef: item.physician_ref,
+      poaContacted: item.poa_contacted,
+      postFallNotes: item.post_fall_notes,
+      postFallNotesColor: item.post_fall_notes_color || 'default',
+      ptRef: item.pt_ref,
+      time: item.time,
+    }));
+
+    res.status(200).json(mappedResults);
   });
 });
 

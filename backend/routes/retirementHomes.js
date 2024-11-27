@@ -4,10 +4,27 @@ const db = require('../db');
 
 // 获取所有退休院
 router.get('/', (req, res) => {
-  const query = 'SELECT * FROM retirement_homes';
-  db.query(query, (err, results) => {
+  const { home_id, year, month, page = 1, limit = 10 } = req.query;
+
+  if (!home_id || !year || !month) {
+    return res.status(400).send({ error: 'home_id, year, and month are required' });
+  }
+
+  const offset = (page - 1) * limit;
+
+  const query = `
+      SELECT fe.*, rh.name AS home_name
+      FROM fall_events fe
+      JOIN retirement_homes rh ON fe.home_id = rh.id
+      WHERE fe.home_id = ? AND YEAR(fe.date) = ? AND MONTH(fe.date) = ?
+      ORDER BY fe.date ASC, fe.time ASC
+      LIMIT ? OFFSET ?;
+    `;
+
+  db.query(query, [home_id, year, month, parseInt(limit), parseInt(offset)], (err, results) => {
     if (err) {
-      res.status(500).send({ error: 'Failed to fetch data' });
+      console.error('Error fetching fall events:', err);
+      res.status(500).send({ error: 'Failed to fetch fall events' });
     } else {
       res.status(200).json(results);
     }

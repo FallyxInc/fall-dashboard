@@ -2,9 +2,12 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const retirementHomesRoutes = require('./routes/retirementHomes');
 const fallEventsRoutes = require('./routes/fallEvents');
+const cors = require('cors');
 
 const app = express();
 const PORT = 8000;
+
+app.use(cors());
 
 // 中间件
 app.use(bodyParser.json());
