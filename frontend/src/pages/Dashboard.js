@@ -240,9 +240,11 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
 
     let updatedData = [...data];
     updatedData[currentPostFallNotesRowIndex].postFallNotes = currentPostFallNotes;
+    updatedData[currentPostFallNotesRowIndex].isPostFallNotesUpdated = 'Yes';
     updatedData = markPostFallNotes(updatedData);
+
     const rowRef = ref(db, `/${name}/2024/${months_backword[desiredMonth]}/row-${currentPostFallNotesRowIndex}`);
-    update(rowRef, { postFallNotes: currentPostFallNotes })
+    update(rowRef, { postFallNotes: currentPostFallNotes, isPostFallNotesUpdated: 'Yes' })
       .then(() => {
         console.log('Post Fall Notes updated successfully');
         setData(updatedData);
@@ -814,7 +816,13 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
               {/* <td className={item.postFallNotesColor === 'red' ? styles.cellRed : ''} style={{ fontSize: '16px' }}>
                 {item.postFallNotes}
               </td> */}
-              <td className={item.postFallNotesColor === 'red' ? styles.cellRed : ''} style={{ fontSize: '16px' }}>
+              <td
+                className={item.postFallNotesColor === 'red' ? styles.cellRed : ''}
+                style={{
+                  fontSize: '16px',
+                  color: item.isPostFallNotesUpdated === 'Yes' ? 'green' : '#000000',
+                }}
+              >
                 {item.postFallNotes}
                 <br />
                 <button onClick={() => handleEditPostFallNotes(i)}>Edit</button>
