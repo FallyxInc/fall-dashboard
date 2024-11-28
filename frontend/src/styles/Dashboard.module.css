@@ -17,7 +17,7 @@ h2 {
   display: flex;
   justify-content: space-between;
   margin-bottom: 20px;
-  gap: 35px; 
+  gap: 35px;
 }
 .chart {
   flex: 1; /* Make charts grow equally */

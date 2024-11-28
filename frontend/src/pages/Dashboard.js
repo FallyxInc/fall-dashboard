@@ -820,7 +820,8 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                 className={item.postFallNotesColor === 'red' ? styles.cellRed : ''}
                 style={{
                   fontSize: '16px',
-                  color: item.isPostFallNotesUpdated === 'Yes' ? 'green' : '#000000',
+                  color: item.isPostFallNotesUpdated === 'Yes' ? '#179c4e' : '#000000',
+                  fontWeight: 'bold'
                 }}
               >
                 {item.postFallNotes}
