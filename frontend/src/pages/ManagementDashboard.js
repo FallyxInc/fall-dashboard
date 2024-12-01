@@ -4,15 +4,7 @@ import styles from '../styles/ManagementDashboard.module.css';
 import { useNavigate } from 'react-router-dom';
 import SummaryCard from './SummaryCard';
 import Modal from './Modal';
-import {
-  Chart,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-} from 'chart.js';
+import { Chart, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
 import { ref, onValue } from 'firebase/database';
 import { db } from '../firebase';
 import { saveAs } from 'file-saver';
@@ -20,7 +12,7 @@ Chart.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 export default function ManagementDashboard() {
   const navigate = useNavigate();
-  const months = ['11', '12'];
+  const months = ['10', '11', '12'];
   const [showModal, setShowModal] = useState(false);
   const [modalContent, setModalContent] = useState([]);
   const [modalTitle, setModalTitle] = useState('');
@@ -99,11 +91,7 @@ export default function ManagementDashboard() {
     const fallsData = fallsPopUpData[locationName];
 
     const { headInjury, fracture, skinTear } = fallsData;
-    const content = [
-      `Head injuries: ${headInjury}`,
-      `Fractures: ${fracture}`,
-      `Skin tears: ${skinTear}`,
-    ];
+    const content = [`Head injuries: ${headInjury}`, `Fractures: ${fracture}`, `Skin tears: ${skinTear}`];
     openModal(locationName, content);
   };
 
@@ -202,12 +190,10 @@ export default function ManagementDashboard() {
   }, [fallsTimeRange]);
 
   const updateHomesChart = (nonComplianceCounts) => {
-    const newData = Object.entries(nonComplianceCounts).map(
-      ([home, counts]) => ({
-        name: home,
-        totalNonCompliance: counts.poaNotNotified + counts.unwrittenNotes,
-      })
-    );
+    const newData = Object.entries(nonComplianceCounts).map(([home, counts]) => ({
+      name: home,
+      totalNonCompliance: counts.poaNotNotified + counts.unwrittenNotes,
+    }));
 
     newData.sort((a, b) => b.totalNonCompliance - a.totalNonCompliance);
 
@@ -258,8 +244,7 @@ export default function ManagementDashboard() {
             Object.values(data).forEach((item) => {
               const fallDate = new Date(item.date);
               const currentDate = new Date();
-              const daysDifference =
-                Math.abs(currentDate - fallDate) / (1000 * 60 * 60 * 24);
+              const daysDifference = Math.abs(currentDate - fallDate) / (1000 * 60 * 60 * 24);
 
               // Count POAs not contacted
               if (item.poaContacted.toLowerCase() !== 'yes') {
@@ -409,30 +394,20 @@ export default function ManagementDashboard() {
                   Object.values(data).forEach((item) => {
                     const fallDate = new Date(item.date);
                     const currentDate = new Date();
-                    const daysDifference =
-                      Math.abs(currentDate - fallDate) / (1000 * 60 * 60 * 24);
+                    const daysDifference = Math.abs(currentDate - fallDate) / (1000 * 60 * 60 * 24);
 
                     // Non-compliance calculations
                     if (item.poaContacted.toLowerCase() !== 'yes') {
                       poaNotNotified += 1;
                     }
-                    if (
-                      daysDifference > 3 &&
-                      parseInt(item.postFallNotes) < 3
-                    ) {
+                    if (daysDifference > 3 && parseInt(item.postFallNotes) < 3) {
                       unwrittenNotes += 1;
                     }
 
                     // Significant injury calculations
-                    const hasHeadInjury = item.injury
-                      .toLowerCase()
-                      .includes('head injury');
-                    const hasFracture = item.injury
-                      .toLowerCase()
-                      .includes('fracture');
-                    const hasSkinTear = item.injury
-                      .toLowerCase()
-                      .includes('skin tear');
+                    const hasHeadInjury = item.injury.toLowerCase().includes('head injury');
+                    const hasFracture = item.injury.toLowerCase().includes('fracture');
+                    const hasSkinTear = item.injury.toLowerCase().includes('skin tear');
 
                     if (hasHeadInjury || hasFracture || hasSkinTear) {
                       significantInjury += 1;
@@ -457,14 +432,18 @@ export default function ManagementDashboard() {
       )
     );
 
+    console.log(fallsData);
+
+    fallsData.sort((a, b) => {
+      const dateA = new Date(a.MonthYear);
+      const dateB = new Date(b.MonthYear);
+      return dateB - dateA;
+    });
+
     // Generate CSV content
-    const headers =
-      'Community,Month/Year,Falls,Incidents of non-compliance,Falls w/ significant injury\n';
+    const headers = 'Community,Month/Year,Falls,Incidents of non-compliance,Falls w/ significant injury\n';
     const rows = fallsData
-      .map(
-        (row) =>
-          `${row.Community},${row.MonthYear},${row.Falls},${row.Incidents},${row.SignificantInjury}`
-      )
+      .map((row) => `${row.Community},${row.MonthYear},${row.Falls},${row.Incidents},${row.SignificantInjury}`)
       .join('\n');
     const csvContent = headers + rows;
 
@@ -488,39 +467,35 @@ export default function ManagementDashboard() {
       </header>
       <div className={styles['chart-container']}>
         <div className={styles['chart']}>
-          <h2 id='fallsHeader'>Falls with significant injury</h2>
+          <h2 id="fallsHeader">Falls with significant injury</h2>
           <select
-            id='fallsTimeRange'
+            id="fallsTimeRange"
             value={fallsTimeRange}
             className={styles.select}
             onChange={(e) => {
               setFallsTimeRange(e.target.value);
             }}
           >
-            <option value='12'>Current Month</option>
-            <option value='11'>November 2024</option>
+            <option value="12">Current Month</option>
+            <option value="11">November 2024</option>
           </select>
-          {fallsChartData.datasets.length > 0 && (
-            <Bar data={fallsChartData} options={createOptions(onClickFalls)} />
-          )}
+          {fallsChartData.datasets.length > 0 && <Bar data={fallsChartData} options={createOptions(onClickFalls)} />}
         </div>
 
         <div className={styles['chart']}>
-          <h2 id='homesHeader'>Number of incidents of non-compliance</h2>
+          <h2 id="homesHeader">Number of incidents of non-compliance</h2>
           <select
-            id='homesTimeRange'
+            id="homesTimeRange"
             value={homesTimeRange}
             onChange={(e) => {
               setHomesTimeRange(e.target.value);
             }}
           >
-            <option value='12'>Current Month</option>
-            <option value='11'>November 2024</option>
+            <option value="12">Current Month</option>
+            <option value="11">November 2024</option>
           </select>
 
-          {homesChartData.datasets.length > 0 && (
-            <Bar data={homesChartData} options={createOptions(onClickHomes)} />
-          )}
+          {homesChartData.datasets.length > 0 && <Bar data={homesChartData} options={createOptions(onClickHomes)} />}
         </div>
       </div>
 
@@ -539,12 +514,7 @@ export default function ManagementDashboard() {
         </div>
       </div>
 
-      <Modal
-        showModal={showModal}
-        handleClose={closeModal}
-        modalContent={modalContent}
-        title={modalTitle}
-      />
+      <Modal showModal={showModal} handleClose={closeModal} modalContent={modalContent} title={modalTitle} />
     </div>
   );
 }
