@@ -20,12 +20,12 @@ Chart.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 export default function ManagementDashboard() {
   const navigate = useNavigate();
-  const months = ['10', '11'];
+  const months = ['11', '12'];
   const [showModal, setShowModal] = useState(false);
   const [modalContent, setModalContent] = useState([]);
   const [modalTitle, setModalTitle] = useState('');
-  const [fallsTimeRange, setFallsTimeRange] = useState('11');
-  const [homesTimeRange, setHomesTimeRange] = useState('11');
+  const [fallsTimeRange, setFallsTimeRange] = useState('12');
+  const [homesTimeRange, setHomesTimeRange] = useState('12');
 
   const [fallsChartData, setFallsChartData] = useState({
     labels: [],
@@ -51,7 +51,7 @@ export default function ManagementDashboard() {
     await Promise.all(
       homes.map((home) => {
         return new Promise((resolve) => {
-          const homeRef = ref(db, `/${home}/2024/11`); // Reference to the home in Firebase
+          const homeRef = ref(db, `/${home}/2024/12`); // Reference to the home in Firebase
 
           onValue(homeRef, (snapshot) => {
             const data = snapshot.val();
@@ -497,8 +497,8 @@ export default function ManagementDashboard() {
               setFallsTimeRange(e.target.value);
             }}
           >
-            <option value='11'>Current Month</option>
-            <option value='10'>October 2024</option>
+            <option value='12'>Current Month</option>
+            <option value='11'>November 2024</option>
           </select>
           {fallsChartData.datasets.length > 0 && (
             <Bar data={fallsChartData} options={createOptions(onClickFalls)} />
@@ -514,8 +514,8 @@ export default function ManagementDashboard() {
               setHomesTimeRange(e.target.value);
             }}
           >
-            <option value='11'>Current Month</option>
-            <option value='10'>October 2024</option>
+            <option value='12'>Current Month</option>
+            <option value='11'>November 2024</option>
           </select>
 
           {homesChartData.datasets.length > 0 && (

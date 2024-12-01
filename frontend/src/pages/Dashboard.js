@@ -28,7 +28,7 @@ Chart.register(ArcElement, PointElement, LineElement);
 export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   const [data, setData] = useState([]);
   const [threeMonthData, setThreeMonthData] = useState({});
-  const [desiredMonth, setDesiredMonth] = useState('November');
+  const [desiredMonth, setDesiredMonth] = useState('December');
 
   // console.log('data');
   // console.log(data);
@@ -161,8 +161,6 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   const [isPostFallNotesModalOpen, setIsPostFallNotesModalOpen] = useState(false);
 
   const handleMonthChange = (event) => {
-    // const selectedMonth = event.target.value === '10' ? 'October' : 'November';
-    // setDesiredMonth(selectedMonth);
     const selectedMonth = event.target.value;
     setDesiredMonth(selectedMonth);
   };
@@ -673,8 +671,8 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
         <div className={styles['header']}>
           <h2>Falls Tracking Table: {desiredMonth} 2024</h2>
           <select onChange={handleMonthChange} value={desiredMonth}>
-            <option value="October">October</option>
             <option value="November">November</option>
+            <option value="December">December</option>
           </select>
         </div>
         <div>
