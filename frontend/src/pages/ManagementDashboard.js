@@ -469,6 +469,11 @@ export default function ManagementDashboard() {
         onChange={(e) => {
           setCurrentMonth(e.target.value);
         }}
+        style={{
+          fontSize: '16px',
+          padding: '10px',
+          height: '40px',
+        }}
       >
         <option value="10">October</option>
         <option value="11">November</option>
