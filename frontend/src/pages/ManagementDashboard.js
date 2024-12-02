@@ -18,6 +18,7 @@ export default function ManagementDashboard() {
   const [modalTitle, setModalTitle] = useState('');
   const [fallsTimeRange, setFallsTimeRange] = useState('12');
   const [homesTimeRange, setHomesTimeRange] = useState('12');
+  const [currentMonth, setCurrentMonth] = useState('12');
 
   const [fallsChartData, setFallsChartData] = useState({
     labels: [],
@@ -43,7 +44,7 @@ export default function ManagementDashboard() {
     await Promise.all(
       homes.map((home) => {
         return new Promise((resolve) => {
-          const homeRef = ref(db, `/${home}/2024/12`); // Reference to the home in Firebase
+          const homeRef = ref(db, `/${home}/2024/${currentMonth}`); // Reference to the home in Firebase
 
           onValue(homeRef, (snapshot) => {
             const data = snapshot.val();
@@ -65,7 +66,7 @@ export default function ManagementDashboard() {
     };
 
     fetchData();
-  }, []);
+  }, [currentMonth]);
 
   const shortToFull = (home) => {
     switch (home) {
@@ -144,7 +145,7 @@ export default function ManagementDashboard() {
     };
 
     const fetchDataForHome = async (home) => {
-      const fallsRef = ref(db, `/${home}/2024/${fallsTimeRange}`);
+      const fallsRef = ref(db, `/${home}/2024/${currentMonth}`);
       return new Promise((resolve) => {
         onValue(fallsRef, (snapshot) => {
           const data = snapshot.val();
@@ -187,7 +188,7 @@ export default function ManagementDashboard() {
     };
 
     fetchAllData();
-  }, [fallsTimeRange]);
+  }, [currentMonth]);
 
   const updateHomesChart = (nonComplianceCounts) => {
     const newData = Object.entries(nonComplianceCounts).map(([home, counts]) => ({
@@ -236,7 +237,7 @@ export default function ManagementDashboard() {
     };
 
     const fetchDataForHome = (home) => {
-      const fallsRef = ref(db, `/${home}/2024/${homesTimeRange}`);
+      const fallsRef = ref(db, `/${home}/2024/${currentMonth}`);
       return new Promise((resolve) => {
         onValue(fallsRef, (snapshot) => {
           const data = snapshot.val();
@@ -278,7 +279,7 @@ export default function ManagementDashboard() {
     };
 
     fetchAllData();
-  }, [homesTimeRange]);
+  }, [currentMonth]);
 
   const openModal = (title, content) => {
     setModalTitle(title);
@@ -432,8 +433,6 @@ export default function ManagementDashboard() {
       )
     );
 
-    console.log(fallsData);
-
     fallsData.sort((a, b) => {
       const dateA = new Date(a.MonthYear);
       const dateB = new Date(b.MonthYear);
@@ -465,10 +464,20 @@ export default function ManagementDashboard() {
           </button>
         </div>
       </header>
+      <select
+        value={currentMonth}
+        onChange={(e) => {
+          setCurrentMonth(e.target.value);
+        }}
+      >
+        <option value="10">October</option>
+        <option value="11">November</option>
+        <option value="12">December</option>
+      </select>
       <div className={styles['chart-container']}>
         <div className={styles['chart']}>
           <h2 id="fallsHeader">Falls with significant injury</h2>
-          <select
+          {/* <select
             id="fallsTimeRange"
             value={fallsTimeRange}
             className={styles.select}
@@ -478,13 +487,13 @@ export default function ManagementDashboard() {
           >
             <option value="12">Current Month</option>
             <option value="11">November 2024</option>
-          </select>
+          </select> */}
           {fallsChartData.datasets.length > 0 && <Bar data={fallsChartData} options={createOptions(onClickFalls)} />}
         </div>
 
         <div className={styles['chart']}>
           <h2 id="homesHeader">Number of incidents of non-compliance</h2>
-          <select
+          {/* <select
             id="homesTimeRange"
             value={homesTimeRange}
             onChange={(e) => {
@@ -493,8 +502,7 @@ export default function ManagementDashboard() {
           >
             <option value="12">Current Month</option>
             <option value="11">November 2024</option>
-          </select>
-
+          </select> */}
           {homesChartData.datasets.length > 0 && <Bar data={homesChartData} options={createOptions(onClickHomes)} />}
         </div>
       </div>

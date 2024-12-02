@@ -550,6 +550,12 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
             return rowA - rowB; // Sort in ascending order
           })
           .map((key) => fetchedData[key]); // Map sorted keys to the values
+        // console.log(Object.values(fetchedData));
+        // const sortedData = Object.values(fetchedData).sort((a, b) => {
+        //   const dateTimeA = new Date(`${a.date} ${a.time}`);
+        //   const dateTimeB = new Date(`${b.date} ${b.time}`);
+        //   return dateTimeB - dateTimeA; // 从近到远排序
+        // });
 
         const updatedData = markPostFallNotes(sortedData);
 
@@ -819,7 +825,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                 style={{
                   fontSize: '16px',
                   color: item.isPostFallNotesUpdated === 'Yes' ? '#179c4e' : '#000000',
-                  fontWeight: 'bold'
+                  fontWeight: 'bold',
                 }}
               >
                 {item.postFallNotes}
