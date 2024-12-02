@@ -181,7 +181,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     updatedData[currentRowIndex].interventions = currentIntervention;
     updatedData[currentRowIndex].isInterventionUpdated = 'Yes';
 
-    const rowRef = ref(db, `/${name}/2024/${months_backword[desiredMonth]}/row-${currentRowIndex}`);
+    const rowRef = ref(db, `/${name}/2024/${months_backword[desiredMonth]}/row-${data[currentRowIndex].id}`);
     update(rowRef, {
       interventions: currentIntervention,
       isInterventionUpdated: 'Yes',
@@ -212,7 +212,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     updatedData[currentCauseRowIndex].cause = currentCauseOfFall;
     updatedData[currentCauseRowIndex].isCauseUpdated = 'Yes';
 
-    const rowRef = ref(db, `/${name}/2024/${months_backword[desiredMonth]}/row-${currentCauseRowIndex}`);
+    const rowRef = ref(db, `/${name}/2024/${months_backword[desiredMonth]}/row-${data[currentCauseRowIndex].id}`);
     update(rowRef, { cause: currentCauseOfFall, isCauseUpdated: 'Yes' })
       .then(() => {
         console.log('Cause of fall updated successfully');
@@ -241,7 +241,10 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     updatedData[currentPostFallNotesRowIndex].isPostFallNotesUpdated = 'Yes';
     updatedData = markPostFallNotes(updatedData);
 
-    const rowRef = ref(db, `/${name}/2024/${months_backword[desiredMonth]}/row-${currentPostFallNotesRowIndex}`);
+    const rowRef = ref(
+      db,
+      `/${name}/2024/${months_backword[desiredMonth]}/row-${data[currentPostFallNotesRowIndex].id}`
+    );
     update(rowRef, { postFallNotes: currentPostFallNotes, isPostFallNotesUpdated: 'Yes' })
       .then(() => {
         console.log('Post Fall Notes updated successfully');
@@ -539,27 +542,16 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
         const fetchDataTime = performance.getEntriesByName('Fetch Data Time')[0].duration;
         console.log('Fetch Data Time: ', fetchDataTime, 'ms'); // Logs the time it took for fetching data
 
-        // Object.keys(fetchedData) will give you all the keys, i.e., 'row-0', 'row-1', etc.
-        // Sort the keys and then map them to the corresponding values
-        // console.log(Object.keys(fetchedData))
-        // console.log(fetchedData);
-        const sortedData = Object.keys(fetchedData)
-          .sort((a, b) => {
-            const rowA = parseInt(a.split('-')[1], 10); // Extract number from 'row-x'
-            const rowB = parseInt(b.split('-')[1], 10);
-            return rowA - rowB; // Sort in ascending order
-          })
-          .map((key) => fetchedData[key]); // Map sorted keys to the values
-        // console.log(Object.values(fetchedData));
-        // const sortedData = Object.values(fetchedData).sort((a, b) => {
-        //   const dateTimeA = new Date(`${a.date} ${a.time}`);
-        //   const dateTimeB = new Date(`${b.date} ${b.time}`);
-        //   return dateTimeB - dateTimeA; // 从近到远排序
-        // });
+        let withIdData = Object.values(fetchedData);
+        for (let i = 0; i < withIdData.length; i++) {
+          withIdData[i].id = i;
+        }
 
-        const updatedData = markPostFallNotes(sortedData);
-
-        setData(updatedData); // Update state with the sorted data
+        const updatedData = markPostFallNotes(withIdData);
+        const sortedData = updatedData.sort(
+          (a, b) => new Date(b.date + ' ' + b.time) - new Date(a.date + ' ' + a.time)
+        );
+        setData(sortedData); // Update state with the sorted data
       } else {
         setData([]);
         console.log(`${name} data not found.`);
@@ -738,7 +730,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
               <td style={{ fontSize: '16px' }}>
                 <select
                   value={item.hir?.toLowerCase() === 'yes' ? 'Yes' : item.hir?.toLowerCase() === 'no' ? 'No' : item.hir}
-                  onChange={(e) => handleUpdateCSV(i, e.target.value, name, 'hir')}
+                  onChange={(e) => handleUpdateCSV(data[i].id, e.target.value, name, 'hir')}
                 >
                   <option value="Yes">Yes</option>
                   <option value="No">No</option>
@@ -754,7 +746,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                       ? 'No'
                       : item.hospital
                   }
-                  onChange={(e) => handleUpdateCSV(i, e.target.value, name, 'hospital')}
+                  onChange={(e) => handleUpdateCSV(data[i].id, e.target.value, name, 'hospital')}
                 >
                   <option value="Yes">Yes</option>
                   <option value="No">No</option>
@@ -765,7 +757,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                   value={
                     item.ptRef?.toLowerCase() === 'yes' ? 'Yes' : item.ptRef?.toLowerCase() === 'no' ? 'No' : item.ptRef
                   }
-                  onChange={(e) => handleUpdateCSV(i, e.target.value, name, 'ptRef')}
+                  onChange={(e) => handleUpdateCSV(data[i].id, e.target.value, name, 'ptRef')}
                 >
                   <option value="Yes">Yes</option>
                   <option value="No">No</option>
@@ -780,7 +772,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                       ? 'No'
                       : item.physicianRef
                   }
-                  onChange={(e) => handleUpdateCSV(i, e.target.value, name, 'physicianRef')}
+                  onChange={(e) => handleUpdateCSV(data[i].id, e.target.value, name, 'physicianRef')}
                 >
                   <option value="Yes">Yes</option>
                   <option value="No">No</option>
@@ -796,7 +788,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                       ? 'No'
                       : item.poaContacted
                   }
-                  onChange={(e) => handleUpdateCSV(i, e.target.value, name, 'poaContacted')}
+                  onChange={(e) => handleUpdateCSV(data[i].id, e.target.value, name, 'poaContacted')}
                 >
                   <option value="Yes">Yes</option>
                   <option value="No">No</option>
@@ -811,7 +803,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                       ? 'No'
                       : item.incidentReport
                   }
-                  onChange={(e) => handleUpdateCSV(i, e.target.value, name, 'incidentReport')}
+                  onChange={(e) => handleUpdateCSV(data[i].id, e.target.value, name, 'incidentReport')}
                 >
                   <option value="Yes">Yes</option>
                   <option value="No">No</option>

@@ -6,9 +6,11 @@ import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { saveAs } from 'file-saver';
 
-export function markPostFallNotes(data) {
+export function markPostFallNotes(input) {
+  let data = [...input];
   data.sort((a, b) => new Date(a.date + ' ' + a.time) - new Date(b.date + ' ' + b.time));
   for (let i = 0; i < data.length; i++) {
+    const currentID = data[i].id;
     const currentRecord = data[i];
     const currentDateTime = new Date(currentRecord.date + ' ' + currentRecord.time);
     let hasFallWithin72Hours = false;
@@ -22,11 +24,13 @@ export function markPostFallNotes(data) {
         break;
       }
     }
-    console.log(currentRecord.hospital);
-    currentRecord.postFallNotesColor =
-      currentRecord.postFallNotes < 3 && !hasFallWithin72Hours && (currentRecord.hospital.toLowerCase() === 'no') ? 'red' : 'default';
+
+    input[currentID].postFallNotesColor =
+      currentRecord.postFallNotes < 3 && !hasFallWithin72Hours && currentRecord.hospital.toLowerCase() === 'no'
+        ? 'red'
+        : 'default';
   }
-  return data;
+  return input;
 }
 
 export function countFallsByExactInjury(data) {
