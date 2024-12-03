@@ -669,6 +669,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
         <div className={styles['header']}>
           <h2>Falls Tracking Table: {desiredMonth} 2024</h2>
           <select onChange={handleMonthChange} value={desiredMonth}>
+            <option value="October">October</option>
             <option value="November">November</option>
             <option value="December">December</option>
           </select>
