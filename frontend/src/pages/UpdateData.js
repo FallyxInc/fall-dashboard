@@ -66,7 +66,6 @@ const UpdateData = () => {
 
     setUploading(true);
 
-    // Firebase 数据库路径包括仪表盘、年份和月份
     const dashboardRef = ref(db, `${selectedDashboard}/${selectedYear}/${selectedMonth}`);
     remove(dashboardRef).then(() => {
       console.log('Previous data removed successfully');
