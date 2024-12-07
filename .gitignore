@@ -6,4 +6,5 @@ frontend/src/components/TestFirebase.js
 .DS_Store
 test_files
 file 4
-autoUpdate.py
+htmlUpdate.py
+reports
