@@ -5,21 +5,20 @@ import { useNavigate } from 'react-router-dom';
 import SummaryCard from './SummaryCard';
 import Modal from './Modal';
 import { Chart, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
-import { ref, onValue, off } from 'firebase/database';
+import { ref, onValue } from 'firebase/database';
 import { db } from '../firebase';
 import { saveAs } from 'file-saver';
 Chart.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
-export default function DemoManagementDashboard() {
-  console.log('render again');
-
+export default function ManagementDashboard() {
   const navigate = useNavigate();
-  const months = ['10', '11'];
+  const months = ['10', '11', '12'];
   const [showModal, setShowModal] = useState(false);
   const [modalContent, setModalContent] = useState([]);
   const [modalTitle, setModalTitle] = useState('');
-  const [fallsTimeRange, setFallsTimeRange] = useState('11');
-  const [homesTimeRange, setHomesTimeRange] = useState('11');
+  const [fallsTimeRange, setFallsTimeRange] = useState('12');
+  const [homesTimeRange, setHomesTimeRange] = useState('12');
+  const [currentMonth, setCurrentMonth] = useState('12');
 
   const [fallsChartData, setFallsChartData] = useState({
     labels: [],
@@ -33,7 +32,9 @@ export default function DemoManagementDashboard() {
 
   const [fallsPopUpData, setFallsPopUpData] = useState([]);
   const [homesPopUpData, setHomesPopUpData] = useState([]);
-
+  // console.log('hello');
+  // console.log('homesPopUpData');
+  // console.log(homesPopUpData);
   const [dataLengths, setDataLengths] = useState({});
 
   const getDataLengths = async () => {
@@ -43,7 +44,7 @@ export default function DemoManagementDashboard() {
     await Promise.all(
       homes.map((home) => {
         return new Promise((resolve) => {
-          const homeRef = ref(db, `/${home}/2024/11`); // Reference to the home in Firebase
+          const homeRef = ref(db, `/${home}/2024/${currentMonth}`); // Reference to the home in Firebase
 
           onValue(homeRef, (snapshot) => {
             const data = snapshot.val();
@@ -65,7 +66,7 @@ export default function DemoManagementDashboard() {
     };
 
     fetchData();
-  }, []);
+  }, [currentMonth]);
 
   const shortToFull = (home) => {
     switch (home) {
@@ -144,7 +145,7 @@ export default function DemoManagementDashboard() {
     };
 
     const fetchDataForHome = async (home) => {
-      const fallsRef = ref(db, `/${home}/2024/${fallsTimeRange}`);
+      const fallsRef = ref(db, `/${home}/2024/${currentMonth}`);
       return new Promise((resolve) => {
         onValue(fallsRef, (snapshot) => {
           const data = snapshot.val();
@@ -187,7 +188,7 @@ export default function DemoManagementDashboard() {
     };
 
     fetchAllData();
-  }, [fallsTimeRange]);
+  }, [currentMonth]);
 
   const updateHomesChart = (nonComplianceCounts) => {
     const newData = Object.entries(nonComplianceCounts).map(([home, counts]) => ({
@@ -236,7 +237,7 @@ export default function DemoManagementDashboard() {
     };
 
     const fetchDataForHome = (home) => {
-      const fallsRef = ref(db, `/${home}/2024/${homesTimeRange}`);
+      const fallsRef = ref(db, `/${home}/2024/${currentMonth}`);
       return new Promise((resolve) => {
         onValue(fallsRef, (snapshot) => {
           const data = snapshot.val();
@@ -278,7 +279,7 @@ export default function DemoManagementDashboard() {
     };
 
     fetchAllData();
-  }, [homesTimeRange]);
+  }, [currentMonth]);
 
   const openModal = (title, content) => {
     setModalTitle(title);
@@ -432,6 +433,12 @@ export default function DemoManagementDashboard() {
       )
     );
 
+    fallsData.sort((a, b) => {
+      const dateA = new Date(a.MonthYear);
+      const dateB = new Date(b.MonthYear);
+      return dateB - dateA;
+    });
+
     // Generate CSV content
     const headers = 'Community,Month/Year,Falls,Incidents of non-compliance,Falls w/ significant injury\n';
     const rows = fallsData
@@ -457,10 +464,25 @@ export default function DemoManagementDashboard() {
           </button>
         </div>
       </header>
+      <select
+        value={currentMonth}
+        onChange={(e) => {
+          setCurrentMonth(e.target.value);
+        }}
+        style={{
+          fontSize: '16px',
+          padding: '10px',
+          height: '40px',
+        }}
+      >
+        <option value="10">October</option>
+        <option value="11">November</option>
+        <option value="12">December</option>
+      </select>
       <div className={styles['chart-container']}>
         <div className={styles['chart']}>
           <h2 id="fallsHeader">Falls with significant injury</h2>
-          <select
+          {/* <select
             id="fallsTimeRange"
             value={fallsTimeRange}
             className={styles.select}
@@ -468,25 +490,24 @@ export default function DemoManagementDashboard() {
               setFallsTimeRange(e.target.value);
             }}
           >
-            <option value="11">Current Month</option>
-            <option value="10">October 2024</option>
-          </select>
+            <option value="12">Current Month</option>
+            <option value="11">November 2024</option>
+          </select> */}
           {fallsChartData.datasets.length > 0 && <Bar data={fallsChartData} options={createOptions(onClickFalls)} />}
         </div>
 
         <div className={styles['chart']}>
           <h2 id="homesHeader">Number of incidents of non-compliance</h2>
-          <select
+          {/* <select
             id="homesTimeRange"
             value={homesTimeRange}
             onChange={(e) => {
               setHomesTimeRange(e.target.value);
             }}
           >
-            <option value="11">Current Month</option>
-            <option value="10">October 2024</option>
-          </select>
-
+            <option value="12">Current Month</option>
+            <option value="11">November 2024</option>
+          </select> */}
           {homesChartData.datasets.length > 0 && <Bar data={homesChartData} options={createOptions(onClickHomes)} />}
         </div>
       </div>
