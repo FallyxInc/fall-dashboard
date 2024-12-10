@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { ref, set, remove } from 'firebase/database';
-import Papa from 'papaparse'; // 如果你没有安装 Papa Parse，记得安装 `npm install papaparse`
-import { db } from '../firebase'; // 引入 Firebase 实例
+import { ref, set, remove, get } from 'firebase/database';
+import Papa from 'papaparse';
+import { db } from '../firebase';
 
 const UpdateData = () => {
   const [uploading, setUploading] = useState(false);
@@ -35,76 +35,132 @@ const UpdateData = () => {
     { value: '12', label: 'December' },
   ];
 
-  // 设置年范围
   const years = Array.from({ length: 10 }, (_, i) => {
     const year = new Date().getFullYear() - i;
     return { value: year.toString(), label: year.toString() };
   });
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const file = e.target.files[0];
 
-    if (!file) {
-      alert('Please select a CSV file!');
-      return;
-    }
-
-    if (!selectedDashboard) {
-      alert('Please select a dashboard!');
-      return;
-    }
-
-    if (!selectedYear) {
-      alert('Please select a year!');
-      return;
-    }
-
-    if (!selectedMonth) {
-      alert('Please select a month!');
+    if (!file || !selectedDashboard || !selectedYear || !selectedMonth) {
+      alert('Please ensure all fields are selected and a file is chosen.');
       return;
     }
 
     setUploading(true);
 
     const dashboardRef = ref(db, `${selectedDashboard}/${selectedYear}/${selectedMonth}`);
-    remove(dashboardRef).then(() => {
-      console.log('Previous data removed successfully');
 
-      Papa.parse(file, {
-        header: true,
-        skipEmptyLines: true,
-        quoteChar: '"',
-        complete: async (results) => {
-          console.log('CSV parsing complete:', results.data);
+    const fieldsWithIsUpdated = [
+      'incidentReport',
+      'physicianRef',
+      'poaContacted',
+      'postFallNotes',
+      'ptRef',
+      'hospital',
+      'hir',
+      'cause',
+      'interventions',
+    ];
 
-          try {
-            results.data.forEach((row, index) => {
-              const rowRef = ref(db, `${selectedDashboard}/${selectedYear}/${selectedMonth}/row-${index}`);
-              set(rowRef, row)
-                .then(() => {
-                  console.log(`Row ${index} uploaded successfully`);
-                })
-                .catch((error) => {
-                  console.error(`Error uploading row ${index}:`, error);
-                });
-            });
-            alert('CSV file successfully uploaded to Firebase!');
-          } catch (error) {
-            console.error('Upload error:', error);
-            alert('Upload failed!');
-          }
+    try {
+      const snapshot = await get(dashboardRef);
+      const existingData = snapshot.exists() ? snapshot.val() : {};
 
-          setUploading(false);
-          e.target.value = null;
-        },
-        error: (error) => {
-          console.error('Parsing error:', error);
-          alert('CSV parsing failed!');
-          setUploading(false);
-          e.target.value = null;
-        },
+      remove(dashboardRef).then(() => {
+        console.log('Previous data removed successfully');
+
+        Papa.parse(file, {
+          header: true,
+          skipEmptyLines: true,
+          complete: async (results) => {
+            const newData = results.data;
+
+            for (let i = 0; i < newData.length; i++) {
+              const row = newData[i];
+              const { date, name, homeUnit, time, injury, ...otherFields } = row;
+
+              const updatedRow = { date, name, homeUnit, time, injury, ...otherFields };
+
+              for (let j = 0; j < fieldsWithIsUpdated.length; j++) {
+                const field = fieldsWithIsUpdated[j];
+                const isUpdatedKey = `is${field.charAt(0).toUpperCase() + field.slice(1)}Updated`;
+
+                if (!(isUpdatedKey in updatedRow)) {
+                  updatedRow[isUpdatedKey] = 'no';
+                } else {
+                  updatedRow[isUpdatedKey] = updatedRow[isUpdatedKey].toLowerCase();
+                }
+              }
+
+              // firebase data
+              const existingEntryKey = Object.keys(existingData).find((key) => {
+                const existingRow = existingData[key];
+                return existingRow.date === date && existingRow.name === name && existingRow.time === time;
+              });
+
+              const rowRef = ref(db, `${selectedDashboard}/${selectedYear}/${selectedMonth}/row-${i}`);
+
+              if (existingEntryKey) {
+                const existingRow = existingData[existingEntryKey];
+
+                for (let j = 0; j < fieldsWithIsUpdated.length; j++) {
+                  const field = fieldsWithIsUpdated[j];
+                  const isUpdatedKey = `is${field.charAt(0).toUpperCase() + field.slice(1)}Updated`;
+
+                  if (!(isUpdatedKey in existingRow)) {
+                    existingRow[isUpdatedKey] = 'no';
+                  }
+                }
+
+                for (let j = 0; j < fieldsWithIsUpdated.length; j++) {
+                  const field = fieldsWithIsUpdated[j];
+                  const isUpdatedKey = `is${field.charAt(0).toUpperCase() + field.slice(1)}Updated`;
+
+                  if (existingRow[isUpdatedKey] === 'yes') {
+                    console.log(`Conflict for field ${field} in row ${i}. Skipping update.`);
+                  } else {
+                    existingRow[field] = updatedRow[field];
+                  }
+                }
+
+                // console.log('existingRow');
+                // console.log(existingRow);
+
+                set(rowRef, existingRow)
+                  .then(() => {
+                    console.log(`Row ${i} uploaded successfully`);
+                  })
+                  .catch((error) => {
+                    console.error(`Failed to upload row ${i}:`, error);
+                  });
+              } else {
+                set(rowRef, updatedRow)
+                  .then(() => {
+                    console.log(`Row ${i} uploaded successfully`);
+                  })
+                  .catch((error) => {
+                    console.error(`Failed to upload row ${i}:`, error);
+                  });
+              }
+            }
+
+            setUploading(false);
+            alert('CSV file uploaded successfully with necessary conflict handling!');
+          },
+          error: (error) => {
+            console.error('Parsing error:', error);
+            setUploading(false);
+            alert('Failed to parse the CSV file.');
+          },
+        });
       });
-    });
+    } catch (error) {
+      console.error('Error during upload:', error);
+      setUploading(false);
+      alert('An error occurred while processing the upload.');
+    }
   };
 
   return (

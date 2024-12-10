@@ -179,12 +179,13 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
 
     const updatedData = [...data];
     updatedData[currentRowIndex].interventions = currentIntervention;
-    updatedData[currentRowIndex].isInterventionUpdated = 'Yes';
+    updatedData[currentRowIndex].isInterventionsUpdated = 'yes';
 
+    console.log(updatedData);
     const rowRef = ref(db, `/${name}/2024/${months_backword[desiredMonth]}/row-${data[currentRowIndex].id}`);
     update(rowRef, {
       interventions: currentIntervention,
-      isInterventionUpdated: 'Yes',
+      isInterventionsUpdated: 'yes',
     })
       .then(() => {
         console.log('Intervention updated successfully');
@@ -210,10 +211,10 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
 
     const updatedData = [...data];
     updatedData[currentCauseRowIndex].cause = currentCauseOfFall;
-    updatedData[currentCauseRowIndex].isCauseUpdated = 'Yes';
+    updatedData[currentCauseRowIndex].isCauseUpdated = 'yes';
 
     const rowRef = ref(db, `/${name}/2024/${months_backword[desiredMonth]}/row-${data[currentCauseRowIndex].id}`);
-    update(rowRef, { cause: currentCauseOfFall, isCauseUpdated: 'Yes' })
+    update(rowRef, { cause: currentCauseOfFall, isCauseUpdated: 'yes' })
       .then(() => {
         console.log('Cause of fall updated successfully');
         setData(updatedData);
@@ -238,14 +239,14 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
 
     let updatedData = [...data];
     updatedData[currentPostFallNotesRowIndex].postFallNotes = currentPostFallNotes;
-    updatedData[currentPostFallNotesRowIndex].isPostFallNotesUpdated = 'Yes';
+    updatedData[currentPostFallNotesRowIndex].isPostFallNotesUpdated = 'yes';
     updatedData = markPostFallNotes(updatedData);
 
     const rowRef = ref(
       db,
       `/${name}/2024/${months_backword[desiredMonth]}/row-${data[currentPostFallNotesRowIndex].id}`
     );
-    update(rowRef, { postFallNotes: currentPostFallNotes, isPostFallNotesUpdated: 'Yes' })
+    update(rowRef, { postFallNotes: currentPostFallNotes, isPostFallNotesUpdated: 'yes' })
       .then(() => {
         console.log('Post Fall Notes updated successfully');
         setData(updatedData);
@@ -449,22 +450,22 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
 
     switch (changeType) {
       case 'hir':
-        updates = { hir: newValue };
+        updates = { hir: newValue, isHirUpdated: 'yes' };
         break;
       case 'hospital':
-        updates = { hospital: newValue };
+        updates = { hospital: newValue, isHospitalUpdated: 'yes' };
         break;
       case 'ptRef':
-        updates = { ptRef: newValue };
+        updates = { ptRef: newValue, isPtRefUpdated: 'yes' };
         break;
       case 'poaContacted':
-        updates = { poaContacted: newValue };
+        updates = { poaContacted: newValue, isPoaContactedUpdated: 'yes' };
         break;
       case 'physicianRef':
-        updates = { physicianRef: newValue };
+        updates = { physicianRef: newValue, isPhysicianRefUpdated: 'yes' };
         break;
       case 'incidentReport':
-        updates = { incidentReport: newValue };
+        updates = { incidentReport: newValue, isIncidentReportUpdated: 'yes' };
         break;
       default:
         break;
@@ -541,6 +542,9 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
 
         const fetchDataTime = performance.getEntriesByName('Fetch Data Time')[0].duration;
         console.log('Fetch Data Time: ', fetchDataTime, 'ms'); // Logs the time it took for fetching data
+
+        console.log('fetchedData');
+        console.log(fetchedData);
 
         let withIdData = Object.values(fetchedData);
         for (let i = 0; i < withIdData.length; i++) {
@@ -713,7 +717,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
               <td style={{ fontSize: '16px' }}>{item.location}</td>
               <td style={{ fontSize: '16px' }}>{item.homeUnit}</td>
               {/* <td style={{ fontSize: '16px' }}>{item.cause}</td> */}
-              <td style={{ fontSize: '16px', color: item.isCauseUpdated === 'Yes' ? 'green' : 'inherit' }}>
+              <td style={{ fontSize: '16px', color: item.isCauseUpdated === 'yes' ? 'green' : 'inherit' }}>
                 {item.cause}
                 <br />
                 <button onClick={() => handleEditCauseOfFall(i)}>Edit</button>
@@ -721,7 +725,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
               <td
                 style={{
                   fontSize: '16px',
-                  color: item.isInterventionUpdated === 'Yes' ? 'green' : 'inherit',
+                  color: item.isInterventionsUpdated === 'yes' ? 'green' : 'inherit',
                 }}
               >
                 {item.interventions}
@@ -817,7 +821,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                 className={item.postFallNotesColor === 'red' ? styles.cellRed : ''}
                 style={{
                   fontSize: '16px',
-                  color: item.isPostFallNotesUpdated === 'Yes' ? '#179c4e' : '#000000',
+                  color: item.isPostFallNotesUpdated === 'yes' ? '#179c4e' : '#000000',
                   fontWeight: 'bold',
                 }}
               >
