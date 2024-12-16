@@ -150,6 +150,76 @@ function App() {
               </PrivateRoute>
             }
           />
+
+          <Route
+            path="/bonairltc"
+            element={
+              <PrivateRoute rolesRequired={['bonairltc', 'responsive']}>
+                <Dashboard
+                  name="bonairltc"
+                  title="Bon Air LTC Falls Dashboard "
+                  unitSelectionValues={['allUnits', '1st Floor', '2nd Floor', '3rd Floor', '4th Floor']}
+                  goal={30}
+                />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/champlain"
+            element={
+              <PrivateRoute rolesRequired={['champlain', 'responsive']}>
+                <Dashboard
+                  name="champlain"
+                  title="Champlain LTC Falls Dashboard "
+                  unitSelectionValues={['allUnits', '1st Floor', '2nd Floor', '3rd Floor', '4th Floor']}
+                  goal={30}
+                />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/lancaster"
+            element={
+              <PrivateRoute rolesRequired={['lancaster', 'responsive']}>
+                <Dashboard
+                  name="lancaster"
+                  title="Lancaster LTC Falls Dashboard"
+                  unitSelectionValues={['allUnits', '1st Floor', '2nd Floor', '3rd Floor', '4th Floor']}
+                  goal={30}
+                />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/oneill"
+            element={
+              <PrivateRoute rolesRequired={['oneill', 'responsive']}>
+                <Dashboard
+                  name="oneill"
+                  title="The O'Neill Centre Falls Dashboard"
+                  unitSelectionValues={['allUnits', '1st Floor', '2nd Floor', '3rd Floor', '4th Floor']}
+                  goal={30}
+                />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/vmltc"
+            element={
+              <PrivateRoute rolesRequired={['vmltc', 'responsive']}>
+                <Dashboard
+                  name="vmltc"
+                  title="Villa Marconi LTC Falls Dashboard"
+                  unitSelectionValues={['allUnits', '1st Floor', '2nd Floor', '3rd Floor', '4th Floor']}
+                  goal={30}
+                />
+              </PrivateRoute>
+            }
+          />
         </Routes>
       </Router>
     </div>
