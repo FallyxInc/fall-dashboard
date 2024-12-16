@@ -93,7 +93,7 @@ export function getTimeShift(fallTime, home) {
       evening: [901, 1380], // 3:01 PM to 11:00 PM
       night: [1381, 419], // 11:01 PM to 6:59 AM
     },
-    mccc: {
+    millCreek: {
       morning: [390, 870], // 6:30 AM to 2:30 PM
       evening: [871, 1350], // 2:31 PM to 10:30 PM
       night: [1351, 389], // 10:31 PM to 6:30 AM
