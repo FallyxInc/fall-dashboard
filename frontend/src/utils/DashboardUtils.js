@@ -86,25 +86,92 @@ export function getMonthFromTimeRange(timeRange) {
   }
 }
 
-export function getTimeShift(fallTime) {
+export function getTimeShift(fallTime, home) {
+  const timeShifts = {
+    iggh: {
+      morning: [420, 900], // 7:00 AM to 3:00 PM
+      evening: [901, 1380], // 3:01 PM to 11:00 PM
+      night: [1381, 419], // 11:01 PM to 6:59 AM
+    },
+    mccc: {
+      morning: [390, 870], // 6:30 AM to 2:30 PM
+      evening: [871, 1350], // 2:31 PM to 10:30 PM
+      night: [1351, 389], // 10:31 PM to 6:30 AM
+    },
+    niagara: {
+      morning: [360, 840], // 6:00 AM to 2:00 PM
+      evening: [841, 1320], // 2:01 PM to 10:00 PM
+      night: [1321, 359], // 10:01 PM to 5:59 AM
+    },
+    wellington: {
+      morning: [390, 870], // 6:30 AM to 2:30 PM
+      evening: [871, 1350], // 2:31 PM to 10:30 PM
+      night: [1351, 389], // 10:31 PM to 6:30 AM
+    },
+    home1: {
+      morning: [420, 900], // 7:00 AM to 3:00 PM
+      evening: [901, 1380], // 3:01 PM to 11:00 PM
+      night: [1381, 419], // 11:01 PM to 6:59 AM
+    },
+    home2: {
+      morning: [420, 900], // 7:00 AM to 3:00 PM
+      evening: [901, 1380], // 3:01 PM to 11:00 PM
+      night: [1381, 419], // 11:01 PM to 6:59 AM
+    },
+    home3: {
+      morning: [420, 900], // 7:00 AM to 3:00 PM
+      evening: [901, 1380], // 3:01 PM to 11:00 PM
+      night: [1381, 419], // 11:01 PM to 6:59 AM
+    },
+    bonairltc: {
+      morning: [420, 900], // 7:00 AM to 3:00 PM
+      evening: [901, 1380], // 3:01 PM to 11:00 PM
+      night: [1381, 419], // 11:01 PM to 6:59 AM
+    },
+    champlain: {
+      morning: [420, 900], // 7:00 AM to 3:00 PM
+      evening: [901, 1380], // 3:01 PM to 11:00 PM
+      night: [1381, 419], // 11:01 PM to 6:59 AM
+    },
+    lancaster: {
+      morning: [420, 900], // 7:00 AM to 3:00 PM
+      evening: [901, 1380], // 3:01 PM to 11:00 PM
+      night: [1381, 419], // 11:01 PM to 6:59 AM
+    },
+    oneill: {
+      morning: [420, 900], // 7:00 AM to 3:00 PM
+      evening: [901, 1380], // 3:01 PM to 11:00 PM
+      night: [1381, 419], // 11:01 PM to 6:59 AM
+    },
+    vmltc: {
+      morning: [420, 900], // 7:00 AM to 3:00 PM
+      evening: [901, 1380], // 3:01 PM to 11:00 PM
+      night: [1381, 419], // 11:01 PM to 6:59 AM
+    },
+  };
+
+  const shiftConfig = timeShifts[home];
+  if (!shiftConfig) {
+    throw new Error(`No configuration found for home: ${home}`);
+  }
+
   var parts = fallTime.split(':');
   var hours = parseInt(parts[0], 10);
   var minutes = parseInt(parts[1], 10);
-
-  // Convert time to minutes since midnight for easier comparison
+  console.log(fallTime);
   var totalMinutes = hours * 60 + minutes;
 
-  // Determine the shift based on time ranges
-  if (totalMinutes >= 390 && totalMinutes <= 870) {
-    // 6:30 AM to 2:30 PM
+  if (totalMinutes >= shiftConfig.morning[0] && totalMinutes <= shiftConfig.morning[1]) {
     return 'Morning';
-  } else if (totalMinutes >= 871 && totalMinutes <= 1350) {
-    // 2:31 PM to 10:30 PM
+  } else if (totalMinutes >= shiftConfig.evening[0] && totalMinutes <= shiftConfig.evening[1]) {
     return 'Evening';
   } else {
-    // 10:31 PM to 6:30 AM
-    return 'Night';
+    if (totalMinutes >= shiftConfig.night[0] || totalMinutes <= shiftConfig.night[1]) {
+      return 'Night';
+    }
   }
+
+  throw new Error(`Time ${fallTime} does not match any shift for home: ${home}`);
 }
 
 export function countResidentsWithRecurringFalls(data) {
@@ -131,11 +198,11 @@ export function countResidentsWithRecurringFalls(data) {
   return recurringFalls;
 }
 
-export function countFallsByTimeOfDay(data) {
+export function countFallsByTimeOfDay(data, name) {
   var timeOfDayCounts = { Morning: 0, Evening: 0, Night: 0 };
 
   data.forEach((fall) => {
-    var shift = getTimeShift(fall.time);
+    var shift = getTimeShift(fall.time, name);
     timeOfDayCounts[shift]++;
   });
 

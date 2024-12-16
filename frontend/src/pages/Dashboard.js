@@ -341,7 +341,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
       case 'timeOfDay':
         setAnalysisHeaderText('Falls by Time of Day');
         newLabels = ['Morning', 'Evening', 'Night'];
-        var timeOfDayCounts = countFallsByTimeOfDay(filteredData);
+        var timeOfDayCounts = countFallsByTimeOfDay(filteredData, name);
         newData = [timeOfDayCounts.Morning, timeOfDayCounts.Evening, timeOfDayCounts.Night];
         break;
 
@@ -637,7 +637,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
             <option value="timeOfDay">Time of Day</option>
             <option value="location">Location</option>
             <option value="injuries">Injuries</option>
-            <option value="hir">Falls by HIR</option>
+            {/* <option value="hir">Falls by HIR</option> */}
             <option value="residents">Residents w/ Recurring Falls</option>
           </select>
 
