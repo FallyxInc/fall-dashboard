@@ -123,6 +123,11 @@ export function getTimeShift(fallTime, home) {
       evening: [901, 1380], // 3:01 PM to 11:00 PM
       night: [1381, 419], // 11:01 PM to 6:59 AM
     },
+    home4: {
+      morning: [420, 900], // 7:00 AM to 3:00 PM
+      evening: [901, 1380], // 3:01 PM to 11:00 PM
+      night: [1381, 419], // 11:01 PM to 6:59 AM
+    },
     bonairltc: {
       morning: [420, 900], // 7:00 AM to 3:00 PM
       evening: [901, 1380], // 3:01 PM to 11:00 PM
