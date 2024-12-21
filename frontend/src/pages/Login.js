@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signInWithEmailAndPassword, signInAnonymously } from 'firebase/auth';
-import { ref, get } from 'firebase/database';
+import { ref, get, set } from 'firebase/database';
 import { db, auth } from '../firebase';
 import '../styles/Login.css';
 import fallyxLogo from '../assets/fallyxlogo.jpeg';
@@ -35,6 +35,8 @@ export default function Login() {
 
       // Now measure the get(userRef) operation
       // performance.mark('start-getUser');
+
+      const userId = userCredential.user.uid;
       const userSnapshot = await get(ref(db, `users/${userCredential.user.uid}`));
       // performance.mark('end-getUser');
       // performance.measure('Get User Time', 'start-getUser', 'end-getUser');
@@ -45,6 +47,10 @@ export default function Login() {
 
       // Proceed with navigation
       if (userSnapshot.exists()) {
+        const userData = userSnapshot.val();
+        const updatedLoginCount = (userData.loginCount || 0) + 1;
+        await set(ref(db, `users/${userId}/loginCount`), updatedLoginCount);
+
         const role = userSnapshot.val().role;
         navigate('/' + role);
       }

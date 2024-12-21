@@ -543,8 +543,8 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
         const fetchDataTime = performance.getEntriesByName('Fetch Data Time')[0].duration;
         console.log('Fetch Data Time: ', fetchDataTime, 'ms'); // Logs the time it took for fetching data
 
-        console.log('fetchedData');
-        console.log(fetchedData);
+        // console.log('fetchedData');
+        // console.log(fetchedData);
 
         let withIdData = Object.values(fetchedData);
         for (let i = 0; i < withIdData.length; i++) {

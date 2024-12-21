@@ -19,7 +19,6 @@ export default function ManagementDashboard() {
   const [fallsTimeRange, setFallsTimeRange] = useState('12');
   const [homesTimeRange, setHomesTimeRange] = useState('12');
   const [currentMonth, setCurrentMonth] = useState('12');
-
   const [fallsChartData, setFallsChartData] = useState({
     labels: [],
     datasets: [],
@@ -36,6 +35,7 @@ export default function ManagementDashboard() {
   // console.log('homesPopUpData');
   // console.log(homesPopUpData);
   const [dataLengths, setDataLengths] = useState({});
+  const [loginCounts, setLoginCounts] = useState({});
 
   const getDataLengths = async () => {
     const homes = ['niagara', 'millCreek', 'wellington', 'iggh'];
@@ -59,10 +59,56 @@ export default function ManagementDashboard() {
     return dataLengths; // { niagara: X, millCreek: Y, wellington: Z, iggh: W }
   };
 
+  const role2home = (role) => {
+    const mapping = {
+      'iggh-ltc': 'iggh',
+      'niagara-ltc': 'niagara',
+      'mill-creek-care': 'millCreek',
+      'the-wellington-ltc': 'wellington',
+    };
+
+    return mapping[role];
+  };
+
+  const getLoginCounts = async () => {
+    const roles = ['iggh-ltc', 'niagara-ltc', 'mill-creek-care', 'the-wellington-ltc'];
+    const loginCounts = {};
+
+    await Promise.all(
+      roles.map((role) => {
+        return new Promise((resolve) => {
+          const userRef = ref(db, `/users`);
+          onValue(userRef, (snapshot) => {
+            const data = snapshot.val();
+
+            for (const userId in data) {
+              if (data[userId].role === role) {
+                loginCounts[role2home(role)] = data[userId].loginCount || 0;
+                break;
+              }
+            }
+            resolve();
+          });
+        });
+      })
+    );
+
+    return loginCounts;
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       const lengths = await getDataLengths();
       setDataLengths(lengths);
+    };
+
+    fetchData();
+  }, [currentMonth]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const counts = await getLoginCounts();
+      setLoginCounts(counts);
     };
 
     fetchData();
@@ -323,24 +369,28 @@ export default function ManagementDashboard() {
         value: dataLengths['niagara'],
         subtitle: 'Niagara LTC',
         fallrate: (dataLengths['niagara'] / 103) * 100,
+        loginCount: loginCounts['niagara'],
         linkTo: '/niagara-ltc',
       },
       {
         value: dataLengths['millCreek'],
         subtitle: 'Mill Creek LTC',
         fallrate: (dataLengths['millCreek'] / 160) * 100,
+        loginCount: loginCounts['millCreek'],
         linkTo: '/mill-creek-care',
       },
       {
         value: dataLengths['wellington'],
         subtitle: 'The Wellington LTC',
         fallrate: (dataLengths['wellington'] / 78) * 100,
+        loginCount: loginCounts['wellington'],
         linkTo: '/the-wellington-ltc',
       },
       {
         value: dataLengths['iggh'],
         subtitle: 'Ina Grafton LTC',
         fallrate: (dataLengths['iggh'] / 128) * 100,
+        loginCount: loginCounts['iggh'],
         linkTo: '/iggh-ltc',
       },
     ];
@@ -522,6 +572,7 @@ export default function ManagementDashboard() {
               subtitle={item.subtitle}
               linkTo={item.linkTo}
               fallrate={item.fallrate}
+              loginCount={item.loginCount}
             />
           ))}
         </div>
