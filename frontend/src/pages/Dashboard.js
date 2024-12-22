@@ -695,7 +695,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
             <th style={{ fontSize: '18px' }}>Name</th>
             <th style={{ fontSize: '18px' }}>Time</th>
             <th style={{ fontSize: '18px' }}>Location</th>
-            <th style={{ fontSize: '18px' }}>Home Unit</th>
+            <th style={{ fontSize: '18px' }}>RHA</th>
             <th style={{ fontSize: '18px' }}>Nature of Fall/Cause</th>
             <th style={{ fontSize: '18px' }}>Interventions</th>
             <th style={{ fontSize: '18px' }}>HIR intiated</th>
