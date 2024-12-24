@@ -7,7 +7,7 @@ import * as Papa from 'papaparse';
 import { saveAs } from 'file-saver';
 import { Chart, ArcElement, PointElement, LineElement } from 'chart.js';
 // import { collection, addDoc } from 'firebase/firestore';
-import { ref, onValue, off, get, update } from 'firebase/database';
+import { ref, onValue, off, get, update, query, orderByChild, equalTo, child } from 'firebase/database';
 import { db } from '../firebase';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -457,40 +457,63 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     saveAs(blob, 'updated_fall_data.csv');
   };
 
-  const handleUpdateCSV = (index, newValue, name, changeType) => {
-    const rowRef = ref(db, `/${name}/${desiredYear}/${months_backword[desiredMonth]}/row-${index}`);
-    let updates = {};
+  const handleUpdateCSV = async (index, newValue, name, changeType) => {
+    const collectionRef = ref(db, `/${name}/${desiredYear}/${months_backword[desiredMonth]}`);
 
-    switch (changeType) {
-      case 'hir':
-        updates = { hir: newValue, isHirUpdated: 'yes' };
-        break;
-      case 'hospital':
-        updates = { hospital: newValue, isHospitalUpdated: 'yes' };
-        break;
-      case 'ptRef':
-        updates = { ptRef: newValue, isPtRefUpdated: 'yes' };
-        break;
-      case 'poaContacted':
-        updates = { poaContacted: newValue, isPoaContactedUpdated: 'yes' };
-        break;
-      case 'physicianRef':
-        updates = { physicianRef: newValue, isPhysicianRefUpdated: 'yes' };
-        break;
-      case 'incidentReport':
-        updates = { incidentReport: newValue, isIncidentReportUpdated: 'yes' };
-        break;
-      default:
-        break;
+    try {
+      const snapshot = await get(collectionRef);
+
+      if (snapshot.exists()) {
+        const rows = snapshot.val(); // Get all rows as an object
+        let targetRowKey = null;
+
+        for (const [key, row] of Object.entries(rows)) {
+          if (row.id === String(index)) {
+            targetRowKey = key;
+            break;
+          }
+        }
+
+        if (targetRowKey) {
+          const rowRef = child(collectionRef, targetRowKey);
+          let updates = {};
+
+          switch (changeType) {
+            case 'hir':
+              updates = { hir: newValue, isHirUpdated: 'yes' };
+              break;
+            case 'hospital':
+              updates = { hospital: newValue, isHospitalUpdated: 'yes' };
+              break;
+            case 'ptRef':
+              updates = { ptRef: newValue, isPtRefUpdated: 'yes' };
+              break;
+            case 'poaContacted':
+              updates = { poaContacted: newValue, isPoaContactedUpdated: 'yes' };
+              break;
+            case 'physicianRef':
+              updates = { physicianRef: newValue, isPhysicianRefUpdated: 'yes' };
+              break;
+            case 'incidentReport':
+              updates = { incidentReport: newValue, isIncidentReportUpdated: 'yes' };
+              break;
+            default:
+              console.error('Invalid changeType');
+              return;
+          }
+
+          // Apply the updates
+          await update(rowRef, updates);
+          console.log(`Row with id ${index} updated successfully.`);
+        } else {
+          console.error(`Row with id ${index} not found.`);
+        }
+      } else {
+        console.error('No data found in the specified path.');
+      }
+    } catch (error) {
+      console.error('Error updating row:', error);
     }
-
-    update(rowRef, updates)
-      .then(() => {
-        console.log('Data updated successfully in Firebase');
-      })
-      .catch((error) => {
-        console.error('Error updating data:', error);
-      });
   };
 
   useEffect(() => {

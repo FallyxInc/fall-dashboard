@@ -130,8 +130,8 @@ const UpdateData = () => {
                   }
                 }
 
-                // console.log('existingRow');
-                // console.log(existingRow);
+                console.log('existingRow');
+                console.log(existingRow);
 
                 set(rowRef, existingRow)
                   .then(() => {
