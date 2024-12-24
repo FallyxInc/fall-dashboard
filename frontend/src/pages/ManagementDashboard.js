@@ -19,6 +19,7 @@ export default function ManagementDashboard() {
   const [fallsTimeRange, setFallsTimeRange] = useState('12');
   const [homesTimeRange, setHomesTimeRange] = useState('12');
   const [currentMonth, setCurrentMonth] = useState('12');
+
   const [fallsChartData, setFallsChartData] = useState({
     labels: [],
     datasets: [],

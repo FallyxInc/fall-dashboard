@@ -163,7 +163,6 @@ export function getTimeShift(fallTime, home) {
   var parts = fallTime.split(':');
   var hours = parseInt(parts[0], 10);
   var minutes = parseInt(parts[1], 10);
-  console.log(fallTime);
   var totalMinutes = hours * 60 + minutes;
 
   if (totalMinutes >= shiftConfig.morning[0] && totalMinutes <= shiftConfig.morning[1]) {

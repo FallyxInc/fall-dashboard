@@ -5,7 +5,7 @@ import styles from '../styles/Dashboard.module.css';
 import { useNavigate } from 'react-router-dom';
 import * as Papa from 'papaparse';
 import { saveAs } from 'file-saver';
-import { Chart, ArcElement, PointElement, LineElement, plugins } from 'chart.js';
+import { Chart, ArcElement, PointElement, LineElement } from 'chart.js';
 // import { collection, addDoc } from 'firebase/firestore';
 import { ref, onValue, off, get, update } from 'firebase/database';
 import { db } from '../firebase';
@@ -18,7 +18,6 @@ import {
   countFallsByLocation,
   countFallsByHIR,
   getMonthFromTimeRange,
-  getTimeShift,
   countResidentsWithRecurringFalls,
   countFallsByTimeOfDay,
 } from '../utils/DashboardUtils';
@@ -26,15 +25,73 @@ import {
 Chart.register(ArcElement, PointElement, LineElement);
 
 export default function Dashboard({ name, title, unitSelectionValues, goal }) {
+  const months_forward = {
+    '01': 'January',
+    '02': 'February',
+    '03': 'March',
+    '04': 'April',
+    '05': 'May',
+    '06': 'June',
+    '07': 'July',
+    '08': 'August',
+    '09': 'September',
+    10: 'October',
+    11: 'November',
+    12: 'December',
+  };
+
+  const months_backword = {
+    January: '01',
+    February: '02',
+    March: '03',
+    April: '04',
+    May: '05',
+    June: '06',
+    July: '07',
+    August: '08',
+    September: '09',
+    October: '10',
+    November: '11',
+    December: '12',
+  };
+
   const [data, setData] = useState([]);
-  const [threeMonthData, setThreeMonthData] = useState({});
-  const [desiredMonth, setDesiredMonth] = useState('December');
+  const [threeMonthData, setThreeMonthData] = useState(new Map());
+  const [desiredMonth, setDesiredMonth] = useState(months_forward[new Date().getMonth() + 1]);
+  const [desiredYear, setDesiredYear] = useState(new Date().getFullYear());
+  // const [desiredMonth, setDesiredMonth] = useState('January');
+  // const [desiredYear, setDesiredYear] = useState(2025);
+  const [availableYearMonth, setAvailableYearMonth] = useState({});
+  // console.log('year month');
+  // console.log(desiredYear);
+  // console.log(desiredMonth);
+  // console.log('availableYearMonth');
+  // console.log(availableYearMonth);
 
   // console.log('data');
   // console.log(data);
   // console.log(currentMonth);
-  // const [isLoading, setIsLoading] = useState(true);
+  // console.log('threeMonthData');
   // console.log(threeMonthData);
+
+  const [gaugeChart, setGaugeChart] = useState(true);
+  const [fallsTimeRange, setFallsTimeRange] = useState('current');
+  const [analysisType, setAnalysisType] = useState('timeOfDay');
+  const [analysisTimeRange, setAnalysisTimeRange] = useState('current');
+  const [analysisUnit, setAnalysisUnit] = useState('allUnits');
+  const [analysisHeaderText, setAnalysisHeaderText] = useState('Falls by Time of Day');
+
+  const [currentIntervention, setCurrentIntervention] = useState('');
+  const [currentRowIndex, setCurrentRowIndex] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const [currentCauseOfFall, setCurrentCauseOfFall] = useState('');
+  const [currentCauseRowIndex, setCurrentCauseRowIndex] = useState(null);
+  const [isCauseModalOpen, setIsCauseModalOpen] = useState(false);
+
+  const [currentPostFallNotes, setCurrentPostFallNotes] = useState('');
+  const [currentPostFallNotesRowIndex, setCurrentPostFallNotesRowIndex] = useState(null);
+  const [isPostFallNotesModalOpen, setIsPostFallNotesModalOpen] = useState(false);
 
   function expandedLog(item, maxDepth = 100, depth = 0) {
     if (depth > maxDepth) {
@@ -51,37 +108,6 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
       console.log(item);
     }
   }
-
-  const navigate = useNavigate();
-  const months_forward = {
-    10: 'October',
-    11: 'November',
-    12: 'December',
-    '01': 'January',
-    '02': 'February',
-    '03': 'March',
-    '04': 'April',
-    '05': 'May',
-    '06': 'June',
-    '07': 'July',
-    '08': 'August',
-    '09': 'September',
-  };
-
-  const months_backword = {
-    October: '10',
-    November: '11',
-    December: '12',
-    January: '01',
-    February: '02',
-    March: '03',
-    April: '04',
-    May: '05',
-    June: '06',
-    July: '07',
-    August: '08',
-    September: '09',
-  };
 
   const [gaugeChartData, setGaugeChartData] = useState({
     labels: [],
@@ -103,6 +129,9 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     datasets: [],
   });
 
+  // console.log('lineChartData');
+  // console.log(lineChartData);
+
   const lineChartOptions = {
     scales: {
       y: {
@@ -118,6 +147,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
       legend: { display: false },
     },
   };
+
   const [analysisChartData, setAnalysisChartData] = useState({
     labels: [],
     datasets: [],
@@ -141,30 +171,6 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     },
   };
 
-  const [gaugeChart, setGaugeChart] = useState(true);
-  const [fallsTimeRange, setFallsTimeRange] = useState('current');
-  const [analysisType, setAnalysisType] = useState('timeOfDay');
-  const [analysisTimeRange, setAnalysisTimeRange] = useState('current');
-  const [analysisUnit, setAnalysisUnit] = useState('allUnits');
-  const [analysisHeaderText, setAnalysisHeaderText] = useState('Falls by Time of Day');
-
-  const [currentIntervention, setCurrentIntervention] = useState('');
-  const [currentRowIndex, setCurrentRowIndex] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const [currentCauseOfFall, setCurrentCauseOfFall] = useState('');
-  const [currentCauseRowIndex, setCurrentCauseRowIndex] = useState(null);
-  const [isCauseModalOpen, setIsCauseModalOpen] = useState(false);
-
-  const [currentPostFallNotes, setCurrentPostFallNotes] = useState('');
-  const [currentPostFallNotesRowIndex, setCurrentPostFallNotesRowIndex] = useState(null);
-  const [isPostFallNotesModalOpen, setIsPostFallNotesModalOpen] = useState(false);
-
-  const handleMonthChange = (event) => {
-    const selectedMonth = event.target.value;
-    setDesiredMonth(selectedMonth);
-  };
-
   const handleEditIntervention = (index) => {
     setCurrentIntervention(data[index].interventions);
     setCurrentRowIndex(index);
@@ -182,7 +188,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     updatedData[currentRowIndex].isInterventionsUpdated = 'yes';
 
     console.log(updatedData);
-    const rowRef = ref(db, `/${name}/2024/${months_backword[desiredMonth]}/row-${data[currentRowIndex].id}`);
+    const rowRef = ref(db, `/${name}/${desiredYear}/${months_backword[desiredMonth]}/row-${data[currentRowIndex].id}`);
     update(rowRef, {
       interventions: currentIntervention,
       isInterventionsUpdated: 'yes',
@@ -213,7 +219,10 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     updatedData[currentCauseRowIndex].cause = currentCauseOfFall;
     updatedData[currentCauseRowIndex].isCauseUpdated = 'yes';
 
-    const rowRef = ref(db, `/${name}/2024/${months_backword[desiredMonth]}/row-${data[currentCauseRowIndex].id}`);
+    const rowRef = ref(
+      db,
+      `/${name}/${desiredYear}/${months_backword[desiredMonth]}/row-${data[currentCauseRowIndex].id}`
+    );
     update(rowRef, { cause: currentCauseOfFall, isCauseUpdated: 'yes' })
       .then(() => {
         console.log('Cause of fall updated successfully');
@@ -244,7 +253,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
 
     const rowRef = ref(
       db,
-      `/${name}/2024/${months_backword[desiredMonth]}/row-${data[currentPostFallNotesRowIndex].id}`
+      `/${name}/${desiredYear}/${months_backword[desiredMonth]}/row-${data[currentPostFallNotesRowIndex].id}`
     );
     update(rowRef, { postFallNotes: currentPostFallNotes, isPostFallNotesUpdated: 'yes' })
       .then(() => {
@@ -268,6 +277,14 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
       newData = [currentFalls, goal - currentFalls];
     }
 
+    let threeMonthX = [];
+    let threeMonthY = [];
+
+    for (const [key, value] of threeMonthData) {
+      threeMonthX.push(months_forward[key]);
+      threeMonthY.push(value.length);
+    }
+
     switch (timeRange) {
       case 'current':
         setGaugeChart(true);
@@ -285,15 +302,11 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
       case '3months':
         setGaugeChart(false);
         setLineChartData({
-          labels: Object.keys(threeMonthData)
-            .sort()
-            .map((key) => months_forward[key]),
+          labels: threeMonthX,
           datasets: [
             {
               label: 'Number of Falls',
-              data: Object.values(threeMonthData)
-                .sort()
-                .map((data) => data.length),
+              data: threeMonthY,
               borderColor: 'rgb(76, 175, 80)',
               tension: 0.1,
             },
@@ -326,7 +339,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
 
   const updateAnalysisChart = () => {
     var selectedUnit = analysisUnit;
-    var filteredData = analysisTimeRange === '3months' ? Object.values(threeMonthData).flat() : data;
+    var filteredData = analysisTimeRange === '3months' ? Array.from(threeMonthData.values()).flat() : data;
 
     if (selectedUnit !== 'allUnits') {
       filteredData = filteredData.filter(
@@ -445,7 +458,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   };
 
   const handleUpdateCSV = (index, newValue, name, changeType) => {
-    const rowRef = ref(db, `/${name}/2024/${months_backword[desiredMonth]}/row-${index}`);
+    const rowRef = ref(db, `/${name}/${desiredYear}/${months_backword[desiredMonth]}/row-${index}`);
     let updates = {};
 
     switch (changeType) {
@@ -483,9 +496,10 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   useEffect(() => {
     // Start measuring fetch data time
     performance.mark('start-fetch-data');
-    const dataRef = ref(db, `/${name}/2024/${months_backword[desiredMonth]}`); // Firebase ref for this specific dashboard
+
+    const dataRef = ref(db, `/${name}/${desiredYear}/${months_backword[desiredMonth]}`); // Firebase ref for this specific dashboard
     // const dataRef = ref(db, name);
-    const currentYear = 2024;
+    const currentYear = desiredYear;
     const currentMonth = parseInt(months_backword[desiredMonth]); // current month
     const pastThreeMonths = [];
 
@@ -499,15 +513,10 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
       }
     }
 
-    // console.log('pastThreeMonths');
-    // console.log(pastThreeMonths);
-
-    const allFallsData = pastThreeMonths.sort().reduce((acc, pair) => {
-      acc[pair.month] = [];
-      return acc;
-    }, {});
-    // console.log('allfalldata');
-    // console.log(allFallsData);
+    const allFallsData = new Map();
+    for (let i = 0; i < pastThreeMonths.length; i++) {
+      allFallsData.set(pastThreeMonths[i].month, []);
+    }
 
     pastThreeMonths.forEach(({ year, month }) => {
       const monthRef = ref(db, `/${name}/${year}/${month}`);
@@ -516,32 +525,29 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
         if (snapshot.exists()) {
           const fallsData = snapshot.val();
           const monthData = Object.keys(fallsData).map((key) => fallsData[key]);
-          allFallsData[month] = monthData;
+          allFallsData.set(month, monthData);
           // console.log('month data');
           // console.log(monthData);
           // console.log('month');
           // console.log(month);
           // console.log('allFallsData');
           // console.log(allFallsData);
-          setThreeMonthData({ ...allFallsData });
-        } else {
-          allFallsData[month] = [];
         }
       });
-
       return () => off(monthRef, listener);
     });
+    setThreeMonthData(allFallsData);
 
     const listener = onValue(dataRef, (snapshot) => {
       if (snapshot.exists()) {
         const fetchedData = snapshot.val();
 
         // End measuring fetch data time
-        performance.mark('end-fetch-data');
-        performance.measure('Fetch Data Time', 'start-fetch-data', 'end-fetch-data');
+        // performance.mark('end-fetch-data');
+        // performance.measure('Fetch Data Time', 'start-fetch-data', 'end-fetch-data');
 
-        const fetchDataTime = performance.getEntriesByName('Fetch Data Time')[0].duration;
-        console.log('Fetch Data Time: ', fetchDataTime, 'ms'); // Logs the time it took for fetching data
+        // const fetchDataTime = performance.getEntriesByName('Fetch Data Time')[0].duration;
+        // console.log('Fetch Data Time: ', fetchDataTime, 'ms'); // Logs the time it took for fetching data
 
         // console.log('fetchedData');
         // console.log(fetchedData);
@@ -565,17 +571,73 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     return () => {
       off(dataRef, listener); // Cleanup listener on unmount
     };
-  }, [desiredMonth]);
+  }, [desiredMonth, desiredYear]);
 
   useEffect(() => {
     updateFallsChart();
     // console.log('Falls Chart');
-  }, [fallsTimeRange, data, desiredMonth]);
+  }, [fallsTimeRange, data, desiredMonth, desiredYear]);
 
   useEffect(() => {
     updateAnalysisChart();
     // console.log('Analysis Chart');
-  }, [analysisType, analysisTimeRange, analysisUnit, data]);
+  }, [analysisType, analysisTimeRange, analysisUnit, data, desiredYear]);
+
+  const handleYearChange = (e) => {
+    const selectedYear = e.target.value;
+    setDesiredYear(selectedYear);
+
+    setDesiredMonth(availableYearMonth[selectedYear][0]);
+  };
+
+  const handleMonthChange = (event) => {
+    const selectedMonth = event.target.value;
+    setDesiredMonth(selectedMonth);
+  };
+
+  useEffect(() => {
+    const yearsRef = ref(db, `/${name}`);
+    onValue(yearsRef, (snapshot) => {
+      const yearMonthMapping = {};
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+
+        Object.keys(data).forEach((year) => {
+          yearMonthMapping[year] = Object.keys(data[year])
+            .sort((a, b) => parseInt(a) - parseInt(b))
+            .map((month) => months_forward[month]);
+        });
+
+        const currentYear = new Date().getFullYear();
+        const currentMonth = months_forward[new Date().getMonth() + 1];
+
+        // const currentYear = 2025;
+        // const currentMonth = 'January';
+
+        if (!yearMonthMapping[currentYear]) {
+          yearMonthMapping[currentYear] = [];
+        }
+        if (!yearMonthMapping[currentYear].includes(currentMonth)) {
+          yearMonthMapping[currentYear].push(currentMonth);
+        }
+        if (yearMonthMapping['2024']) {
+          const index = yearMonthMapping['2024'].indexOf('July');
+          if (index > -1) {
+            yearMonthMapping['2024'].splice(index, 1);
+          }
+          const August = yearMonthMapping['2024'].indexOf('August');
+          if (August > -1) {
+            yearMonthMapping['2024'].splice(August, 1);
+          }
+          const September = yearMonthMapping['2024'].indexOf('September');
+          if (September > -1) {
+            yearMonthMapping['2024'].splice(September, 1);
+          }
+        }
+      }
+      setAvailableYearMonth(yearMonthMapping);
+    });
+  }, []);
 
   return (
     <div className={styles.dashboard} ref={tableRef}>
@@ -671,11 +733,23 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
       </div>
       <div className={styles['table-header']}>
         <div className={styles['header']}>
-          <h2>Falls Tracking Table: {desiredMonth} 2024</h2>
+          <h2>
+            Falls Tracking Table: {desiredMonth} {desiredYear}
+          </h2>
+          <select onChange={handleYearChange} value={desiredYear}>
+            {Object.keys(availableYearMonth).map((year) => (
+              <option key={year} value={year}>
+                {year}
+              </option>
+            ))}
+          </select>
+
           <select onChange={handleMonthChange} value={desiredMonth}>
-            <option value="October">October</option>
-            <option value="November">November</option>
-            <option value="December">December</option>
+            {(availableYearMonth[desiredYear] || []).map((month) => (
+              <option key={month} value={month}>
+                {month}
+              </option>
+            ))}
           </select>
         </div>
         <div>
