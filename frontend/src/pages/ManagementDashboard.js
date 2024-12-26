@@ -37,6 +37,7 @@ export default function ManagementDashboard() {
   // console.log(homesPopUpData);
   const [dataLengths, setDataLengths] = useState({});
   const [loginCounts, setLoginCounts] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
 
   const getDataLengths = async () => {
     const homes = ['niagara', 'millCreek', 'wellington', 'iggh'];
@@ -101,6 +102,7 @@ export default function ManagementDashboard() {
     const fetchData = async () => {
       const lengths = await getDataLengths();
       setDataLengths(lengths);
+      setIsLoading(false);
     };
 
     fetchData();
@@ -135,19 +137,66 @@ export default function ManagementDashboard() {
 
     const index = elements[0].index;
     const locationName = fallsChartData.labels[index];
-
     const fallsData = fallsPopUpData[locationName];
+    const totalFalls = summaryData.find(item => item.subtitle === locationName)?.value || 0;
 
-    const { headInjury, fracture, skinTear } = fallsData;
-    const content = [`Head injuries: ${headInjury}`, `Fractures: ${fracture}`, `Skin tears: ${skinTear}`];
+    const { headInjury, fracture, skinTear, significantInjury } = fallsData;
+    // Calculate percentage only if there are falls
+    const percentage = totalFalls > 0 ? ((significantInjury / totalFalls) * 100).toFixed(1) : '0';
+    
+    // const content = [
+    //   `Total Falls: ${totalFalls}`,
+    //   `Falls with Significant Injuries: ${significantInjury} (${percentage}%)`,
+    //   '----------------------------------------',
+    //   'Breakdown of Significant Injuries:',
+    //   '',
+    //   `Head Injuries:          ${headInjury}`,
+    //   `Fractures:             ${fracture}`,
+    //   `Skin Tears:            ${skinTear}`,
+    //   '----------------------------------------',
+    //   `Total:                 ${significantInjury}`
+    // ];
+
+    const content = (
+      <div style={{ textAlign: 'left', fontSize: '16px' }}>
+        <div style={{ marginLeft: '20px' }}>
+          <div style={{ fontSize: '22px', marginBottom: '10px'}}>
+            <b style={{fontWeight: 'bold',}}># of Falls with Significant Injuries: {significantInjury} </b> ({percentage}%)
+          </div>
+          <ul>
+          <li style={{ marginBottom: '8px', fontSize: '19px'}}>
+            Head Injuries: {headInjury}
+          </li>
+          <li style={{ marginBottom: '8px', fontSize: '19px' }}>
+            Fractures: {fracture}
+          </li>
+          <li style={{ marginBottom: '8px', fontSize: '19px' }}>
+            Skin Tears: {skinTear}
+          </li>
+          </ul>
+          
+        </div>
+      </div>
+    );
     openModal(locationName, content);
   };
 
   const updateFallsChart = (injuryCounts) => {
-    const newData = Object.entries(injuryCounts).map(([home, counts]) => ({
-      name: home,
-      value: counts.significantInjury,
-    }));
+    const newData = Object.entries(injuryCounts).map(([home, counts]) => {
+      const totalFalls = dataLengths[home];
+      const percentage = totalFalls > 0 ? (counts.significantInjury / totalFalls) * 100 : 0;
+      
+      console.log(`${home} stats:`, {
+        totalFalls,
+        significantInjuries: counts.significantInjury,
+        percentage: percentage.toFixed(1)
+      });
+
+      return {
+        name: home,
+        value: percentage
+      };
+    });
 
     newData.sort((a, b) => b.value - a.value);
 
@@ -155,7 +204,7 @@ export default function ManagementDashboard() {
       labels: newData.map((item) => shortToFull(item.name)),
       datasets: [
         {
-          label: 'Total Significant Injuries',
+          label: '% of Falls with Significant Injuries',
           data: newData.map((item) => item.value),
           backgroundColor: 'rgba(76, 175, 80, 0.6)',
           borderColor: 'rgb(76, 175, 80)',
@@ -167,28 +216,14 @@ export default function ManagementDashboard() {
   };
 
   useEffect(() => {
-    const homes = ['iggh', 'millCreek', 'niagara', 'wellington'];
+    if (isLoading) return;
 
+    const homes = ['iggh', 'millCreek', 'niagara', 'wellington'];
     const injuryCounts = {
       iggh: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0 },
-      millCreek: {
-        headInjury: 0,
-        fracture: 0,
-        skinTear: 0,
-        significantInjury: 0,
-      },
-      niagara: {
-        headInjury: 0,
-        fracture: 0,
-        skinTear: 0,
-        significantInjury: 0,
-      },
-      wellington: {
-        headInjury: 0,
-        fracture: 0,
-        skinTear: 0,
-        significantInjury: 0,
-      },
+      millCreek: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0 },
+      niagara: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0 },
+      wellington: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0 },
     };
 
     const fetchDataForHome = async (home) => {
@@ -203,10 +238,12 @@ export default function ManagementDashboard() {
               const hasFracture = lowerCaseInjury.includes('fracture');
               const hasSkinTear = lowerCaseInjury.includes('skin tear');
 
+              // Count individual types
               if (hasHeadInjury) injuryCounts[home].headInjury += 1;
               if (hasFracture) injuryCounts[home].fracture += 1;
               if (hasSkinTear) injuryCounts[home].skinTear += 1;
 
+              // Count total significant injuries
               if (hasHeadInjury || hasFracture || hasSkinTear) {
                 injuryCounts[home].significantInjury += 1;
               }
@@ -235,22 +272,28 @@ export default function ManagementDashboard() {
     };
 
     fetchAllData();
-  }, [currentMonth]);
+  }, [currentMonth, isLoading]);
 
   const updateHomesChart = (nonComplianceCounts) => {
-    const newData = Object.entries(nonComplianceCounts).map(([home, counts]) => ({
-      name: home,
-      totalNonCompliance: counts.poaNotNotified + counts.unwrittenNotes,
-    }));
+    const newData = Object.entries(nonComplianceCounts).map(([home, counts]) => {
+      const totalFalls = dataLengths[home];
+      // Use the totalFallsWithIssues count we tracked
+      const percentage = totalFalls > 0 ? (counts.totalFallsWithIssues / totalFalls) * 100 : 0;
+      
+      return {
+        name: home,
+        value: percentage
+      };
+    });
 
-    newData.sort((a, b) => b.totalNonCompliance - a.totalNonCompliance);
+    newData.sort((a, b) => b.value - a.value);
 
     setHomesChartData({
       labels: newData.map((item) => shortToFull(item.name)),
       datasets: [
         {
-          label: 'Total Non-Compliance',
-          data: newData.map((item) => item.totalNonCompliance),
+          label: '% of Falls with Non-Compliance Issues',
+          data: newData.map((item) => item.value),
           backgroundColor: 'rgba(76, 175, 80, 0.6)',
           borderColor: 'rgb(76, 175, 80)',
           borderWidth: 1,
@@ -267,20 +310,38 @@ export default function ManagementDashboard() {
     const locationName = homesChartData.labels[index];
     const homeData = homesPopUpData[locationName];
 
-    const content = [
-      `Number of POAs not notified: ${homeData.poaNotNotified}`,
-      `Number of unwritten post-fall notes: ${homeData.unwrittenNotes}`,
-    ];
+    const content = (
+      <div style={{ textAlign: 'left', fontSize: '16px' }}>
+        <div style={{ marginLeft: '20px' }}>
+          <div style={{ fontSize: '22px', marginBottom: '10px'}}>
+            <b style={{fontWeight: 'bold',}}># of Falls with Non-Compliance Issues: {homeData.fallsWithNonCompliance}</b> ({homeData.percentage}%)
+          </div>
+          <ul>
+          <li style={{ marginBottom: '8px', fontSize: '19px'}}>
+            # of POAs not Contacted: {homeData.poaNotContacted}
+          </li>
+          <li style={{ marginBottom: '8px', fontSize: '19px' }}>
+            # of No Fall Notes: {homeData.noFallNote}
+          </li>
+          <li style={{ marginBottom: '8px', fontSize: '19px' }}>
+            # of Less than 3 Post-Fall Notes: {homeData.lessThanThreeNotes}
+          </li>
+          </ul>
+          
+        </div>
+      </div>
+    );
+    
     openModal(locationName, content);
   };
 
   useEffect(() => {
     const homes = ['iggh', 'millCreek', 'niagara', 'wellington'];
     let nonComplianceCounts = {
-      niagara: { poaNotNotified: 0, unwrittenNotes: 0 },
-      millCreek: { poaNotNotified: 0, unwrittenNotes: 0 },
-      wellington: { poaNotNotified: 0, unwrittenNotes: 0 },
-      iggh: { poaNotNotified: 0, unwrittenNotes: 0 },
+      niagara: { fallsWithNonCompliance: 0, totalFalls: 0, poaNotContacted: 0, noFallNote: 0, lessThanThreeNotes: 0},
+      millCreek: { fallsWithNonCompliance: 0, totalFalls: 0, poaNotContacted: 0, noFallNote: 0, lessThanThreeNotes: 0},
+      wellington: { fallsWithNonCompliance: 0, totalFalls: 0, poaNotContacted: 0, noFallNote: 0, lessThanThreeNotes: 0},
+      iggh: { fallsWithNonCompliance: 0, totalFalls: 0, poaNotContacted: 0, noFallNote: 0, lessThanThreeNotes: 0},
     };
 
     const fetchDataForHome = (home) => {
@@ -289,23 +350,39 @@ export default function ManagementDashboard() {
         onValue(fallsRef, (snapshot) => {
           const data = snapshot.val();
           if (data) {
-            Object.values(data).forEach((item) => {
-              const fallDate = new Date(item.date);
-              const currentDate = new Date();
-              const daysDifference = Math.abs(currentDate - fallDate) / (1000 * 60 * 60 * 24);
+            Object.values(data).forEach((fall) => {
+              // Increment total falls counter
+              nonComplianceCounts[home].totalFalls++;
+              
+            let poaNotContacted = fall.poaContacted.toLowerCase() !== 'yes';
+            let noFallNote = fall.cause === "No Fall Note";
+            let lessThanThreeNotes = parseInt(fall.postFallNotes) < 3;
 
-              // Count POAs not contacted
-              if (item.poaContacted.toLowerCase() !== 'yes') {
-                nonComplianceCounts[home].poaNotNotified += 1;
-              }
+            // Track specific POA non-compliance
+            if (fall.poaContacted.toLowerCase() !== 'yes') {
+              nonComplianceCounts[home].poaNotContacted++;
+            }
 
-              // Count unwritten post-fall notes (if more than 3 days after the fall and postFallNotes < 3)
-              if (daysDifference > 3 && parseInt(item.postFallNotes) < 3) {
-                nonComplianceCounts[home].unwrittenNotes += 1;
+            if (fall.cause === "No Fall Note") {
+              nonComplianceCounts[home].noFallNote++;
+            }
+
+            if (parseInt(fall.postFallNotes) < 3) {
+              nonComplianceCounts[home].lessThanThreeNotes++;
+            }
+
+              // Check for any non-compliance conditions
+              const hasNonCompliance = (
+                poaNotContacted ||  // POA not contacted
+                noFallNote ||              // No fall note
+                lessThanThreeNotes           // Less than 3 post-fall notes
+              );
+
+              // If any non-compliance condition is met, increment counter
+              if (hasNonCompliance) {
+                nonComplianceCounts[home].fallsWithNonCompliance++;
               }
             });
-          } else {
-            console.warn(`No data found in Firebase for ${home}`);
           }
           resolve();
         });
@@ -313,15 +390,49 @@ export default function ManagementDashboard() {
     };
 
     const fetchAllData = async () => {
-      const allDataPromises = homes.map(fetchDataForHome);
-      await Promise.all(allDataPromises);
+      await Promise.all(homes.map(fetchDataForHome));
 
-      updateHomesChart(nonComplianceCounts);
+      // Calculate percentages and update chart
+      const chartData = Object.entries(nonComplianceCounts).map(([home, counts]) => {
+        const percentage = counts.totalFalls > 0 
+          ? (counts.fallsWithNonCompliance / counts.totalFalls) * 100 
+          : 0;
+        
+        return {
+          name: home,
+          value: percentage,
+          fallsWithNonCompliance: counts.fallsWithNonCompliance,
+          totalFalls: counts.totalFalls
+        };
+      });
+
+      // Sort by percentage
+      chartData.sort((a, b) => b.value - a.value);
+
+      // Update chart data
+      setHomesChartData({
+        labels: chartData.map(item => shortToFull(item.name)),
+        datasets: [{
+          data: chartData.map(item => item.value),
+          backgroundColor: 'rgba(76, 175, 80, 0.6)',
+          borderColor: 'rgb(76, 175, 80)',
+          borderWidth: 1,
+          indexAxis: 'x',
+        }]
+      });
+
+      // Save detailed data for modal popup
       const popupData = {};
-      for (const key in nonComplianceCounts) {
-        const newKey = shortToFull(key);
-        popupData[newKey] = nonComplianceCounts[key];
-      }
+      chartData.forEach(item => {
+        popupData[shortToFull(item.name)] = {
+          fallsWithNonCompliance: item.fallsWithNonCompliance,
+          poaNotContacted: nonComplianceCounts[item.name].poaNotContacted,  // Include this count
+          noFallNote: nonComplianceCounts[item.name].noFallNote,
+          lessThanThreeNotes: nonComplianceCounts[item.name].lessThanThreeNotes,
+          totalFalls: item.totalFalls,
+          percentage: item.value.toFixed(1)
+        };
+      });
       setHomesPopUpData(popupData);
     };
 
@@ -344,13 +455,19 @@ export default function ManagementDashboard() {
       y: {
         beginAtZero: true,
         ticks: {
-          stepSize: 1,
-        },
+          callback: function(value) {
+            return value + '%';
+          }
+        }
       },
     },
     plugins: {
-      tooltip: { enabled: false },
-      legend: { display: true },
+      tooltip: { 
+        enabled: false 
+      },
+      legend: { 
+        display: false
+      },
     },
     animations: {
       duration: 0,
@@ -532,34 +649,23 @@ export default function ManagementDashboard() {
       </select>
       <div className={styles['chart-container']}>
         <div className={styles['chart']}>
-          <h2 id="fallsHeader">Falls with significant injury</h2>
-          {/* <select
-            id="fallsTimeRange"
-            value={fallsTimeRange}
-            className={styles.select}
-            onChange={(e) => {
-              setFallsTimeRange(e.target.value);
-            }}
-          >
-            <option value="12">Current Month</option>
-            <option value="11">November 2024</option>
-          </select> */}
-          {fallsChartData.datasets.length > 0 && <Bar data={fallsChartData} options={createOptions(onClickFalls)} />}
+          <h2 style={{ marginLeft: '10px',}} id="fallsHeader">Falls with significant injury</h2>
+          {isLoading ? (
+            <div>Loading...</div>
+          ) : (
+            fallsChartData.datasets.length > 0 && 
+            <Bar data={fallsChartData} options={createOptions(onClickFalls)} />
+          )}
         </div>
 
         <div className={styles['chart']}>
-          <h2 id="homesHeader">Number of incidents of non-compliance</h2>
-          {/* <select
-            id="homesTimeRange"
-            value={homesTimeRange}
-            onChange={(e) => {
-              setHomesTimeRange(e.target.value);
-            }}
-          >
-            <option value="12">Current Month</option>
-            <option value="11">November 2024</option>
-          </select> */}
-          {homesChartData.datasets.length > 0 && <Bar data={homesChartData} options={createOptions(onClickHomes)} />}
+          <h2 style={{ marginLeft: '10px',}} >% of Falls with Non-Compliance Issues</h2>
+          {isLoading ? (
+            <div>Loading...</div>
+          ) : (
+            homesChartData.datasets.length > 0 && 
+            <Bar data={homesChartData} options={createOptions(onClickHomes)} />
+          )}
         </div>
       </div>
 
