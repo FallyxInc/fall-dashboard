@@ -649,7 +649,7 @@ export default function ManagementDashboard() {
       </select>
       <div className={styles['chart-container']}>
         <div className={styles['chart']}>
-          <h2 style={{ marginLeft: '10px',}} id="fallsHeader">Falls with significant injury</h2>
+          <h2 style={{ marginLeft: '10px',}} id="fallsHeader">% of Falls With Significant Injury</h2>
           {isLoading ? (
             <div>Loading...</div>
           ) : (
