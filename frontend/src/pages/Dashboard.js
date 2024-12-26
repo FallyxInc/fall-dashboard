@@ -58,7 +58,12 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
 
   const [data, setData] = useState([]);
   const [threeMonthData, setThreeMonthData] = useState(new Map());
-  const [desiredMonth, setDesiredMonth] = useState(months_forward[new Date().getMonth() + 1]);
+  const getCurrentMonth = () => {
+    const today = new Date();
+    const month = (today.getMonth() + 1).toString().padStart(2, '0');  // Convert 1-12 to "01"-"12"
+    return months_forward[month];  // Convert "01" to "January" etc.
+  };
+  const [desiredMonth, setDesiredMonth] = useState(getCurrentMonth());
   const [desiredYear, setDesiredYear] = useState(new Date().getFullYear());
   // const [desiredMonth, setDesiredMonth] = useState('January');
   // const [desiredYear, setDesiredYear] = useState(2025);
