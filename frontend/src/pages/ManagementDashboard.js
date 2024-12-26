@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import SummaryCard from './SummaryCard';
 import Modal from './Modal';
 import { Chart, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
-import { ref, onValue } from 'firebase/database';
+import { ref, onValue, get, set } from 'firebase/database';
 import { db } from '../firebase';
 import { saveAs } from 'file-saver';
 Chart.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
@@ -38,6 +38,7 @@ export default function ManagementDashboard() {
   const [dataLengths, setDataLengths] = useState({});
   const [loginCounts, setLoginCounts] = useState({});
   const [isLoading, setIsLoading] = useState(true);
+  const [residentsNeedingReview, setResidentsNeedingReview] = useState([]);
 
   const getDataLengths = async () => {
     const homes = ['niagara', 'millCreek', 'wellington', 'iggh'];
@@ -617,6 +618,56 @@ export default function ManagementDashboard() {
     // Save CSV using file-saver
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     saveAs(blob, 'falls_data_all_months.csv');
+  };
+
+  useEffect(() => {
+    const homes = ['iggh', 'millCreek', 'wellington', 'niagara'];
+    
+    homes.forEach(home => {
+      // Get falls data
+      const fallsRef = ref(db, `/${home}/2024/${currentMonth}`);
+      // Get reviews data
+      const reviewsRef = ref(db, `/reviews/${home}/2024/${currentMonth}`);
+      
+      onValue(fallsRef, async (snapshot) => {
+        const fallsData = snapshot.val();
+        // Get reviews data
+        const reviewsSnapshot = await get(reviewsRef);
+        const reviewsData = reviewsSnapshot.val() || {};
+
+        if (fallsData) {
+          // Count falls per resident
+          const fallCounts = {};
+          Object.values(fallsData).forEach(fall => {
+            // Only count if not reviewed
+            if (!reviewsData[fall.name]) {
+              fallCounts[fall.name] = (fallCounts[fall.name] || 0) + 1;
+            }
+          });
+
+          // Check who has 3+ falls without review
+          const needReview = Object.entries(fallCounts)
+            .filter(([_, count]) => count >= 3)
+            .map(([name]) => ({
+              name,
+              home
+            }));
+
+          setResidentsNeedingReview(current => [...current, ...needReview]);
+        }
+      });
+    });
+  }, [currentMonth]);
+
+  const markReviewDone = async (resident) => {
+    // Simply mark the review as done in the reviews node
+    const reviewRef = ref(db, `/reviews/${resident.home}/2024/${currentMonth}/${resident.name}`);
+    await set(reviewRef, 'reviewed');
+    
+    // Remove this resident from the state
+    setResidentsNeedingReview(current => 
+      current.filter(r => !(r.name === resident.name && r.home === resident.home))
+    );
   };
 
   return (

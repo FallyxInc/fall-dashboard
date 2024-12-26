@@ -1,6 +1,6 @@
 import React from 'react';
 
-const Modal = ({ showModal, handleClose, modalContent, title }) => {
+const Modal = ({ showModal, handleClose, modalContent, title, showCloseButton = true }) => {
   const modalStyle = {
     display: showModal ? 'block' : 'none',
     position: 'fixed',
@@ -17,10 +17,10 @@ const Modal = ({ showModal, handleClose, modalContent, title }) => {
     backgroundColor: '#fefefe',
     margin: '15% auto',
     padding: '20px',
-    border: '1px solid #888',
+    border: 'none',
     width: '80%',
     maxWidth: '500px',
-    borderRadius: '5px',
+    borderRadius: '12px',
     position: 'relative',
   };
 
@@ -35,20 +35,16 @@ const Modal = ({ showModal, handleClose, modalContent, title }) => {
   return (
     <div style={modalStyle}>
       <div style={modalContentStyle}>
-        <span 
-          style={closeButtonStyle} 
-          onClick={handleClose}
-        >
-          &times;
-        </span>
-        <h2>{title}</h2>
-        <div style={{ marginTop: '20px' }}>
-          {Array.isArray(modalContent) 
-            ? modalContent.map((line, index) => (
-                <div key={index} style={{ margin: '10px 0' }}>{line}</div>
-              ))
-            : modalContent
-          }
+        {showCloseButton && (
+          <span 
+            style={closeButtonStyle} 
+            onClick={handleClose}
+          >
+            &times;
+          </span>
+        )}
+        <div style={{ marginTop: showCloseButton ? '20px' : '0' }}>
+          {modalContent}
         </div>
       </div>
     </div>

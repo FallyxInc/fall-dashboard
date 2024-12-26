@@ -7,7 +7,7 @@ import * as Papa from 'papaparse';
 import { saveAs } from 'file-saver';
 import { Chart, ArcElement, PointElement, LineElement } from 'chart.js';
 // import { collection, addDoc } from 'firebase/firestore';
-import { ref, onValue, off, get, update, query, orderByChild, equalTo, child } from 'firebase/database';
+import { ref, onValue, off, get, update, query, orderByChild, equalTo, child, set, serverTimestamp } from 'firebase/database';
 import { db } from '../firebase';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -21,6 +21,7 @@ import {
   countResidentsWithRecurringFalls,
   countFallsByTimeOfDay,
 } from '../utils/DashboardUtils';
+import Modal from './Modal';
 
 Chart.register(ArcElement, PointElement, LineElement);
 
@@ -92,6 +93,10 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   const [currentPostFallNotes, setCurrentPostFallNotes] = useState('');
   const [currentPostFallNotesRowIndex, setCurrentPostFallNotesRowIndex] = useState(null);
   const [isPostFallNotesModalOpen, setIsPostFallNotesModalOpen] = useState(false);
+
+  const [residentsNeedingReview, setResidentsNeedingReview] = useState([]);
+  const [currentResidentIndex, setCurrentResidentIndex] = useState(0);
+  const [showModal, setShowModal] = useState(false);
 
   function expandedLog(item, maxDepth = 100, depth = 0) {
     if (depth > maxDepth) {
@@ -564,27 +569,29 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     const listener = onValue(dataRef, (snapshot) => {
       if (snapshot.exists()) {
         const fetchedData = snapshot.val();
+        console.log("Raw fetched data:", fetchedData);
+        
+        // First ensure all data is loaded and valid
+        if (!fetchedData) {
+          console.log('No data available');
+          setData([]);
+          return;
+        }
 
-        // End measuring fetch data time
-        // performance.mark('end-fetch-data');
-        // performance.measure('Fetch Data Time', 'start-fetch-data', 'end-fetch-data');
-
-        // const fetchDataTime = performance.getEntriesByName('Fetch Data Time')[0].duration;
-        // console.log('Fetch Data Time: ', fetchDataTime, 'ms'); // Logs the time it took for fetching data
-
-        // console.log('fetchedData');
-        // console.log(fetchedData);
-
+        // Then process the data
         let withIdData = Object.values(fetchedData);
         for (let i = 0; i < withIdData.length; i++) {
           withIdData[i].id = i;
         }
 
-        const updatedData = markPostFallNotes(withIdData);
-        const sortedData = updatedData.sort(
-          (a, b) => new Date(b.date + ' ' + b.time) - new Date(a.date + ' ' + a.time)
-        );
-        setData(sortedData); // Update state with the sorted data
+        // Only call markPostFallNotes after we're sure data is loaded
+        if (withIdData.length > 0) {
+          const updatedData = markPostFallNotes(withIdData);
+          const sortedData = updatedData.sort(
+            (a, b) => new Date(b.date + ' ' + b.time) - new Date(a.date + ' ' + a.time)
+          );
+          setData(sortedData);
+        }
       } else {
         setData([]);
         console.log(`${name} data not found.`);
@@ -661,6 +668,96 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
       setAvailableYearMonth(yearMonthMapping);
     });
   }, []);
+
+  const checkForUnreviewedResidents = async () => {
+    const fallsRef = ref(db, `/${name}/${desiredYear}/${months_backword[desiredMonth]}`);
+    const reviewsRef = ref(db, `/reviews/${name}/${desiredYear}/${months_backword[desiredMonth]}`);
+    
+    // Get both falls and reviews data
+    const [fallsSnapshot, reviewsSnapshot] = await Promise.all([
+      get(fallsRef),
+      get(reviewsRef)
+    ]);
+
+    const fallsData = fallsSnapshot.val();
+    const reviewsData = reviewsSnapshot.val() || {};
+
+    if (fallsData) {
+      // Count falls per resident
+      const fallCounts = {};
+      Object.values(fallsData).forEach(fall => {
+        if (fall.name) {
+          fallCounts[fall.name] = (fallCounts[fall.name] || 0) + 1;
+        }
+      });
+
+      // Filter for residents with 3+ falls who haven't been reviewed or need reminder
+      const needReview = Object.entries(fallCounts)
+        .filter(([residentName, count]) => {
+          const review = reviewsData[residentName];
+          if (!review) return count >= 3;  // No review exists
+          
+          // Check if reminder is due (more than 24 hours old)
+          if (review.needsReminder && review.lastReminderTime) {
+            const reminderTime = new Date(review.lastReminderTime);
+            const now = new Date();
+            return count >= 3 && (now - reminderTime) >= 86400000;  // 86400000ms = 24 hours
+          }
+          
+          return false;  // Already reviewed
+        })
+        .map(([residentName]) => ({
+          name: residentName
+        }));
+
+      setResidentsNeedingReview(needReview);
+      if (needReview.length > 0) {
+        setCurrentResidentIndex(0);
+        setShowModal(true);
+      }
+    }
+  };
+
+  // Initial check and set up interval
+  useEffect(() => {
+    checkForUnreviewedResidents();
+    const interval = setInterval(checkForUnreviewedResidents, 10000); // Check every 10 seconds
+    
+    return () => clearInterval(interval);
+  }, [name, desiredMonth]);
+
+  const markReviewDone = async (resident) => {
+    const reviewRef = ref(db, `/reviews/${name}/${desiredYear}/${months_backword[desiredMonth]}/${resident.name}`);
+    await set(reviewRef, {
+      reviewed: true,
+      reviewedAt: serverTimestamp(),
+      needsReminder: false,
+      lastReminderTime: null
+    });
+    
+    // Re-check for remaining unreviewed residents
+    await checkForUnreviewedResidents();
+  };
+
+  const handleRemindLater = async () => {
+    const currentResident = residentsNeedingReview[currentResidentIndex];
+    const reviewRef = ref(db, `/reviews/${name}/${desiredYear}/${months_backword[desiredMonth]}/${currentResident.name}`);
+    
+    await set(reviewRef, {
+      reviewed: false,
+      needsReminder: true,
+      lastReminderTime: serverTimestamp()
+    });
+
+    // Move to next resident if available
+    if (currentResidentIndex < residentsNeedingReview.length - 1) {
+      setCurrentResidentIndex(prev => prev + 1);
+    } else {
+      setShowModal(false);
+      setCurrentResidentIndex(0);
+      // Will be checked again by the interval
+    }
+  };
 
   return (
     <div className={styles.dashboard} ref={tableRef}>
@@ -968,6 +1065,39 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
             </div>
           </div>
         </div>
+      )}
+      {showModal && residentsNeedingReview.length > 0 && residentsNeedingReview[currentResidentIndex] && (
+        <Modal 
+          showModal={true}
+          handleClose={() => setShowModal(false)}
+          showCloseButton={false}
+          modalContent={
+            <div>
+              <h3 style={{ fontSize: '30px', fontWeight: 'bold', marginBottom: '15px' }}>Special Care Review Needed:</h3>
+              <p style={{ fontSize: '18px', marginBottom: '25px', }}>
+                <b style={{ fontSize: '18px', fontWeight: 'bold' }}> 
+                  {residentsNeedingReview[currentResidentIndex]?.name} 
+                </b> has had 3 or more falls 
+                in the past month. Have you completed a special care review?
+              </p>
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'left', marginBottom: '25px' }}>
+                <button 
+                  onClick={() => residentsNeedingReview[currentResidentIndex] && 
+                    markReviewDone(residentsNeedingReview[currentResidentIndex])}
+                  style={{ padding: '10px', backgroundColor: 'green', color: 'white', fontFamily: 'inherit', fontSize: '16px', borderRadius: '12px', border: 'transparent', cursor: 'pointer'}}
+                >
+                  Yes, Review Complete
+                </button>
+                <button 
+                  onClick={handleRemindLater}
+                  style={{ backgroundColor: '#D3D3D3', padding: '10px', fontFamily: 'inherit', fontSize: '16px', fontFamily: 'inherit', borderRadius: '12px', border: 'transparent', cursor: 'pointer'}}
+                >
+                  Remind me in 24 hours
+                </button>
+              </div>
+            </div>
+          }
+        />
       )}
     </div>
   );
