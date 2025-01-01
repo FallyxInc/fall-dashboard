@@ -6,6 +6,7 @@ import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { saveAs } from 'file-saver';
 
+
 export function markPostFallNotes(input) {
   let data = [...input];
   data.sort((a, b) => new Date(a.date + ' ' + a.time) - new Date(b.date + ' ' + b.time));
@@ -26,7 +27,8 @@ export function markPostFallNotes(input) {
     }
 
     input[currentID].postFallNotesColor =
-      currentRecord.postFallNotes < 3 && !hasFallWithin72Hours && currentRecord.hospital.toLowerCase() === 'no'
+      currentRecord.postFallNotes < 3 && !hasFallWithin72Hours && 
+      (currentRecord.hospital === 'no' || currentRecord.hospital === 'No')
         ? 'red'
         : 'default';
   }
@@ -50,26 +52,32 @@ export function countFallsByExactInjury(data) {
 }
 
 export function countFallsByLocation(data) {
-  var locationCounts = {};
-  data.forEach((fall) => {
-    if (locationCounts[fall.location]) {
-      locationCounts[fall.location]++;
-    } else {
-      locationCounts[fall.location] = 1;
+  const locationCounts = {};
+  
+  Object.values(data).forEach(item => {
+    // Check for both possible field names
+    const locationValue = item.location || item.incident_location;
+    
+    if (locationValue) {
+      locationCounts[locationValue] = (locationCounts[locationValue] || 0) + 1;
     }
   });
+  
+  console.log('Location counts:', locationCounts); // Debug log
   return locationCounts;
 }
 
 export function countFallsByHIR(data) {
-  var hirCount = 0;
-
-  data.forEach((fall) => {
-    if (fall.hir?.toLowerCase() === 'yes') {
-      hirCount++;
+  let hirCount = 0;
+  data.forEach(item => {
+    try {
+      if (item.hir === 'yes' || item.hir === 'Yes') {
+        hirCount++;
+      }
+    } catch (error) {
+      console.error('Error processing HIR:', error);
     }
   });
-
   return hirCount;
 }
 

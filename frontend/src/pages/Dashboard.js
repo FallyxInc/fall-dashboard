@@ -353,7 +353,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
 
     if (selectedUnit !== 'allUnits') {
       filteredData = filteredData.filter(
-        (fall) => fall.homeUnit.trim()?.toLowerCase() === selectedUnit.trim().toLowerCase()
+        (fall) => fall.homeUnit?.trim() === selectedUnit?.trim()
       );
     }
 
@@ -913,8 +913,8 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
               <td style={{ whiteSpace: 'nowrap', fontSize: '16px' }}>{item.date}</td> {/* Increased font size */}
               <td style={{ fontSize: '16px' }}>{item.name}</td>
               <td style={{ fontSize: '16px' }}>{item.time}</td>
-              <td style={{ fontSize: '16px' }}>{item.location}</td>
-              <td style={{ fontSize: '16px' }}>{item.homeUnit}</td>
+              <td style={{ fontSize: '16px' }}>{item.location || item.incident_location}</td>
+              <td style={{ fontSize: '16px' }}>{item.homeUnit || item.room}</td>
               {/* <td style={{ fontSize: '16px' }}>{item.cause}</td> */}
               <td style={{ fontSize: '16px', color: item.isCauseUpdated === 'yes' ? 'green' : 'inherit' }}>
                 {item.cause}
@@ -933,22 +933,24 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
               </td>
               <td style={{ fontSize: '16px' }}>
                 <select
-                  value={item.hir?.toLowerCase() === 'yes' ? 'Yes' : item.hir?.toLowerCase() === 'no' ? 'No' : item.hir}
+                  value={item.hir === 'yes' || item.hir === 'Yes' ? 'Yes' : item.hir === 'no' || item.hir === 'No' ? 'No' : item.hir}
                   onChange={(e) => handleUpdateCSV(data[i].id, e.target.value, name, 'hir')}
                 >
                   <option value="Yes">Yes</option>
                   <option value="No">No</option>
                 </select>
               </td>
-              <td style={{ fontSize: '16px' }}>{item.injury}</td>
+              <td style={{ fontSize: '16px' }}>{item.injury || item.injuries}</td>
               <td style={{ fontSize: '16px' }}>
                 <select
                   value={
-                    item.hospital?.toLowerCase() === 'yes'
-                      ? 'Yes'
-                      : item.hospital?.toLowerCase() === 'no'
-                      ? 'No'
-                      : item.hospital
+                    (item.hospital || item.transfer_to_hospital) === 'yes' || 
+                    (item.hospital || item.transfer_to_hospital) === 'Yes' 
+                      ? 'Yes' 
+                      : (item.hospital || item.transfer_to_hospital) === 'no' || 
+                        (item.hospital || item.transfer_to_hospital) === 'No'
+                        ? 'No' 
+                        : (item.hospital || item.transfer_to_hospital)
                   }
                   onChange={(e) => handleUpdateCSV(data[i].id, e.target.value, name, 'hospital')}
                 >
@@ -958,9 +960,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
               </td>
               <td style={{ fontSize: '16px' }}>
                 <select
-                  value={
-                    item.ptRef?.toLowerCase() === 'yes' ? 'Yes' : item.ptRef?.toLowerCase() === 'no' ? 'No' : item.ptRef
-                  }
+                  value={item.ptRef === 'yes' || item.ptRef === 'Yes' ? 'Yes' : item.ptRef === 'no' || item.ptRef === 'No' ? 'No' : item.ptRef}
                   onChange={(e) => handleUpdateCSV(data[i].id, e.target.value, name, 'ptRef')}
                 >
                   <option value="Yes">Yes</option>
@@ -969,13 +969,11 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
               </td>
               <td style={{ fontSize: '16px' }}>
                 <select
-                  value={
-                    item.physicianRef?.toLowerCase() === 'yes'
-                      ? 'Yes'
-                      : item.physicianRef?.toLowerCase() === 'no'
-                      ? 'No'
-                      : item.physicianRef
-                  }
+                  value={item.physicianRef === 'yes' || item.physicianRef === 'Yes'
+                    ? 'Yes'
+                    : item.physicianRef === 'no' || item.physicianRef === 'No'
+                    ? 'No'
+                    : item.physicianRef}
                   onChange={(e) => handleUpdateCSV(data[i].id, e.target.value, name, 'physicianRef')}
                 >
                   <option value="Yes">Yes</option>
@@ -985,13 +983,11 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
               </td>
               <td className={item.poaContacted === 'No' ? styles.cellRed : ''} style={{ fontSize: '16px' }}>
                 <select
-                  value={
-                    item.poaContacted?.toLowerCase() === 'yes'
-                      ? 'Yes'
-                      : item.poaContacted?.toLowerCase() === 'no'
-                      ? 'No'
-                      : item.poaContacted
-                  }
+                  value={item.poaContacted === 'yes' || item.poaContacted === 'Yes'
+                    ? 'Yes'
+                    : item.poaContacted === 'no' || item.poaContacted === 'No'
+                    ? 'No'
+                    : item.poaContacted}
                   onChange={(e) => handleUpdateCSV(data[i].id, e.target.value, name, 'poaContacted')}
                 >
                   <option value="Yes">Yes</option>
@@ -1001,9 +997,9 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
               <td style={{ fontSize: '16px' }}>
                 <select
                   value={
-                    item.incidentReport?.toLowerCase() === 'yes'
+                    item.incidentReport === 'yes' || item.incidentReport === 'Yes'
                       ? 'Yes'
-                      : item.incidentReport?.toLowerCase() === 'no'
+                      : item.incidentReport === 'no' || item.incidentReport === 'No'
                       ? 'No'
                       : item.incidentReport
                   }
