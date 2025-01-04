@@ -36,12 +36,22 @@ export default function ManagementDashboard() {
   // console.log('homesPopUpData');
   // console.log(homesPopUpData);
   const [dataLengths, setDataLengths] = useState({});
-  const [loginCounts, setLoginCounts] = useState({});
+  const [loginCounts, setLoginCounts] = useState({
+    'iggh': 0,
+    'millCreek': 0,
+    'niagara': 0,
+    'wellington': 0,
+    'champlain': 0,
+    'lancaster': 0,
+    'vmltc': 0,
+    'oneill': 0,
+    'bonairltc': 0
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [residentsNeedingReview, setResidentsNeedingReview] = useState([]);
 
   const getDataLengths = async () => {
-    const homes = ['niagara', 'millCreek', 'wellington', 'iggh'];
+    const homes = ['niagara', 'millCreek', 'wellington', 'iggh', 'bonairltc', 'champlain', 'lancaster', 'oneill', 'vmltc'];
     const dataLengths = {};
 
     await Promise.all(
@@ -62,43 +72,6 @@ export default function ManagementDashboard() {
     return dataLengths; // { niagara: X, millCreek: Y, wellington: Z, iggh: W }
   };
 
-  const role2home = (role) => {
-    const mapping = {
-      'iggh-ltc': 'iggh',
-      'niagara-ltc': 'niagara',
-      'mill-creek-care': 'millCreek',
-      'the-wellington-ltc': 'wellington',
-    };
-
-    return mapping[role];
-  };
-
-  const getLoginCounts = async () => {
-    const roles = ['iggh-ltc', 'niagara-ltc', 'mill-creek-care', 'the-wellington-ltc'];
-    const loginCounts = {};
-
-    await Promise.all(
-      roles.map((role) => {
-        return new Promise((resolve) => {
-          const userRef = ref(db, `/users`);
-          onValue(userRef, (snapshot) => {
-            const data = snapshot.val();
-
-            for (const userId in data) {
-              if (data[userId].role === role) {
-                loginCounts[role2home(role)] = data[userId].loginCount || 0;
-                break;
-              }
-            }
-            resolve();
-          });
-        });
-      })
-    );
-
-    return loginCounts;
-  };
-
   useEffect(() => {
     const fetchData = async () => {
       const lengths = await getDataLengths();
@@ -110,24 +83,58 @@ export default function ManagementDashboard() {
   }, [currentMonth]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      const counts = await getLoginCounts();
-      setLoginCounts(counts);
-    };
+    if (isLoading) {
+      console.log('Still loading, waiting...');
+      return;
+    }
 
-    fetchData();
-  }, [currentMonth]);
+    const usersRef = ref(db, '/users');
+    
+    onValue(usersRef, (snapshot) => {
+      const users = snapshot.val();
+      const newCounts = { ...loginCounts };
+
+      console.log('Raw Firebase users data:', users);
+
+      if (users) {
+        Object.values(users).forEach(user => {
+          console.log('Processing user:', user);
+          if (user.role && user.loginCounts) {
+            newCounts[user.role] = user.loginCount;
+            console.log(`Processing ${user.role}: setting to ${user.loginCount}`);
+          }
+        });
+      }
+
+      console.log('Final newCounts before setState:', newCounts);
+      setLoginCounts(newCounts);
+    });
+  }, [isLoading]);
+
+  useEffect(() => {
+    console.log('State updated - current loginCounts:', loginCounts);
+  }, [loginCounts]);
 
   const shortToFull = (home) => {
     switch (home) {
       case 'iggh':
-        return 'Ina Grafton LTC';
+        return 'Ina Grafton Gage Home';
       case 'millCreek':
-        return 'Mill Creek LTC';
+        return 'Mill Creek Care Center';
       case 'niagara':
         return 'Niagara LTC';
       case 'wellington':
         return 'The Wellington LTC';
+      case 'champlain':
+        return 'Champlain LTC';
+      case 'lancaster':
+        return 'Lancaster LTC';
+      case 'vmltc':
+        return 'Villa Marconi LTC';
+      case 'oneill':
+        return 'O\'Neill Center';
+      case 'bonairltc':
+        return 'Bon Air LTC';
       default:
         return home;
     }
@@ -219,25 +226,43 @@ export default function ManagementDashboard() {
   useEffect(() => {
     if (isLoading) return;
 
-    const homes = ['iggh', 'millCreek', 'niagara', 'wellington'];
+    console.log('Database reference:', db); // Add this debug log
+    const homes = ['niagara', 'millCreek', 'wellington', 'iggh', 'bonairltc', 'champlain', 'lancaster', 'oneill', 'vmltc'];
     const injuryCounts = {
       iggh: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0 },
       millCreek: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0 },
       niagara: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0 },
       wellington: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0 },
+      bonairltc: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0 },
+      champlain: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0 },
+      lancaster: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0 },
+      oneill: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0 },
+      vmltc: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0 }, 
     };
 
     const fetchDataForHome = async (home) => {
+      console.log('Current month value:', currentMonth); // Add this debug log
+      console.log('Full path being accessed:', `/${home}/2024/${currentMonth}`);
       const fallsRef = ref(db, `/${home}/2024/${currentMonth}`);
       return new Promise((resolve) => {
         onValue(fallsRef, (snapshot) => {
           const data = snapshot.val();
           if (data) {
             Object.values(data).forEach((item) => {
-              const lowerCaseInjury = item.injury.toLowerCase();
-              const hasHeadInjury = lowerCaseInjury.includes('head injury');
-              const hasFracture = lowerCaseInjury.includes('fracture');
-              const hasSkinTear = lowerCaseInjury.includes('skin tear');
+              console.log('Full item data:', item); // Debug log to see all fields
+              
+              // Check both possible field names and use whichever exists
+              const injury = item.injuries || item.injury || '';
+              
+              // Arrays of possible variations for each injury type
+              const headInjuryVariations = ['Head Injury', 'HEAD INJURY', 'head injury', 'Head injury'];
+              const fractureVariations = ['Fracture', 'FRACTURE', 'fracture'];
+              const skinTearVariations = ['Skin Tear', 'SKIN TEAR', 'skin tear', 'Skin tear'];
+              
+              // Check if any variation matches
+              const hasHeadInjury = headInjuryVariations.some(variant => injury.includes(variant));
+              const hasFracture = fractureVariations.some(variant => injury.includes(variant));
+              const hasSkinTear = skinTearVariations.some(variant => injury.includes(variant));
 
               // Count individual types
               if (hasHeadInjury) injuryCounts[home].headInjury += 1;
@@ -337,12 +362,17 @@ export default function ManagementDashboard() {
   };
 
   useEffect(() => {
-    const homes = ['iggh', 'millCreek', 'niagara', 'wellington'];
+    const homes = ['niagara', 'millCreek', 'wellington', 'iggh', 'bonairltc', 'champlain', 'lancaster', 'oneill', 'vmltc'];
     let nonComplianceCounts = {
       niagara: { fallsWithNonCompliance: 0, totalFalls: 0, poaNotContacted: 0, noFallNote: 0, lessThanThreeNotes: 0},
       millCreek: { fallsWithNonCompliance: 0, totalFalls: 0, poaNotContacted: 0, noFallNote: 0, lessThanThreeNotes: 0},
       wellington: { fallsWithNonCompliance: 0, totalFalls: 0, poaNotContacted: 0, noFallNote: 0, lessThanThreeNotes: 0},
       iggh: { fallsWithNonCompliance: 0, totalFalls: 0, poaNotContacted: 0, noFallNote: 0, lessThanThreeNotes: 0},
+      bonairltc: { fallsWithNonCompliance: 0, totalFalls: 0, poaNotContacted: 0, noFallNote: 0, lessThanThreeNotes: 0},
+      champlain: { fallsWithNonCompliance: 0, totalFalls: 0, poaNotContacted: 0, noFallNote: 0, lessThanThreeNotes: 0},
+      lancaster: { fallsWithNonCompliance: 0, totalFalls: 0, poaNotContacted: 0, noFallNote: 0, lessThanThreeNotes: 0},
+      oneill: { fallsWithNonCompliance: 0, totalFalls: 0, poaNotContacted: 0, noFallNote: 0, lessThanThreeNotes: 0},
+      vmltc: { fallsWithNonCompliance: 0, totalFalls: 0, poaNotContacted: 0, noFallNote: 0, lessThanThreeNotes: 0},
     };
 
     const fetchDataForHome = (home) => {
@@ -355,12 +385,13 @@ export default function ManagementDashboard() {
               // Increment total falls counter
               nonComplianceCounts[home].totalFalls++;
               
-            let poaNotContacted = fall.poaContacted.toLowerCase() !== 'yes';
+            const poaVariations = ['Yes', 'YES', 'yes'];
+            let poaNotContacted = !poaVariations.some(variant => fall.poaContacted === variant);
             let noFallNote = fall.cause === "No Fall Note";
             let lessThanThreeNotes = parseInt(fall.postFallNotes) < 3;
 
             // Track specific POA non-compliance
-            if (fall.poaContacted.toLowerCase() !== 'yes') {
+            if (!poaVariations.some(variant => fall.poaContacted === variant)) {
               nonComplianceCounts[home].poaNotContacted++;
             }
 
@@ -488,35 +519,76 @@ export default function ManagementDashboard() {
         value: dataLengths['niagara'],
         subtitle: 'Niagara LTC',
         fallrate: (dataLengths['niagara'] / 103) * 100,
-        loginCount: loginCounts['niagara'],
-        linkTo: '/niagara-ltc',
+        loginCounts: loginCounts['niagara'],
+        linkTo: '/niagara',
       },
       {
         value: dataLengths['millCreek'],
         subtitle: 'Mill Creek LTC',
         fallrate: (dataLengths['millCreek'] / 160) * 100,
-        loginCount: loginCounts['millCreek'],
-        linkTo: '/mill-creek-care',
+        loginCounts: loginCounts['millCreek'],
+        linkTo: '/millCreek',
       },
       {
         value: dataLengths['wellington'],
         subtitle: 'The Wellington LTC',
         fallrate: (dataLengths['wellington'] / 78) * 100,
-        loginCount: loginCounts['wellington'],
-        linkTo: '/the-wellington-ltc',
+        loginCounts: loginCounts['wellington'],
+        linkTo: '/wellington',
       },
       {
         value: dataLengths['iggh'],
-        subtitle: 'Ina Grafton LTC',
+        subtitle: 'Ina Grafton Gage Home',
         fallrate: (dataLengths['iggh'] / 128) * 100,
-        loginCount: loginCounts['iggh'],
-        linkTo: '/iggh-ltc',
+        loginCounts: loginCounts['iggh'],
+        linkTo: '/iggh',
+      },
+      {
+        value: dataLengths['bonairltc'],
+        subtitle: 'Bon Air LTC',
+        fallrate: (dataLengths['bonairltc'] / 55) * 100,
+        loginCounst: loginCounts['bonairltc'],
+        linkTo: '/bonairltc',
+      },
+      {
+        value: dataLengths['champlain'],
+        subtitle: 'Champlain LTC',
+        fallrate: (dataLengths['champlain'] / 60) * 100,
+        loginCounts: loginCounts['champlain'],
+        linkTo: '/champlain',
+      },
+      {
+        value: dataLengths['lancaster'],
+        subtitle: 'Lancaster LTC',
+        fallrate: (dataLengths['lancaster'] / 60) * 100,
+        loginCount: loginCounts['lancaster'],
+        linkTo: '/lancaster',
+      },
+      {
+        value: dataLengths['oneill'],
+        subtitle: 'O\'Neill LTC',
+        fallrate: (dataLengths['oneill'] / 162) * 100,
+        loginCounts: loginCounts['oneill'],
+        linkTo: '/oneill',
+      },
+      {
+        value: dataLengths['vmltc'],
+        subtitle: 'Villa Marconi LTC',
+        fallrate: (dataLengths['vmltc'] / 128) * 100,
+        loginCounts: loginCounts['vmltc'],
+        linkTo: '/vmltc',
       },
     ];
 
     updatedSummaryData.sort((a, b) => b.fallrate - a.fallrate);
 
     setSummaryData(updatedSummaryData);
+
+    // Add debug log right after creating summaryData
+    console.log('Summary Data for Mill Creek:', {
+      loginCountFromState: loginCounts['millCreek'],
+      summaryDataEntry: updatedSummaryData.find(item => item.subtitle === 'Mill Creek LTC')
+    });
   }, [dataLengths]);
 
   const logout = () => {
@@ -542,7 +614,7 @@ export default function ManagementDashboard() {
   };
 
   const downloadCSV = async () => {
-    const homes = ['niagara', 'millCreek', 'wellington', 'iggh'];
+    const homes = ['niagara', 'millCreek', 'wellington', 'iggh', 'bonairltc', 'champlain', 'lancaster', 'oneill', 'vmltc'];
     const fallsData = [];
 
     await Promise.all(
@@ -567,7 +639,8 @@ export default function ManagementDashboard() {
                     const daysDifference = Math.abs(currentDate - fallDate) / (1000 * 60 * 60 * 24);
 
                     // Non-compliance calculations
-                    if (item.poaContacted.toLowerCase() !== 'yes') {
+                    const poaVariations = ['Yes', 'YES', 'yes'];
+                    if (!poaVariations.some(variant => item.poaContacted === variant)) {
                       poaNotNotified += 1;
                     }
                     if (daysDifference > 3 && parseInt(item.postFallNotes) < 3) {
@@ -575,9 +648,17 @@ export default function ManagementDashboard() {
                     }
 
                     // Significant injury calculations
-                    const hasHeadInjury = item.injury.toLowerCase().includes('head injury');
-                    const hasFracture = item.injury.toLowerCase().includes('fracture');
-                    const hasSkinTear = item.injury.toLowerCase().includes('skin tear');
+                    const injury = item.injuries || '';
+                    
+                    // Arrays of possible variations for each injury type
+                    const headInjuryVariations = ['Head Injury', 'HEAD INJURY', 'head injury', 'Head injury'];
+                    const fractureVariations = ['Fracture', 'FRACTURE', 'fracture'];
+                    const skinTearVariations = ['Skin Tear', 'SKIN TEAR', 'skin tear', 'Skin tear'];
+                    
+                    // Check if any variation matches
+                    const hasHeadInjury = headInjuryVariations.some(variant => injury.includes(variant));
+                    const hasFracture = fractureVariations.some(variant => injury.includes(variant));
+                    const hasSkinTear = skinTearVariations.some(variant => injury.includes(variant));
 
                     if (hasHeadInjury || hasFracture || hasSkinTear) {
                       significantInjury += 1;
@@ -621,7 +702,7 @@ export default function ManagementDashboard() {
   };
 
   useEffect(() => {
-    const homes = ['iggh', 'millCreek', 'wellington', 'niagara'];
+    const homes = ['iggh', 'millCreek', 'wellington', 'niagara', 'bonairltc', 'champlain', 'lancaster', 'oneill', 'vmltc'];
     
     homes.forEach(home => {
       // Get falls data
@@ -730,7 +811,7 @@ export default function ManagementDashboard() {
               subtitle={item.subtitle}
               linkTo={item.linkTo}
               fallrate={item.fallrate}
-              loginCount={item.loginCount}
+              loginCounts={item.loginCounts}
             />
           ))}
         </div>

@@ -88,9 +88,9 @@ function App() {
             }
           ></Route>
           <Route
-            path="/the-wellington-ltc"
+            path="/wellington"
             element={
-              <PrivateRoute rolesRequired={['the-wellington-ltc', 'responsive']}>
+              <PrivateRoute rolesRequired={['wellington', 'responsive']}>
                 <Dashboard
                   name="wellington"
                   title={'The Wellington LTC Falls Dashboard'}
@@ -101,9 +101,9 @@ function App() {
             }
           />
           <Route
-            path="/niagara-ltc"
+            path="/niagara"
             element={
-              <PrivateRoute rolesRequired={['niagara-ltc', 'responsive']}>
+              <PrivateRoute rolesRequired={['niagara', 'responsive']}>
                 <Dashboard
                   name="niagara"
                   title="Niagara LTC Falls Dashboard"
@@ -125,9 +125,9 @@ function App() {
             }
           />
           <Route
-            path="/mill-creek-care"
+            path="/millCreek"
             element={
-              <PrivateRoute rolesRequired={['mill-creek-care', 'responsive']}>
+              <PrivateRoute rolesRequired={['millCreek', 'responsive']}>
                 <Dashboard
                   name="millCreek"
                   title="Mill Creek Care Center Falls Dashboard"
@@ -138,9 +138,9 @@ function App() {
             }
           />
           <Route
-            path="/iggh-ltc"
+            path="/iggh"
             element={
-              <PrivateRoute rolesRequired={['iggh-ltc', 'responsive']}>
+              <PrivateRoute rolesRequired={['iggh', 'responsive']}>
                 <Dashboard
                   name="iggh"
                   title="Ina Grafton Gage Home Falls Dashboard"

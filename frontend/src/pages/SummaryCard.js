@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom'; // 引入Link组件
 import '../styles/SummaryCard.css';
 
-const SummaryCard = ({ value, subtitle, linkTo, fallrate, loginCount }) => {
+const SummaryCard = ({ value, subtitle, linkTo, fallrate, loginCounts }) => {
   return (
     <div className="summary-card">
       <Link to={linkTo} className="summary-link">
@@ -11,7 +11,7 @@ const SummaryCard = ({ value, subtitle, linkTo, fallrate, loginCount }) => {
       </Link>
       <div className="summary-title">Falls</div>
       <div className="summary-fallrate">Fall Rate: {fallrate.toFixed(2)}%</div>
-      <div className="summary-login-count">Logged In {loginCount} times</div>
+      <div className="summary-login-count">Logged In {loginCounts} times</div>
       <div className="summary-subtitle">{subtitle}</div>
     </div>
   );

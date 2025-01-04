@@ -535,6 +535,9 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     const currentYear = desiredYear;
     const currentMonth = parseInt(months_backword[desiredMonth]); // current month
     const pastThreeMonths = [];
+    console.log('Name prop:', name); // Check what name is being passed
+    console.log('Desired year:', desiredYear);
+    console.log('Desired month:', months_backword[desiredMonth]);
 
     for (let i = 3; i >= 1; i--) {
       const month = currentMonth - i;
@@ -632,47 +635,47 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
 
   useEffect(() => {
     const yearsRef = ref(db, `/${name}`);
+    console.log('Checking available years/months for:', name);
+    
     onValue(yearsRef, (snapshot) => {
       const yearMonthMapping = {};
       if (snapshot.exists()) {
         const data = snapshot.val();
+        
+        // Get current date info
+        const currentDate = new Date();
+        const currentYear = currentDate.getFullYear();
+        const currentMonth = currentDate.getMonth() + 1; // 1-12
 
-        Object.keys(data).forEach((year) => {
-          yearMonthMapping[year] = Object.keys(data[year])
-            .sort((a, b) => parseInt(a) - parseInt(b))
-            .map((month) => months_forward[month]);
-        });
-
-        const currentYear = new Date().getFullYear();
-        const currentMonth = months_forward[new Date().getMonth() + 1];
-
-        // const currentYear = 2025;
-        // const currentMonth = 'January';
-
-        if (!yearMonthMapping[currentYear]) {
-          yearMonthMapping[currentYear] = [];
-        }
-        if (!yearMonthMapping[currentYear].includes(currentMonth)) {
-          yearMonthMapping[currentYear].push(currentMonth);
-        }
-        if (yearMonthMapping['2024']) {
-          const index = yearMonthMapping['2024'].indexOf('July');
-          if (index > -1) {
-            yearMonthMapping['2024'].splice(index, 1);
+        // Calculate the last 4 months
+        const months = [];
+        for (let i = 0; i < 4; i++) {
+          let month = currentMonth - i;
+          let year = currentYear;
+          
+          if (month <= 0) {
+            month += 12;
+            year -= 1;
           }
-          const August = yearMonthMapping['2024'].indexOf('August');
-          if (August > -1) {
-            yearMonthMapping['2024'].splice(August, 1);
+          
+          // Format month as two digits
+          const monthStr = month.toString().padStart(2, '0');
+          
+          if (!yearMonthMapping[year]) {
+            yearMonthMapping[year] = [];
           }
-          const September = yearMonthMapping['2024'].indexOf('September');
-          if (September > -1) {
-            yearMonthMapping['2024'].splice(September, 1);
+          
+          // Only add if the data exists in Firebase
+          if (data[year] && data[year][monthStr]) {
+            yearMonthMapping[year].push(months_forward[monthStr]);
           }
         }
+
+        console.log('Final year/month mapping:', yearMonthMapping);
       }
       setAvailableYearMonth(yearMonthMapping);
     });
-  }, []);
+  }, [name]);
 
   const checkForUnreviewedResidents = async () => {
     const fallsRef = ref(db, `/${name}/${desiredYear}/${months_backword[desiredMonth]}`);
