@@ -14,20 +14,27 @@ const PrivateRoute = ({ rolesRequired, children }) => {
       get(userRef)
         .then((snapshot) => {
           if (snapshot.exists()) {
-            const role = snapshot.val().role;
+            let role = snapshot.val().role;
+            // Add the same role mapping as in Login.js
+            const roleMapping = {
+              'niagara-ltc': 'niagara',
+              // Add other mappings if needed
+            };
+            role = roleMapping[role] || role;
+            
             if (rolesRequired.includes(role)) {
-              setAuthorized(true); // 用户有权限访问
+              setAuthorized(true);
             } else {
-              setAuthorized(false); // 用户没有权限访问
+              setAuthorized(false);
             }
           }
-          setLoading(false); // 数据加载完毕
+          setLoading(false);
         })
         .catch(() => {
-          setLoading(false); // 如果有错误，也终止加载状态
+          setLoading(false);
         });
     } else {
-      setLoading(false); // 没有用户时，也终止加载状态
+      setLoading(false);
     }
   }, [user, rolesRequired]);
 

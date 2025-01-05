@@ -839,16 +839,20 @@ export default function ManagementDashboard() {
       <div className={styles['summary-container']}>
         <h2>Fall Summary</h2>
         <div className={styles['summary-cards']}>
-          {summaryData.map((item, index) => (
-            <SummaryCard
-              key={index}
-              value={item.value}
-              subtitle={item.subtitle}
-              linkTo={item.linkTo}
-              fallrate={item.fallrate}
-              loginCounts={item.loginCounts}
-            />
-          ))}
+          {isLoading ? (
+            <div>Loading...</div>
+          ) : (
+            summaryData.map((item, index) => (
+              <SummaryCard
+                key={index}
+                value={item.value}
+                subtitle={item.subtitle}
+                linkTo={item.linkTo}
+                fallrate={item.fallrate}
+                loginCounts={item.loginCounts}
+              />
+            ))
+          )}
         </div>
       </div>
 

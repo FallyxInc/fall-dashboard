@@ -51,7 +51,14 @@ export default function Login() {
         const updatedLoginCount = (userData.loginCount || 0) + 1;
         await set(ref(db, `users/${userId}/loginCount`), updatedLoginCount);
 
-        const role = userSnapshot.val().role;
+        let role = userSnapshot.val().role;
+        // Add role mapping
+        const roleMapping = {
+          'niagara-ltc': 'niagara',
+          // Add other mappings if needed
+        };
+        
+        role = roleMapping[role] || role;  // Use mapped role if it exists, otherwise use original
         navigate('/' + role);
       }
     } catch (error) {
