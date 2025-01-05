@@ -89,10 +89,7 @@ export default function ManagementDashboard() {
   }, [currentMonth]);
 
   useEffect(() => {
-    if (isLoading) {
-      console.log('Still loading, waiting...');
-      return;
-    }
+    if (isLoading) return;
 
     const usersRef = ref(db, '/users');
     
@@ -105,9 +102,19 @@ export default function ManagementDashboard() {
       if (users) {
         Object.values(users).forEach(user => {
           console.log('Processing user:', user);
-          if (user.role && user.loginCounts) {
-            newCounts[user.role] = user.loginCount;
-            console.log(`Processing ${user.role}: setting to ${user.loginCount}`);
+          console.log('User role:', user.role);
+          console.log('User loginCount:', user.loginCount);
+          console.log('User loginCounts:', user.loginCounts);
+          // Check for both loginCount and loginCounts
+          const count = user.loginCount || user.loginCounts || 0;
+          if (user.role && count) {
+            // Convert role to lowercase to ensure matching
+            const role = user.role.toLowerCase();
+            // Only update if this role exists in our counts object
+            if (role in newCounts) {
+              newCounts[role] = count;
+              console.log(`Processing ${role}: setting to ${count}`);
+            }
           }
         });
       }
@@ -562,7 +569,7 @@ export default function ManagementDashboard() {
         value: dataLengths['lancaster'],
         subtitle: 'Lancaster LTC',
         fallrate: (dataLengths['lancaster'] / 60) * 100,
-        loginCount: loginCounts['lancaster'],
+        loginCounts: loginCounts['lancaster'],
         linkTo: '/lancaster',
       },
       {
@@ -573,7 +580,7 @@ export default function ManagementDashboard() {
         linkTo: '/oneill',
       },
       {
-        value: dataLengths['vmltc'],
+        value: dataLengths['vmltc'], 
         subtitle: 'Villa Marconi LTC',
         fallrate: (dataLengths['vmltc'] / 128) * 100,
         loginCounts: loginCounts['vmltc'],
@@ -582,15 +589,14 @@ export default function ManagementDashboard() {
     ];
 
     updatedSummaryData.sort((a, b) => b.fallrate - a.fallrate);
-
     setSummaryData(updatedSummaryData);
 
-    // Add debug log right after creating summaryData
-    console.log('Summary Data for Mill Creek:', {
-      loginCountFromState: loginCounts['millCreek'],
-      summaryDataEntry: updatedSummaryData.find(item => item.subtitle === 'Mill Creek LTC')
+    // Add debug log
+    console.log('Updated Summary Data with login counts:', {
+      loginCounts,
+      updatedSummaryData
     });
-  }, [dataLengths]);
+  }, [dataLengths, loginCounts]);
 
   const logout = () => {
     navigate('/login');
