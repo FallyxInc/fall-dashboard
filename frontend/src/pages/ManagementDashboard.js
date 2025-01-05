@@ -76,6 +76,8 @@ export default function ManagementDashboard() {
     return dataLengths; // { niagara: X, millCreek: Y, wellington: Z, iggh: W }
   };
 
+
+  
   useEffect(() => {
     const fetchData = async () => {
       const lengths = await getDataLengths();
@@ -150,25 +152,9 @@ export default function ManagementDashboard() {
     const index = elements[0].index;
     const locationName = fallsChartData.labels[index];
     const fallsData = fallsPopUpData[locationName];
-    const totalFalls = summaryData.find(item => item.subtitle === locationName)?.value || 0;
-
-    const { headInjury, fracture, skinTear, significantInjury } = fallsData;
-    // Calculate percentage only if there are falls
-    const percentage = totalFalls > 0 ? ((significantInjury / totalFalls) * 100).toFixed(1) : '0';
     
-    // const content = [
-    //   `Total Falls: ${totalFalls}`,
-    //   `Falls with Significant Injuries: ${significantInjury} (${percentage}%)`,
-    //   '----------------------------------------',
-    //   'Breakdown of Significant Injuries:',
-    //   '',
-    //   `Head Injuries:          ${headInjury}`,
-    //   `Fractures:             ${fracture}`,
-    //   `Skin Tears:            ${skinTear}`,
-    //   '----------------------------------------',
-    //   `Total:                 ${significantInjury}`
-    // ];
-
+    const { headInjury, fracture, skinTear, significantInjury, percentage } = fallsData;
+    
     const content = (
       <div style={{ textAlign: 'left', fontSize: '16px' }}>
         <div style={{ marginLeft: '20px' }}>
@@ -176,17 +162,10 @@ export default function ManagementDashboard() {
             <b style={{fontWeight: 'bold',}}># of Falls with Significant Injuries: {significantInjury} </b> ({percentage}%)
           </div>
           <ul>
-          <li style={{ marginBottom: '8px', fontSize: '19px'}}>
-            Head Injuries: {headInjury}
-          </li>
-          <li style={{ marginBottom: '8px', fontSize: '19px' }}>
-            Fractures: {fracture}
-          </li>
-          <li style={{ marginBottom: '8px', fontSize: '19px' }}>
-            Skin Tears: {skinTear}
-          </li>
+            <li style={{ marginBottom: '8px', fontSize: '19px'}}>Head Injuries: {headInjury}</li>
+            <li style={{ marginBottom: '8px', fontSize: '19px' }}>Fractures: {fracture}</li>
+            <li style={{ marginBottom: '8px', fontSize: '19px' }}>Skin Tears: {skinTear}</li>
           </ul>
-          
         </div>
       </div>
     );
@@ -228,81 +207,98 @@ export default function ManagementDashboard() {
   };
 
   useEffect(() => {
-    if (isLoading) return;
-
-    console.log('Database reference:', db); // Add this debug log
     const homes = ['niagara', 'millCreek', 'wellington', 'iggh', 'bonairltc', 'champlain', 'lancaster', 'oneill', 'vmltc'];
-    const injuryCounts = {
-      iggh: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0 },
-      millCreek: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0 },
-      niagara: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0 },
-      wellington: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0 },
-      bonairltc: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0 },
-      champlain: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0 },
-      lancaster: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0 },
-      oneill: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0 },
-      vmltc: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0 }, 
+    let injuryCounts = {
+      iggh: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0, totalFalls: 0 },
+      millCreek: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0, totalFalls: 0 },
+      niagara: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0, totalFalls: 0 },
+      wellington: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0, totalFalls: 0 },
+      bonairltc: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0, totalFalls: 0 },
+      champlain: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0, totalFalls: 0 },
+      lancaster: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0, totalFalls: 0 },
+      oneill: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0, totalFalls: 0 },
+      vmltc: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0, totalFalls: 0 },
     };
 
-    const fetchDataForHome = async (home) => {
-      console.log('Current month value:', currentMonth); // Add this debug log
-      console.log('Full path being accessed:', `/${home}/2024/${currentMonth}`);
+    const fetchDataForHome = (home) => {
       const fallsRef = ref(db, `/${home}/${currentMonth === '01' ? 2025 : 2024}/${currentMonth}`);
       return new Promise((resolve) => {
         onValue(fallsRef, (snapshot) => {
           const data = snapshot.val();
           if (data) {
             Object.values(data).forEach((item) => {
-              console.log('Full item data:', item); // Debug log to see all fields
+              // Increment total falls for this home
+              injuryCounts[home].totalFalls++;
               
-              // Check both possible field names and use whichever exists
+              // Check for injuries using existing logic
               const injury = item.injuries || item.injury || '';
               
-              // Arrays of possible variations for each injury type
               const headInjuryVariations = ['Head Injury', 'HEAD INJURY', 'head injury', 'Head injury'];
               const fractureVariations = ['Fracture', 'FRACTURE', 'fracture'];
               const skinTearVariations = ['Skin Tear', 'SKIN TEAR', 'skin tear', 'Skin tear'];
               
-              // Check if any variation matches
               const hasHeadInjury = headInjuryVariations.some(variant => injury.includes(variant));
               const hasFracture = fractureVariations.some(variant => injury.includes(variant));
               const hasSkinTear = skinTearVariations.some(variant => injury.includes(variant));
 
-              // Count individual types
               if (hasHeadInjury) injuryCounts[home].headInjury += 1;
               if (hasFracture) injuryCounts[home].fracture += 1;
               if (hasSkinTear) injuryCounts[home].skinTear += 1;
 
-              // Count total significant injuries
               if (hasHeadInjury || hasFracture || hasSkinTear) {
                 injuryCounts[home].significantInjury += 1;
               }
             });
-            resolve();
-          } else {
-            console.warn(`No data found in Firebase for ${home}`);
-            resolve();
           }
+          resolve();
         });
       });
     };
 
     const fetchAllData = async () => {
-      const allDataPromises = homes.map(fetchDataForHome);
-      await Promise.all(allDataPromises);
+      await Promise.all(homes.map(fetchDataForHome));
 
+      // Calculate percentages and prepare chart data
+      const newData = Object.entries(injuryCounts).map(([home, counts]) => {
+        const percentage = counts.totalFalls > 0 ? (counts.significantInjury / counts.totalFalls) * 100 : 0;
+        return {
+          name: home,
+          value: percentage
+        };
+      });
+
+      newData.sort((a, b) => b.value - a.value);
+
+      // Update chart data
+      setFallsChartData({
+        labels: newData.map((item) => shortToFull(item.name)),
+        datasets: [{
+          label: '% of Falls with Significant Injuries',
+          data: newData.map((item) => item.value),
+          backgroundColor: 'rgba(76, 175, 80, 0.6)',
+          borderColor: 'rgb(76, 175, 80)',
+          borderWidth: 1,
+          indexAxis: 'x',
+        }]
+      });
+
+      // Prepare and set popup data
       const popupData = {};
-      for (const key in injuryCounts) {
-        const newKey = shortToFull(key);
-        popupData[newKey] = injuryCounts[key];
-      }
-
+      Object.entries(injuryCounts).forEach(([home, counts]) => {
+        popupData[shortToFull(home)] = {
+          headInjury: counts.headInjury,
+          fracture: counts.fracture,
+          skinTear: counts.skinTear,
+          significantInjury: counts.significantInjury,
+          totalFalls: counts.totalFalls,
+          percentage: (counts.totalFalls > 0 ? (counts.significantInjury / counts.totalFalls) * 100 : 0).toFixed(1)
+        };
+      });
       setFallsPopUpData(popupData);
-      updateFallsChart(injuryCounts);
     };
 
     fetchAllData();
-  }, [currentMonth, isLoading]);
+  }, [currentMonth]);
 
   const updateHomesChart = (nonComplianceCounts) => {
     const newData = Object.entries(nonComplianceCounts).map(([home, counts]) => {
@@ -379,6 +375,8 @@ export default function ManagementDashboard() {
       vmltc: { fallsWithNonCompliance: 0, totalFalls: 0, poaNotContacted: 0, noFallNote: 0, lessThanThreeNotes: 0},
     };
 
+
+    // LOGIC FOR graph of non-compliance!
     const fetchDataForHome = (home) => {
       const fallsRef = ref(db, `/${home}/${currentMonth === '01' ? 2025 : 2024}/${currentMonth}`);
       return new Promise((resolve) => {
@@ -386,7 +384,6 @@ export default function ManagementDashboard() {
           const data = snapshot.val();
           if (data) {
             Object.values(data).forEach((fall) => {
-              // Increment total falls counter
               nonComplianceCounts[home].totalFalls++;
               
             const poaVariations = ['Yes', 'YES', 'yes'];
@@ -624,71 +621,94 @@ export default function ManagementDashboard() {
     const fallsData = [];
 
     await Promise.all(
-      months.map((month) =>
-        Promise.all(
+      months.map((month) => {
+        // Initialize counts object for this month using same structure as graphs
+        let injuryCounts = {
+          iggh: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0, totalFalls: 0 },
+          millCreek: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0, totalFalls: 0 },
+          niagara: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0, totalFalls: 0 },
+          wellington: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0, totalFalls: 0 },
+          bonairltc: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0, totalFalls: 0 },
+          champlain: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0, totalFalls: 0 },
+          lancaster: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0, totalFalls: 0 },
+          oneill: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0, totalFalls: 0 },
+          vmltc: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0, totalFalls: 0 },
+        };
+
+        let nonComplianceCounts = {
+          niagara: { fallsWithNonCompliance: 0, totalFalls: 0, poaNotContacted: 0, noFallNote: 0, lessThanThreeNotes: 0},
+          millCreek: { fallsWithNonCompliance: 0, totalFalls: 0, poaNotContacted: 0, noFallNote: 0, lessThanThreeNotes: 0},
+          wellington: { fallsWithNonCompliance: 0, totalFalls: 0, poaNotContacted: 0, noFallNote: 0, lessThanThreeNotes: 0},
+          iggh: { fallsWithNonCompliance: 0, totalFalls: 0, poaNotContacted: 0, noFallNote: 0, lessThanThreeNotes: 0},
+          bonairltc: { fallsWithNonCompliance: 0, totalFalls: 0, poaNotContacted: 0, noFallNote: 0, lessThanThreeNotes: 0},
+          champlain: { fallsWithNonCompliance: 0, totalFalls: 0, poaNotContacted: 0, noFallNote: 0, lessThanThreeNotes: 0},
+          lancaster: { fallsWithNonCompliance: 0, totalFalls: 0, poaNotContacted: 0, noFallNote: 0, lessThanThreeNotes: 0},
+          oneill: { fallsWithNonCompliance: 0, totalFalls: 0, poaNotContacted: 0, noFallNote: 0, lessThanThreeNotes: 0},
+          vmltc: { fallsWithNonCompliance: 0, totalFalls: 0, poaNotContacted: 0, noFallNote: 0, lessThanThreeNotes: 0},
+        };
+
+        return Promise.all(
           homes.map((home) => {
             return new Promise((resolve) => {
               const fallsRef = ref(db, `/${home}/${month === '01' ? 2025 : 2024}/${month}`);
               onValue(fallsRef, (snapshot) => {
                 const data = snapshot.val();
-                const homeName = shortToFull(home);
-                const monthYear = getMonthName(month, month === '01' ? 2025 : 2024);
-                const fallsCount = data ? Object.keys(data).length : 0;
-                let poaNotNotified = 0;
-                let unwrittenNotes = 0;
-                let significantInjury = 0;
-
                 if (data) {
                   Object.values(data).forEach((item) => {
-                    const fallDate = new Date(item.date);
-                    const currentDate = new Date();
-                    const daysDifference = Math.abs(currentDate - fallDate) / (1000 * 60 * 60 * 24);
+                    // Increment total falls for both counts
+                    injuryCounts[home].totalFalls++;
+                    nonComplianceCounts[home].totalFalls++;
 
-                    // Non-compliance calculations
-                    const poaVariations = ['Yes', 'YES', 'yes'];
-                    if (!poaVariations.some(variant => item.poaContacted === variant)) {
-                      poaNotNotified += 1;
-                    }
-                    if (daysDifference > 3 && parseInt(item.postFallNotes) < 3) {
-                      unwrittenNotes += 1;
-                    }
-
-                    // Significant injury calculations
-                    const injury = item.injuries || '';
-                    
-                    // Arrays of possible variations for each injury type
+                    // Significant Injury Logic (same as graph)
+                    const injury = item.injuries || item.injury || '';
                     const headInjuryVariations = ['Head Injury', 'HEAD INJURY', 'head injury', 'Head injury'];
                     const fractureVariations = ['Fracture', 'FRACTURE', 'fracture'];
                     const skinTearVariations = ['Skin Tear', 'SKIN TEAR', 'skin tear', 'Skin tear'];
                     
-                    // Check if any variation matches
                     const hasHeadInjury = headInjuryVariations.some(variant => injury.includes(variant));
                     const hasFracture = fractureVariations.some(variant => injury.includes(variant));
                     const hasSkinTear = skinTearVariations.some(variant => injury.includes(variant));
 
+                    if (hasHeadInjury) injuryCounts[home].headInjury += 1;
+                    if (hasFracture) injuryCounts[home].fracture += 1;
+                    if (hasSkinTear) injuryCounts[home].skinTear += 1;
                     if (hasHeadInjury || hasFracture || hasSkinTear) {
-                      significantInjury += 1;
+                      injuryCounts[home].significantInjury += 1;
+                    }
+
+                    // Non-Compliance Logic (same as graph)
+                    const poaVariations = ['Yes', 'YES', 'yes'];
+                    const poaNotContacted = !poaVariations.some(variant => item.poaContacted === variant);
+                    const noFallNote = item.cause === "No Fall Note";
+                    const lessThanThreeNotes = parseInt(item.postFallNotes) < 3;
+
+                    if (poaNotContacted) nonComplianceCounts[home].poaNotContacted++;
+                    if (noFallNote) nonComplianceCounts[home].noFallNote++;
+                    if (lessThanThreeNotes) nonComplianceCounts[home].lessThanThreeNotes++;
+                    if (poaNotContacted || noFallNote || lessThanThreeNotes) {
+                      nonComplianceCounts[home].fallsWithNonCompliance++;
                     }
                   });
                 }
 
-                // Append data for each home and month to fallsData
+                // Add data for this home/month to fallsData
                 fallsData.push({
-                  Community: homeName,
-                  MonthYear: monthYear,
-                  Falls: fallsCount,
-                  Incidents: poaNotNotified + unwrittenNotes,
-                  SignificantInjury: significantInjury,
+                  Community: shortToFull(home),
+                  MonthYear: getMonthName(month, 2024),
+                  Falls: injuryCounts[home].totalFalls,
+                  Incidents: nonComplianceCounts[home].fallsWithNonCompliance,
+                  SignificantInjury: injuryCounts[home].significantInjury
                 });
 
                 resolve();
               });
             });
           })
-        )
-      )
+        );
+      })
     );
 
+    // Sort data by date
     fallsData.sort((a, b) => {
       const dateA = new Date(a.MonthYear);
       const dateB = new Date(b.MonthYear);
@@ -714,7 +734,7 @@ export default function ManagementDashboard() {
       // Get falls data
       const fallsRef = ref(db, `/${home}/${currentMonth === '01' ? 2025 : 2024}/${currentMonth}`); // MAIN ONE
       // Get reviews data
-      const reviewsRef = ref(db, `/reviews/${home}/${currentMonth === '01' ? 2025 : 2024}/${currentMonth}`);
+      const reviewsRef = ref(db, `/${home}/${currentMonth === '01' ? 2025 : 2024}/${currentMonth}`);
       
       
       onValue(fallsRef, async (snapshot) => {
@@ -749,7 +769,7 @@ export default function ManagementDashboard() {
 
   const markReviewDone = async (resident) => {
     // Simply mark the review as done in the reviews node
-    const reviewRef = ref(db, `/reviews/${resident.home}/${currentMonth === '01' ? 2025 : 2024}/${currentMonth}/${resident.name}`);
+    const reviewRef = ref(db, `/reviews/${resident.home}/2024/${currentMonth}/${resident.name}`);
     await set(reviewRef, 'reviewed');
     
     // Remove this resident from the state

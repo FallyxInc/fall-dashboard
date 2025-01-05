@@ -158,8 +158,8 @@ function App() {
                 <Dashboard
                   name="bonairltc"
                   title="Bon Air LTC Falls Dashboard "
-                  unitSelectionValues={['allUnits', '1st Floor', '2nd Floor', '3rd Floor', '4th Floor']}
-                  goal={30}
+                  unitSelectionValues={['allUnits', '1', '2']}
+                  goal={6}
                 />
               </PrivateRoute>
             }
@@ -172,8 +172,8 @@ function App() {
                 <Dashboard
                   name="champlain"
                   title="Champlain LTC Falls Dashboard "
-                  unitSelectionValues={['allUnits', '1st Floor', '2nd Floor', '3rd Floor', '4th Floor']}
-                  goal={30}
+                  unitSelectionValues={['allUnits', 'West', 'East']}
+                  goal={12}
                 />
               </PrivateRoute>
             }
@@ -186,8 +186,8 @@ function App() {
                 <Dashboard
                   name="lancaster"
                   title="Lancaster LTC Falls Dashboard"
-                  unitSelectionValues={['allUnits', '1st Floor', '2nd Floor', '3rd Floor', '4th Floor']}
-                  goal={30}
+                  unitSelectionValues={['allUnits', 'East', 'North', 'South']}
+                  goal={7}
                 />
               </PrivateRoute>
             }
@@ -200,8 +200,8 @@ function App() {
                 <Dashboard
                   name="oneill"
                   title="The O'Neill Centre Falls Dashboard"
-                  unitSelectionValues={['allUnits', '1st Floor', '2nd Floor', '3rd Floor', '4th Floor']}
-                  goal={30}
+                  unitSelectionValues={['allUnits', '4', '2', '3']}
+                  goal={12}
                 />
               </PrivateRoute>
             }
@@ -214,8 +214,8 @@ function App() {
                 <Dashboard
                   name="vmltc"
                   title="Villa Marconi LTC Falls Dashboard"
-                  unitSelectionValues={['allUnits', '1st Floor', '2nd Floor', '3rd Floor', '4th Floor']}
-                  goal={30}
+                  unitSelectionValues={['allUnits', 'Casa dell Amore', 'Casa della Vita', 'Casa della Luce', 'Casa degli Amici']}
+                  goal={26}
                 />
               </PrivateRoute>
             }

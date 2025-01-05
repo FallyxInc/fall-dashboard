@@ -1,5 +1,3 @@
-// src/utils/DashboardUtils.js
-
 import { ref, update } from 'firebase/database';
 import * as Papa from 'papaparse';
 import html2canvas from 'html2canvas';
@@ -8,28 +6,33 @@ import { saveAs } from 'file-saver';
 
 
 export function markPostFallNotes(input) {
+  console.log('markPostFallNotes is being called with data:', input);
   let data = [...input];
   data.sort((a, b) => new Date(a.date + ' ' + a.time) - new Date(b.date + ' ' + b.time));
   for (let i = 0; i < data.length; i++) {
     const currentID = data[i].id;
     const currentRecord = data[i];
-    const currentDateTime = new Date(currentRecord.date + ' ' + currentRecord.time);
-    let hasFallWithin72Hours = false;
-    for (let j = i + 1; j < data.length; j++) {
-      const nextRecord = data[j];
-      const nextDateTime = new Date(nextRecord.date + ' ' + nextRecord.time);
-      const timeDifference = (nextDateTime - currentDateTime) / (1000 * 60 * 60);
-      if (timeDifference > 72) break;
-      if (currentRecord.name === nextRecord.name && timeDifference <= 72) {
-        hasFallWithin72Hours = true;
-        break;
-      }
-    }
+    
+    // Convert postFallNotes to number
+    const postFallNotesCount = Number(currentRecord.postFallNotes) || 0;
+    const notHospitalized = currentRecord.transfer_to_hospital === 'no' || currentRecord.transfer_to_hospital === 'No';
+    
+    console.log('Checking conditions:', {
+      name: currentRecord.name,
+      postFallNotes: postFallNotesCount,
+      transfer_to_hospital: currentRecord.transfer_to_hospital,
+      notHospitalized: notHospitalized,
+      poaContacted: currentRecord.poaContacted
+    });
 
-    input[currentID].postFallNotesColor =
-      currentRecord.postFallNotes < 3 && !hasFallWithin72Hours && 
-      (currentRecord.hospital === 'no' || currentRecord.hospital === 'No')
-        ? 'red'
+    // Set colors for different conditions
+    input[currentID].postFallNotesColor = 
+      postFallNotesCount < 3 && notHospitalized ? 'red' : 'default';
+    
+    // Only set red if explicitly "No" or "no"
+    input[currentID].poaContactedColor = 
+      currentRecord.poaContacted === 'No' || currentRecord.poaContacted === 'no' 
+        ? 'red' 
         : 'default';
   }
   return input;
@@ -137,29 +140,29 @@ export function getTimeShift(fallTime, home) {
       night: [1381, 419], // 11:01 PM to 6:59 AM
     },
     bonairltc: {
-      morning: [420, 900], // 7:00 AM to 3:00 PM
-      evening: [901, 1380], // 3:01 PM to 11:00 PM
-      night: [1381, 419], // 11:01 PM to 6:59 AM
+      morning: [390, 869],   // 6:30 AM to 2:29 PM
+      evening: [870, 1349],  // 2:30 PM to 10:29 PM
+      night: [1350, 389],    // 10:30 PM to 6:29 AM
     },
     champlain: {
-      morning: [420, 900], // 7:00 AM to 3:00 PM
-      evening: [901, 1380], // 3:01 PM to 11:00 PM
-      night: [1381, 419], // 11:01 PM to 6:59 AM
+      morning: [360, 839],   // 6:00 AM to 1:59 PM
+      evening: [840, 1319],  // 2:00 PM to 9:59 PM
+      night: [1320, 359],    // 10:00 PM to 5:59 AM
     },
     lancaster: {
-      morning: [420, 900], // 7:00 AM to 3:00 PM
-      evening: [901, 1380], // 3:01 PM to 11:00 PM
-      night: [1381, 419], // 11:01 PM to 6:59 AM
+      morning: [360, 839],   // 6:00 AM to 1:59 PM
+      evening: [840, 1319],  // 2:00 PM to 9:59 PM
+      night: [1320, 359],    // 10:00 PM to 5:59 AM
     },
     oneill: {
-      morning: [420, 900], // 7:00 AM to 3:00 PM
-      evening: [901, 1380], // 3:01 PM to 11:00 PM
-      night: [1381, 419], // 11:01 PM to 6:59 AM
+      morning: [420, 899],   // 7:00 AM to 2:59 PM
+      evening: [900, 1379],  // 3:00 PM to 10:59 PM
+      night: [1380, 419],    // 11:00 PM to 6:59 AM
     },
     vmltc: {
-      morning: [420, 900], // 7:00 AM to 3:00 PM
-      evening: [901, 1380], // 3:01 PM to 11:00 PM
-      night: [1381, 419], // 11:01 PM to 6:59 AM
+      morning: [420, 899],   // 7:00 AM to 2:59 PM
+      evening: [900, 1379],  // 3:00 PM to 10:59 PM
+      night: [1380, 419],    // 11:00 PM to 6:59 AM
     },
   };
 
@@ -219,4 +222,20 @@ export function countFallsByTimeOfDay(data, name) {
   });
 
   return timeOfDayCounts;
+}
+
+export function countFallsByUnit(data) {
+  const unitCounts = {};
+  
+  data.forEach((fall) => {
+    // Use homeUnit if available, otherwise use room
+    const unit = fall.homeUnit || fall.room;
+    
+    if (unit) {
+      const trimmedUnit = unit.trim();
+      unitCounts[trimmedUnit] = (unitCounts[trimmedUnit] || 0) + 1;
+    }
+  });
+  
+  return unitCounts;
 }

@@ -63,7 +63,7 @@ const UpdateData = () => {
       'poaContacted',
       'postFallNotes',
       'ptRef',
-      'hospital',
+      'transfer_to_hospital',
       'hir',
       'cause',
       'interventions',

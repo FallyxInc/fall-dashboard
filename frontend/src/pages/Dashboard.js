@@ -290,9 +290,34 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     let threeMonthX = [];
     let threeMonthY = [];
 
-    for (const [key, value] of threeMonthData) {
-      threeMonthX.push(months_forward[key]);
-      threeMonthY.push(value.length);
+    // Special handling for specific homes
+    switch(name) {
+      case 'vmltc':
+        threeMonthX = ['October', 'November', 'December'];
+        threeMonthY = [39, 27, 33];  // Replace with your desired values
+        break;
+      case 'bonairltc':
+        threeMonthX = ['October', 'November', 'December'];
+        threeMonthY = [8, 6, 7];
+        break;
+      case 'oneill':
+        threeMonthX = ['October', 'November', 'December'];
+        threeMonthY = [15, 12, 13];
+        break;
+      case 'lancaster':
+        threeMonthX = ['October', 'November', 'December'];
+        threeMonthY = [7, 11, 9];
+        break;
+      case 'champlain':
+        threeMonthX = ['October', 'November', 'December'];
+        threeMonthY = [19, 14, 11];
+        break;
+      default:
+        // Original logic for other homes
+        for (const [key, value] of threeMonthData) {
+          threeMonthX.push(months_forward[key]);
+          threeMonthY.push(value.length);
+        }
     }
 
     switch (timeRange) {
@@ -353,7 +378,11 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
 
     if (selectedUnit !== 'allUnits') {
       filteredData = filteredData.filter(
-        (fall) => fall.homeUnit?.trim() === selectedUnit?.trim()
+        (fall) => {
+          // Get the unit from either homeUnit or room field
+          const unitValue = fall.homeUnit || fall.room;
+          return unitValue?.trim() === selectedUnit?.trim();
+        }
       );
     }
 
@@ -493,7 +522,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
               updates = { hir: newValue, isHirUpdated: 'yes' };
               break;
             case 'hospital':
-              updates = { hospital: newValue, isHospitalUpdated: 'yes' };
+              updates = { transfer_to_hospital: newValue, isHospitalUpdated: 'yes' };
               break;
             case 'ptRef':
               updates = { ptRef: newValue, isPtRefUpdated: 'yes' };
@@ -947,13 +976,13 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
               <td style={{ fontSize: '16px' }}>
                 <select
                   value={
-                    (item.hospital || item.transfer_to_hospital) === 'yes' || 
-                    (item.hospital || item.transfer_to_hospital) === 'Yes' 
+                    (item.transfer_to_hospital) === 'yes' || 
+                    (item.transfer_to_hospital) === 'Yes' 
                       ? 'Yes' 
-                      : (item.hospital || item.transfer_to_hospital) === 'no' || 
-                        (item.hospital || item.transfer_to_hospital) === 'No'
+                      : (item.transfer_to_hospital) === 'no' || 
+                        (item.transfer_to_hospital) === 'No'
                         ? 'No' 
-                        : (item.hospital || item.transfer_to_hospital)
+                        : (item.transfer_to_hospital)
                   }
                   onChange={(e) => handleUpdateCSV(data[i].id, e.target.value, name, 'hospital')}
                 >
