@@ -12,13 +12,16 @@ Chart.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 export default function ManagementDashboard() {
   const navigate = useNavigate();
-  const months = ['10', '11', '12'];
+  const months = ['10', '11', '12', '01'];
   const [showModal, setShowModal] = useState(false);
   const [modalContent, setModalContent] = useState([]);
   const [modalTitle, setModalTitle] = useState('');
-  const [fallsTimeRange, setFallsTimeRange] = useState('12');
-  const [homesTimeRange, setHomesTimeRange] = useState('12');
-  const [currentMonth, setCurrentMonth] = useState('12');
+  const [fallsTimeRange, setFallsTimeRange] = useState('01');
+  const [homesTimeRange, setHomesTimeRange] = useState('01');
+  const [currentMonth, setCurrentMonth] = useState('01');
+  const [desiredYear, setDesiredYear] = useState(2025); // Set to 2025
+  const [desiredMonth, setDesiredMonth] = useState(new Date().getMonth() + 1);
+  const [availableYearMonth, setAvailableYearMonth] = useState({});
 
   const [fallsChartData, setFallsChartData] = useState({
     labels: [],
@@ -57,7 +60,8 @@ export default function ManagementDashboard() {
     await Promise.all(
       homes.map((home) => {
         return new Promise((resolve) => {
-          const homeRef = ref(db, `/${home}/2024/${currentMonth}`); // Reference to the home in Firebase
+        const homeRef = ref(db, `/${home}/${currentMonth === '01' ? 2025 : 2024}/${currentMonth}`);
+
 
           onValue(homeRef, (snapshot) => {
             const data = snapshot.val();
@@ -243,7 +247,7 @@ export default function ManagementDashboard() {
     const fetchDataForHome = async (home) => {
       console.log('Current month value:', currentMonth); // Add this debug log
       console.log('Full path being accessed:', `/${home}/2024/${currentMonth}`);
-      const fallsRef = ref(db, `/${home}/2024/${currentMonth}`);
+      const fallsRef = ref(db, `/${home}/${currentMonth === '01' ? 2025 : 2024}/${currentMonth}`);
       return new Promise((resolve) => {
         onValue(fallsRef, (snapshot) => {
           const data = snapshot.val();
@@ -376,7 +380,7 @@ export default function ManagementDashboard() {
     };
 
     const fetchDataForHome = (home) => {
-      const fallsRef = ref(db, `/${home}/2024/${currentMonth}`);
+      const fallsRef = ref(db, `/${home}/${currentMonth === '01' ? 2025 : 2024}/${currentMonth}`);
       return new Promise((resolve) => {
         onValue(fallsRef, (snapshot) => {
           const data = snapshot.val();
@@ -595,7 +599,7 @@ export default function ManagementDashboard() {
     navigate('/login');
   };
 
-  const getMonthName = (month) => {
+  const getMonthName = (month, year) => {
     const monthNames = [
       'January',
       'February',
@@ -610,8 +614,10 @@ export default function ManagementDashboard() {
       'November',
       'December',
     ];
-    return monthNames[month - 1]; // Subtract 1 because array is 0-indexed
+    const monthIndex = parseInt(month, 10) - 1;
+    return `${monthNames[monthIndex]} ${month === '01' ? year + 1 : year}`;
   };
+  
 
   const downloadCSV = async () => {
     const homes = ['niagara', 'millCreek', 'wellington', 'iggh', 'bonairltc', 'champlain', 'lancaster', 'oneill', 'vmltc'];
@@ -622,11 +628,11 @@ export default function ManagementDashboard() {
         Promise.all(
           homes.map((home) => {
             return new Promise((resolve) => {
-              const fallsRef = ref(db, `/${home}/2024/${month}`);
+              const fallsRef = ref(db, `/${home}/${month === '01' ? 2025 : 2024}/${month}`);
               onValue(fallsRef, (snapshot) => {
                 const data = snapshot.val();
                 const homeName = shortToFull(home);
-                const monthYear = `${getMonthName(month)} 2024`; // Format month as two digits
+                const monthYear = getMonthName(month, month === '01' ? 2025 : 2024);
                 const fallsCount = data ? Object.keys(data).length : 0;
                 let poaNotNotified = 0;
                 let unwrittenNotes = 0;
@@ -706,9 +712,10 @@ export default function ManagementDashboard() {
     
     homes.forEach(home => {
       // Get falls data
-      const fallsRef = ref(db, `/${home}/2024/${currentMonth}`);
+      const fallsRef = ref(db, `/${home}/${currentMonth === '01' ? 2025 : 2024}/${currentMonth}`); // MAIN ONE
       // Get reviews data
-      const reviewsRef = ref(db, `/reviews/${home}/2024/${currentMonth}`);
+      const reviewsRef = ref(db, `/reviews/${home}/${currentMonth === '01' ? 2025 : 2024}/${currentMonth}`);
+      
       
       onValue(fallsRef, async (snapshot) => {
         const fallsData = snapshot.val();
@@ -742,7 +749,7 @@ export default function ManagementDashboard() {
 
   const markReviewDone = async (resident) => {
     // Simply mark the review as done in the reviews node
-    const reviewRef = ref(db, `/reviews/${resident.home}/2024/${currentMonth}/${resident.name}`);
+    const reviewRef = ref(db, `/reviews/${resident.home}/${currentMonth === '01' ? 2025 : 2024}/${currentMonth}/${resident.name}`);
     await set(reviewRef, 'reviewed');
     
     // Remove this resident from the state
@@ -764,6 +771,7 @@ export default function ManagementDashboard() {
           </button>
         </div>
       </header>
+      
       <select
         value={currentMonth}
         onChange={(e) => {
@@ -775,9 +783,10 @@ export default function ManagementDashboard() {
           height: '40px',
         }}
       >
-        <option value="10">October</option>
-        <option value="11">November</option>
-        <option value="12">December</option>
+        <option value="10">October - 2024</option>
+        <option value="11">November - 2024</option>
+        <option value="12">December - 2024</option>
+        <option value="01">January - 2025</option>
       </select>
       <div className={styles['chart-container']}>
         <div className={styles['chart']}>
