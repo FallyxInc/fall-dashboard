@@ -92,7 +92,20 @@ export default function ManagementDashboard() {
     const fallsData = fallsPopUpData[locationName];
 
     const { headInjury, fracture, skinTear } = fallsData;
-    const content = [`Head injuries: ${headInjury}`, `Fractures: ${fracture}`, `Skin tears: ${skinTear}`];
+    const content = [
+      <div style={{ textAlign: 'left', fontSize: '16px' }}>
+      <div style={{ marginLeft: '20px' }}>
+        <div style={{ fontSize: '22px', marginBottom: '10px'}}>
+        <b style={{fontWeight: 'bold',}}># of Falls with Significant Injuries </b>
+        </div>
+        <ul>
+          <li style={{ marginBottom: '8px', fontSize: '19px'}}>Head Injuries: {headInjury}</li>
+          <li style={{ marginBottom: '8px', fontSize: '19px' }}>Fractures: {fracture}</li>
+          <li style={{ marginBottom: '8px', fontSize: '19px' }}>Skin Tears: {skinTear}</li>
+        </ul>
+      </div>
+    </div>
+    ];
     openModal(locationName, content);
   };
 
@@ -221,9 +234,19 @@ export default function ManagementDashboard() {
     const homeData = homesPopUpData[locationName];
 
     const content = [
-      `Number of POAs not notified: ${homeData.poaNotNotified}`,
-      `Number of unwritten post-fall notes: ${homeData.unwrittenNotes}`,
+      <div style={{ textAlign: 'left', fontSize: '16px' }}>
+        <div style={{ marginLeft: '20px' }}>
+          <div style={{ fontSize: '22px', marginBottom: '10px'}}>
+            <b style={{fontWeight: 'bold',}}>Incidents of Non-Compliance</b>
+          </div>
+          <ul>
+            <li style={{ marginBottom: '8px', fontSize: '19px'}}>POAs Not Notified: {homeData.poaNotNotified}</li>
+            <li style={{ marginBottom: '8px', fontSize: '19px' }}>Unwritten Post-Fall Notes: {homeData.unwrittenNotes}</li>
+          </ul>
+        </div>
+      </div>
     ];
+    
     openModal(locationName, content);
   };
 
@@ -454,7 +477,7 @@ export default function ManagementDashboard() {
   return (
     <div className={styles.dashboard}>
       <header className={styles.header}>
-        <h1 className={styles.h1}>Demo Management Dashboard</h1>
+        <h1 className={styles.h1}>Schlegel Villages Dashboard</h1>
         <div className={styles['button-container']}>
           <button className={styles['download-button']} onClick={downloadCSV}>
             Download CSV
