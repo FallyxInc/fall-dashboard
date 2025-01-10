@@ -97,29 +97,37 @@ export default function ManagementDashboard() {
       const users = snapshot.val();
       const newCounts = { ...loginCounts };
 
-      console.log('Raw Firebase users data:', users);
+      console.log('Initial newCounts:', newCounts);  // Debug log
 
       if (users) {
         Object.values(users).forEach(user => {
-          console.log('Processing user:', user);
-          console.log('User role:', user.role);
-          console.log('User loginCount:', user.loginCount);
-          console.log('User loginCounts:', user.loginCounts);
-          // Check for both loginCount and loginCounts
           const count = user.loginCount || user.loginCounts || 0;
           if (user.role && count) {
-            // Convert role to lowercase to ensure matching
-            const role = user.role.toLowerCase();
-            // Only update if this role exists in our counts object
-            if (role in newCounts) {
-              newCounts[role] = count;
-              console.log(`Processing ${role}: setting to ${count}`);
+            let role = user.role;
+            role = role.replace('-ltc', '');
+            
+            console.log('Processing role:', role);  // Debug log
+            console.log('Available roles:', Object.keys(newCounts));  // Debug log
+            
+            const matchingRole = Object.keys(newCounts).find(
+              key => {
+                const matches = key.toLowerCase() === role.toLowerCase();
+                console.log(`Comparing ${key} with ${role}: ${matches}`);  // Debug log
+                return matches;
+              }
+            );
+            
+            if (matchingRole) {
+              newCounts[matchingRole] = count;
+              console.log(`Updated ${matchingRole} to ${count}`);  // Debug log
+            } else {
+              console.log(`No match found for role: ${role}`);  // Debug log
             }
           }
         });
       }
 
-      console.log('Final newCounts before setState:', newCounts);
+      console.log('Final newCounts:', newCounts);  // Debug log
       setLoginCounts(newCounts);
     });
   }, [isLoading]);
@@ -555,7 +563,7 @@ export default function ManagementDashboard() {
         value: dataLengths['bonairltc'],
         subtitle: 'Bon Air LTC',
         fallrate: (dataLengths['bonairltc'] / 55) * 100,
-        loginCounst: loginCounts['bonairltc'],
+        loginCounts: loginCounts['bonairltc'],
         linkTo: '/bonairltc',
       },
       {
