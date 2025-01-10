@@ -55,11 +55,18 @@ export default function Login() {
         // Add role mapping
         const roleMapping = {
           'niagara-ltc': 'niagara',
+          'generations': 'generations',
           // Add other mappings if needed
         };
         
         role = roleMapping[role] || role;  // Use mapped role if it exists, otherwise use original
-        navigate('/' + role);
+        
+        // If the user has the generations role, navigate to generations dashboard
+        if (role === 'generations') {
+          navigate('/generations');
+        } else {
+          navigate('/' + role);
+        }
       }
     } catch (error) {
       console.error('Error during login:', error);

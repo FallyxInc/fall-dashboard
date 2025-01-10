@@ -23,6 +23,7 @@ const UpdateData = () => {
     { name: 'home2', label: 'Homes2' },
     { name: 'home3', label: 'Homes3' },
     { name: 'home4', label: 'Homes4' },
+    { name: 'generations', label: 'generations' },
   ];
 
   const months = [
@@ -57,7 +58,24 @@ const UpdateData = () => {
 
     const dashboardRef = ref(db, `${selectedDashboard}/${selectedYear}/${selectedMonth}`);
 
-    const fieldsWithIsUpdated = [
+    // Special fields list for generations
+    const fieldsWithIsUpdated = selectedDashboard === 'generations' ? [
+      'interventions',
+      'type',
+      'incident_location',
+      'room',
+      'injuries',
+      'witnessed',
+      'fallsThisMonth',
+      'fallsInThreeMonths',
+      'nearMissesInThreeMonths',
+      'cause',
+      'poaContacted',
+      'transfer_to_hospital',
+      'postFallNotesColor',
+      'dayOfTheWeek',
+      'longTermIntervention'
+    ] : [
       'incidentReport',
       'physicianRef',
       'poaContacted',
@@ -84,75 +102,106 @@ const UpdateData = () => {
 
             for (let i = 0; i < newData.length; i++) {
               const row = newData[i];
-              const { date, name, homeUnit, time, injury, ...otherFields } = row;
 
-              const updatedRow = { date, name, homeUnit, time, injury, ...otherFields };
+              if (selectedDashboard === 'generations') {
+                // Special handling for generations
+                const updatedRow = {
+                  date: row.date,
+                  name: row.name,
+                  time: row.time,
+                  room: row.room || '',
+                  injuries: row.injuries || '',
+                  interventions: row.interventions || '',
+                  cause: row.cause || '',
+                  transfer_to_hospital: row.transfer_to_hospital || 'no',
+                  postFallNotesColor: 'default',
+                  witnessed: row.witnessed || 'N',
+                  id: row.id || String(i),
+                  'Falls This Month': row['Falls This Month'] || '',
+                  'Falls in 3 Months': row['Falls in 3 Months'] || '',
+                  'Near Missses in 3 Months': row['Near Missses in 3 Months'] || '',
+                  'Day of the Week': row['Day of the Week'] || '',
+                  type: row.type || '',
+                  incident_location: row.incident_location || '',
+                  longTermIntervention: row.longTermIntervention || 'Click here to add',
+                  poaContacted: row.poaContacted || 'no',
+                  isTransfer_to_hospitalUpdated: 'no',
+                  isPostFallNotesUpdated: 'no'
+                };
 
-              for (let j = 0; j < fieldsWithIsUpdated.length; j++) {
-                const field = fieldsWithIsUpdated[j];
-                const isUpdatedKey = `is${field.charAt(0).toUpperCase() + field.slice(1)}Updated`;
-
-                if (!(isUpdatedKey in updatedRow)) {
-                  updatedRow[isUpdatedKey] = 'no';
-                } else {
-                  updatedRow[isUpdatedKey] = updatedRow[isUpdatedKey].toLowerCase();
-                }
-              }
-
-              // firebase data
-              const existingEntryKey = Object.keys(existingData).find((key) => {
-                const existingRow = existingData[key];
-                return existingRow.date === date && existingRow.name === name && existingRow.time === time;
-              });
-
-              const rowRef = ref(db, `${selectedDashboard}/${selectedYear}/${selectedMonth}/row-${i}`);
-
-              if (existingEntryKey) {
-                const existingRow = existingData[existingEntryKey];
-
-                for (let j = 0; j < fieldsWithIsUpdated.length; j++) {
-                  const field = fieldsWithIsUpdated[j];
-                  const isUpdatedKey = `is${field.charAt(0).toUpperCase() + field.slice(1)}Updated`;
-
-                  if (!(isUpdatedKey in existingRow)) {
-                    existingRow[isUpdatedKey] = 'no';
-                  }
-                }
-
-                for (let j = 0; j < fieldsWithIsUpdated.length; j++) {
-                  const field = fieldsWithIsUpdated[j];
-                  const isUpdatedKey = `is${field.charAt(0).toUpperCase() + field.slice(1)}Updated`;
-
-                  if (existingRow[isUpdatedKey] === 'yes') {
-                    console.log(`Conflict for field ${field} in row ${i}. Skipping update.`);
-                  } else {
-                    existingRow[field] = updatedRow[field];
-                  }
-                }
-
-                console.log('existingRow');
-                console.log(existingRow);
-
-                set(rowRef, existingRow)
-                  .then(() => {
-                    console.log(`Row ${i} uploaded successfully`);
-                  })
-                  .catch((error) => {
-                    console.error(`Failed to upload row ${i}:`, error);
-                  });
+                const rowRef = ref(db, `${selectedDashboard}/${selectedYear}/${selectedMonth}/row-${i}`);
+                await set(rowRef, updatedRow);
               } else {
-                set(rowRef, updatedRow)
-                  .then(() => {
-                    console.log(`Row ${i} uploaded successfully`);
-                  })
-                  .catch((error) => {
-                    console.error(`Failed to upload row ${i}:`, error);
-                  });
+                // Original code for other dashboards remains unchanged
+                const { date, name, homeUnit, time, injury, ...otherFields } = row;
+                const updatedRow = { date, name, homeUnit, time, injury, ...otherFields };
+
+                for (let j = 0; j < fieldsWithIsUpdated.length; j++) {
+                  const field = fieldsWithIsUpdated[j];
+                  const isUpdatedKey = `is${field.charAt(0).toUpperCase() + field.slice(1)}Updated`;
+
+                  if (!(isUpdatedKey in updatedRow)) {
+                    updatedRow[isUpdatedKey] = 'no';
+                  } else {
+                    updatedRow[isUpdatedKey] = updatedRow[isUpdatedKey].toLowerCase();
+                  }
+                }
+
+                // firebase data
+                const existingEntryKey = Object.keys(existingData).find((key) => {
+                  const existingRow = existingData[key];
+                  return existingRow.date === date && existingRow.name === name && existingRow.time === time;
+                });
+
+                const rowRef = ref(db, `${selectedDashboard}/${selectedYear}/${selectedMonth}/row-${i}`);
+
+                if (existingEntryKey) {
+                  const existingRow = existingData[existingEntryKey];
+
+                  for (let j = 0; j < fieldsWithIsUpdated.length; j++) {
+                    const field = fieldsWithIsUpdated[j];
+                    const isUpdatedKey = `is${field.charAt(0).toUpperCase() + field.slice(1)}Updated`;
+
+                    if (!(isUpdatedKey in existingRow)) {
+                      existingRow[isUpdatedKey] = 'no';
+                    }
+                  }
+
+                  for (let j = 0; j < fieldsWithIsUpdated.length; j++) {
+                    const field = fieldsWithIsUpdated[j];
+                    const isUpdatedKey = `is${field.charAt(0).toUpperCase() + field.slice(1)}Updated`;
+
+                    if (existingRow[isUpdatedKey] === 'yes') {
+                      console.log(`Conflict for field ${field} in row ${i}. Skipping update.`);
+                    } else {
+                      existingRow[field] = updatedRow[field];
+                    }
+                  }
+
+                  console.log('existingRow');
+                  console.log(existingRow);
+
+                  set(rowRef, existingRow)
+                    .then(() => {
+                      console.log(`Row ${i} uploaded successfully`);
+                    })
+                    .catch((error) => {
+                      console.error(`Failed to upload row ${i}:`, error);
+                    });
+                } else {
+                  set(rowRef, updatedRow)
+                    .then(() => {
+                      console.log(`Row ${i} uploaded successfully`);
+                    })
+                    .catch((error) => {
+                      console.error(`Failed to upload row ${i}:`, error);
+                    });
+                }
               }
             }
 
             setUploading(false);
-            alert('CSV file uploaded successfully with necessary conflict handling!');
+            alert('CSV file uploaded successfully!');
           },
           error: (error) => {
             console.error('Parsing error:', error);

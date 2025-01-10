@@ -11,6 +11,7 @@ import Unauthorized from './pages/Unauthorized';
 import UpdateData from './pages/UpdateData';
 import UpdatePasswordPage from './pages/ResetPassword';
 import DemoManagementDashboard from './pages/DemoManagementDashboard';
+import GenerationsDashboard from './pages/Generations';
 
 function App() {
   useEffect(() => {
@@ -216,6 +217,20 @@ function App() {
                   title="Villa Marconi LTC Falls Dashboard"
                   unitSelectionValues={['allUnits', 'Casa dell Amore', 'Casa della Vita', 'Casa della Luce', 'Casa degli Amici']}
                   goal={26}
+                />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/generations"
+            element={
+              <PrivateRoute rolesRequired={['generations', 'responsive']}>
+                <GenerationsDashboard
+                  name="generations"
+                  title="Generations Falls Dashboard"
+                  unitSelectionValues={['allUnits', 'SL4 2 East', 'SL4 2 South', 'SL4 2 North', 'SL4 1 East', 'SL4 1 South', 'SL4 1 North']}
+                  goal={20}
                 />
               </PrivateRoute>
             }
