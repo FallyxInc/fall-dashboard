@@ -506,8 +506,12 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
         const rows = snapshot.val(); // Get all rows as an object
         let targetRowKey = null;
 
+        // Let's add some console.logs to understand what's happening
+        console.log("Index passed:", index);
+        console.log("Rows from Firebase:", rows);
+
         for (const [key, row] of Object.entries(rows)) {
-          if (row.id === String(index)) {
+          if (row.id === String(index)) {  
             targetRowKey = key;
             break;
           }
@@ -606,32 +610,24 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     const listener = onValue(dataRef, (snapshot) => {
       if (snapshot.exists()) {
         const fetchedData = snapshot.val();
-        console.log("Raw fetched data:", fetchedData);
         
-        // First ensure all data is loaded and valid
         if (!fetchedData) {
           console.log('No data available');
           setData([]);
           return;
         }
 
-        // Then process the data
-        let withIdData = Object.values(fetchedData);
-        for (let i = 0; i < withIdData.length; i++) {
-          withIdData[i].id = i;
-        }
+        // Convert to array while preserving the stored IDs
+        let withIdData = Object.values(fetchedData).map(item => ({
+          ...item,
+          // Use the ID that's already in the data, don't assign new ones
+          id: item.id || ''
+        }));
 
-        // Only call markPostFallNotes after we're sure data is loaded
-        if (withIdData.length > 0) {
-          const updatedData = markPostFallNotes(withIdData);
-          const sortedData = updatedData.sort(
-            (a, b) => new Date(b.date + ' ' + b.time) - new Date(a.date + ' ' + a.time)
-          );
-          setData(sortedData);
-        }
-      } else {
-        setData([]);
-        console.log(`${name} data not found.`);
+        const sortedData = withIdData.sort(
+          (a, b) => new Date(b.date + ' ' + b.time) - new Date(a.date + ' ' + a.time)
+        );
+        setData(sortedData);
       }
     });
 
