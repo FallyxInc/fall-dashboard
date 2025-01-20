@@ -56,6 +56,7 @@ export default function Login() {
         const roleMapping = {
           'niagara-ltc': 'niagara',
           'generations': 'generations',
+          'shepherd': 'shepherd',
           // Add other mappings if needed
         };
         

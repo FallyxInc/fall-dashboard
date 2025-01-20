@@ -12,6 +12,7 @@ import UpdateData from './pages/UpdateData';
 import UpdatePasswordPage from './pages/ResetPassword';
 import DemoManagementDashboard from './pages/DemoManagementDashboard';
 import GenerationsDashboard from './pages/Generations';
+import ShepherdLodge from './pages/Shepherd-Lodge';
 
 function App() {
   useEffect(() => {
@@ -265,21 +266,14 @@ function App() {
           />
 
           <Route
-            path="/shepherd-lodge"
+            path="/shepherd"
             element={
               <PrivateRoute rolesRequired={['shepherd', 'responsive']}>
-                <GenerationsDashboard
+                <ShepherdLodge 
                   name="shepherd"
-                  title="Shepherd Village Falls Dashboard"
-                  unitSelectionValues={[
-                    'allUnits',
-                    'Lodge 2nd Floor',
-                    'Lodge 3rd Floor',
-                    'Lodge 4th Floor',
-                    'Lodge 5th Floor',
-                    'Lodge 6th Floor'
-                  ]}
+                  title="Shepherd Lodge Falls Dashboard"
                   goal={20}
+                
                 />
               </PrivateRoute>
             }

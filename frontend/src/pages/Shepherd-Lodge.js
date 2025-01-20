@@ -106,6 +106,8 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   const [currentLongTermIntervention, setCurrentLongTermIntervention] = useState('');
   const [isLongTermInterventionModalOpen, setIsLongTermInterventionModalOpen] = useState(false);
 
+  const [uploading, setUploading] = useState(false);
+
   function expandedLog(item, maxDepth = 100, depth = 0) {
     if (depth > maxDepth) {
       console.log(item);
@@ -530,13 +532,13 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   };
 
   const handleUpdateCSV = async (index, newValue, name, changeType) => {
-    const collectionRef = ref(db, `/${name}/${desiredYear}/${months_backword[desiredMonth]}`);
+    const collectionRef = ref(db, `/shepherd/${desiredYear}/${months_backword[desiredMonth]}`);
 
     try {
       const snapshot = await get(collectionRef);
 
       if (snapshot.exists()) {
-        const rows = snapshot.val(); // Get all rows as an object
+        const rows = snapshot.val();
         let targetRowKey = null;
 
         for (const [key, row] of Object.entries(rows)) {
@@ -569,12 +571,14 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
             case 'incidentReport':
               updates = { incidentReport: newValue, isIncidentReportUpdated: 'yes' };
               break;
+            case 'rnaoAssessment':  // Add this case for RNAO assessment
+              updates = { rnaoAssessment: newValue, isRnaoAssessmentUpdated: 'yes' };
+              break;
             default:
               console.error('Invalid changeType');
               return;
           }
 
-          // Apply the updates
           await update(rowRef, updates);
           console.log(`Row with id ${index} updated successfully.`);
         } else {
@@ -586,6 +590,97 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     } catch (error) {
       console.error('Error updating row:', error);
     }
+  };
+
+  const handleFileUpload = (event) => {
+    const file = event.target.files[0];
+    setUploading(true);
+
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: async (results) => {
+        try {
+          const newData = results.data;
+          console.log("Parsed CSV data:", newData);
+
+          for (let i = 0; i < newData.length; i++) {
+            const row = newData[i];
+            
+            // Create a complete row object with ALL possible fields and default values
+            const updatedRow = {
+              // Required identifiers
+              id: String(i),
+              
+              // Basic information - default to empty string if missing
+              date: row.date || '',
+              name: row.name || '',
+              time: row.time || '',
+              room: row.room || '',
+              rha: row.rha || '',
+              homeUnit: row.homeUnit || '',
+              
+              // Fall details - default to empty string if missing
+              cause: row.cause || '',
+              interventions: row.interventions || '',
+              injury: row.injury || '',  // Keep both injury and injuries to be safe
+              injuries: row.injuries || '',
+              postFallNotes: row.postFallNotes || '',
+              longTermIntervention: row.longTermIntervention || '',
+              
+              // Yes/No fields - default to 'No' if missing
+              hir: row.hir?.toLowerCase() === 'yes' ? 'Yes' : 'No',
+              transfer_to_hospital: row.transfer_to_hospital?.toLowerCase() === 'yes' ? 'Yes' : 'No',
+              pt_ref: row.pt_ref?.toLowerCase() === 'yes' ? 'Yes' : 'No',
+              physician_notification: row.physician_notification?.toLowerCase() === 'yes' ? 'Yes' : 'No',
+              poa_contacted: row.poa_contacted?.toLowerCase() === 'yes' ? 'Yes' : 'No',
+              risk_management: row.risk_management?.toLowerCase() === 'yes' ? 'Yes' : 'No',
+              rnaoAssessment: row.rnaoAssessment?.toLowerCase() === 'yes' ? 'Yes' : 'No',
+              witnessed: row.witnessed?.toLowerCase() === 'yes' ? 'Yes' : 'No',
+              
+              // Update flags - always start as 'no'
+              isHirUpdated: 'no',
+              isTransferToHospitalUpdated: 'no',
+              isPtRefUpdated: 'no',
+              isPhysicianNotificationUpdated: 'no',
+              isPoaContactedUpdated: 'no',
+              isRiskManagementUpdated: 'no',
+              isRnaoAssessmentUpdated: 'no',
+              isInterventionsUpdated: 'no',
+              isCauseUpdated: 'no',
+              
+              // Timestamps and metadata
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+              
+              // Additional fields that might be needed
+              type: row.type || 'fall',  // default to 'fall' if not specified
+              dayOfWeek: row.dayOfWeek || '',
+              fallsThisMonth: row.fallsThisMonth || '0',
+              fallsInThreeMonths: row.fallsInThreeMonths || '0',
+              nearMissesInThreeMonths: row.nearMissesInThreeMonths || '0'
+            };
+
+            console.log(`Writing row ${i}:`, updatedRow);
+
+            const rowRef = ref(db, `shepherd/${desiredYear}/${months_backword[desiredMonth]}/row-${i}`);
+            await set(rowRef, updatedRow);
+          }
+
+          setUploading(false);
+          alert('CSV file uploaded successfully!');
+        } catch (error) {
+          console.error("Upload error:", error);
+          setUploading(false);
+          alert(`Failed to upload: ${error.message}`);
+        }
+      },
+      error: (error) => {
+        console.error('CSV parsing error:', error);
+        setUploading(false);
+        alert('Failed to parse the CSV file.');
+      }
+    });
   };
 
   useEffect(() => {
@@ -829,32 +924,79 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     }
   };
 
-  // First, define your column structure
+  // Update the columns array to match Dashboard.js headers
   const columns = [
-    { key: 'type', label: 'Type' },
     { key: 'date', label: 'Date' },
     { key: 'name', label: 'Name' },
-    { key: 'Day of the Week', label: 'Day of the Week' },
     { key: 'time', label: 'Time' },
-        { key: 'room', label: 'Location' },
-    { key: 'cause', label: 'Cause of Fall' },
+    { key: 'incident_location', label: 'Location' },
+    { key: 'homeUnit', label: 'RHA' },
+    { key: 'cause', label: 'Nature of Fall/Cause' },
     { key: 'interventions', label: 'Interventions' },
-    { key: 'injuries', label: 'Injuries' },
-    { key: 'witnessed', label: 'Witnessed?' },
-    { key: 'Falls This Month', label: 'Falls This Month' },
-    { key: 'Falls in 3 Months', label: 'Falls in 3 Months' },
-    { key: 'Near Missses in 3 Months', label: 'Near Misses in 3 Months' },
-    { key: 'transfer_to_hospital', label: 'Transferred to Hospital?' },
-    { key: 'longTermIntervention', label: 'Long Term Intervention' },
+    { key: 'hir', label: 'HIR initiated' },
+    { key: 'injury', label: 'Injury' },
+    { key: 'transfer_to_hospital', label: 'Transfer to Hospital' },
+    { key: 'pt_ref', label: 'PT Ref' },
+    { key: 'physician_notification', label: 'Physician/NP Notification (If Applicable)' },
+    { key: 'poa_contacted', label: 'POA Contacted' },
+    { key: 'incidentReport', label: 'Risk Management Incident Fall Written' },
+    { key: 'rnaoAssessment', label: 'RNAO Post Fall Assessment Done?' }
   ];
+
+  const getDuplicateNames = (data) => {
+    const nameCounts = {};
+    data.forEach(item => {
+      if (item.name) {
+        nameCounts[item.name] = (nameCounts[item.name] || 0) + 1;
+      }
+    });
+    return Object.keys(nameCounts).filter(name => nameCounts[name] > 1);
+  };
+
+  // Add this function to count total falls per resident
+  const getResidentsWithMultipleFalls = (data) => {
+    const fallCounts = {};
+    data.forEach(item => {
+      if (item.name) {
+        fallCounts[item.name] = (fallCounts[item.name] || 0) + 1;
+      }
+    });
+    return Object.keys(fallCounts).filter(name => fallCounts[name] >= 3);  // 3 or more falls
+  };
+
+  // Keep the existing getFallsWithin24Hours function
+  const getFallsWithin24Hours = (data) => {
+    const fallsByResident = {};
+    
+    const sortedData = [...data].sort((a, b) => {
+      const dateA = new Date(a.date + ' ' + (a.time || '00:00'));
+      const dateB = new Date(b.date + ' ' + (b.time || '00:00'));
+      return dateA - dateB;
+    });
+
+    sortedData.forEach((fall, index) => {
+      if (!fall.name || !fall.date) return;
+      
+      const currentFallTime = new Date(fall.date + ' ' + (fall.time || '00:00'));
+      
+      sortedData.slice(0, index).forEach(previousFall => {
+        if (previousFall.name === fall.name) {
+          const previousFallTime = new Date(previousFall.date + ' ' + (previousFall.time || '00:00'));
+          const hoursDifference = (currentFallTime - previousFallTime) / (1000 * 60 * 60);
+          
+          if (hoursDifference <= 24) {
+            fallsByResident[fall.name] = true;
+          }
+        }
+      });
+    });
+
+    return fallsByResident;
+  };
 
   return (
     <div className={styles.dashboard} ref={tableRef}>
-      <h1>{title}</h1>
-
-      {/* <button className="logout-button" onClick={logout}>
-        Log Out
-      </button> */}
+      <h1>Shepherd Lodge Falls Dashboard</h1>
 
       <div className={styles['chart-container']}>
         <div className={styles.chart}>
@@ -930,11 +1072,11 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
               setAnalysisUnit(e.target.value);
             }}
           >
-            {unitSelectionValues.map((unit) => (
-              <option key={unit} value={unit}>
-                {unit}
-              </option>
-            ))}
+            <option value="Lodge 2nd Floor">Lodge 2nd Floor</option>
+            <option value="Lodge 3rd Floor">Lodge 3rd Floor</option>
+            <option value="Lodge 4th Floor">Lodge 4th Floor</option>
+            <option value="Lodge 5th Floor">Lodge 5th Floor</option>
+            <option value="Lodge 6th Floor">Lodge 6th Floor</option>
           </select>
 
           {analysisChartData.datasets.length > 0 && <Bar data={analysisChartData} options={analysisChartOptions} />}
@@ -979,29 +1121,51 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
           </tr>
         </thead>
         <tbody id="fallsTableBody">
-          {data.map((item, i) => (
-            <tr key={i}>
-              {columns.map(col => (
-                <td key={col.key} style={{ fontSize: '16px', whiteSpace: col.key === 'date' ? 'nowrap' : 'normal' }}>
-                  {col.key === 'transfer_to_hospital' ? (
-                    <select
-                      value={item[col.key] === 'yes' || item[col.key] === 'Yes' ? 'Yes' : 'No'}
-                      onChange={(e) => handleUpdateCSV(data[i].id, e.target.value, 'generations', 'hospital')}
-                    >
-                      <option value="Yes">Yes</option>
-                      <option value="No">No</option>
-                    </select>
-                  ) : col.key === 'longTermIntervention' ? (
-                    <div style={{ cursor: 'pointer' }} onClick={() => handleEditLongTermIntervention(i)}>
-                      {item[col.key] || 'Click to add'}
-                    </div>
-                  ) : (
-                    item[col.key]
-                  )}
-                </td>
-              ))}
-            </tr>
-          ))}
+          {data.map((item, i) => {
+            const residentsWithThreePlusFalls = getResidentsWithMultipleFalls(data);
+            const hasThreePlusFalls = residentsWithThreePlusFalls.includes(item.name);
+            
+            const fallsWithin24Hours = getFallsWithin24Hours(data);
+            const hasMultipleFalls24Hours = fallsWithin24Hours[item.name];
+
+            return (
+              <tr 
+                key={i}
+                style={{
+                  backgroundColor: hasThreePlusFalls ? '#ffebee' :  // Light red for 3+ falls
+                                  hasMultipleFalls24Hours ? '#e0e0e0' :  // Grey for 2 falls in 24hrs
+                                  'inherit'
+                }}
+              >
+                {columns.map(col => (
+                  <td 
+                    key={col.key} 
+                    style={{ 
+                      fontSize: '16px', 
+                      whiteSpace: col.key === 'date' ? 'nowrap' : 'normal',
+                    }}
+                  >
+                    {col.key === 'transfer_to_hospital' || 
+                     col.key === 'hir' || 
+                     col.key === 'pt_ref' || 
+                     col.key === 'poa_contacted' ||
+                     col.key === 'risk_management' ||
+                     col.key === 'rnaoAssessment' ? (
+                      <select
+                        value={item[col.key] === 'yes' || item[col.key] === 'Yes' ? 'Yes' : 'No'}
+                        onChange={(e) => handleUpdateCSV(data[i].id, e.target.value, 'shepherd', col.key)}
+                      >
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                      </select>
+                    ) : (
+                      item[col.key]
+                    )}
+                  </td>
+                ))}
+              </tr>
+            );
+          })}
         </tbody>
       </table>
 
