@@ -24,6 +24,7 @@ const UpdateData = () => {
     { name: 'home3', label: 'Homes3' },
     { name: 'home4', label: 'Homes4' },
     { name: 'generations', label: 'generations' },
+    { name: 'shepherd', label: 'Shepherd Village' },
     { name: 'goderich', label: 'goderich' }
   ];
 

@@ -263,6 +263,27 @@ function App() {
               </PrivateRoute>
             }
           />
+
+          <Route
+            path="/shepherd-lodge"
+            element={
+              <PrivateRoute rolesRequired={['shepherd', 'responsive']}>
+                <GenerationsDashboard
+                  name="shepherd"
+                  title="Shepherd Village Falls Dashboard"
+                  unitSelectionValues={[
+                    'allUnits',
+                    'Lodge 2nd Floor',
+                    'Lodge 3rd Floor',
+                    'Lodge 4th Floor',
+                    'Lodge 5th Floor',
+                    'Lodge 6th Floor'
+                  ]}
+                  goal={20}
+                />
+              </PrivateRoute>
+            }
+          />
         </Routes>
       </Router>
     </div>
