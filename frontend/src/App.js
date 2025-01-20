@@ -11,7 +11,6 @@ import Unauthorized from './pages/Unauthorized';
 import UpdateData from './pages/UpdateData';
 import UpdatePasswordPage from './pages/ResetPassword';
 import DemoManagementDashboard from './pages/DemoManagementDashboard';
-import IL_Dashboard from './pages/IL-Dashboard';
 import GenerationsDashboard from './pages/Generations';
 
 function App() {

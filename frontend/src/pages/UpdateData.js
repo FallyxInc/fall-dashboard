@@ -132,6 +132,23 @@ const UpdateData = () => {
 
                 const rowRef = ref(db, `${selectedDashboard}/${selectedYear}/${selectedMonth}/row-${i}`);
                 await set(rowRef, updatedRow);
+              } else if (selectedDashboard === 'goderich') {
+                // New mapping for Goderich's CSV format
+                const updatedRow = {
+                  name: row['Resident Name'] || '',
+                  room: row['Suite #'] || '',
+                  incident_location: row['Location'] || '',
+                  witnessed: row['Witnessed'] || '',
+                  time: row['Time (Period)'] || '',
+                  injuries: row['Injury'] || '',
+                  cause: row['Cause'] || '',
+                  description: row['Description'] || '',
+                  interventions: row['Intervention/Response'] || '',
+                  type: row['Risk of Fall'] || ''
+                };
+
+                const rowRef = ref(db, `${selectedDashboard}/${selectedYear}/${selectedMonth}/row-${i}`);
+                await set(rowRef, updatedRow);
               } else {
                 // Original code for other dashboards remains unchanged
                 const { date, name, homeUnit, time, injury, ...otherFields } = row;
