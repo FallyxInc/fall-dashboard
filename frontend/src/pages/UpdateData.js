@@ -24,6 +24,7 @@ const UpdateData = () => {
     { name: 'home3', label: 'Homes3' },
     { name: 'home4', label: 'Homes4' },
     { name: 'generations', label: 'generations' },
+    { name: 'goderich', label: 'goderich' }
   ];
 
   const months = [
@@ -59,7 +60,7 @@ const UpdateData = () => {
     const dashboardRef = ref(db, `${selectedDashboard}/${selectedYear}/${selectedMonth}`);
 
     // Special fields list for generations
-    const fieldsWithIsUpdated = selectedDashboard === 'generations' ? [
+    const fieldsWithIsUpdated = selectedDashboard === 'generations' || selectedDashboard === 'goderich' ? [
       'interventions',
       'type',
       'incident_location',
@@ -134,7 +135,7 @@ const UpdateData = () => {
               } else {
                 // Original code for other dashboards remains unchanged
                 const { date, name, homeUnit, time, injury, ...otherFields } = row;
-                const updatedRow = { date, name, homeUnit, time, injury, ...otherFields };
+                const updatedRow = { date, name, homeUnit, time, injury, ...otherFields }; // this is why don't work rn 
 
                 for (let j = 0; j < fieldsWithIsUpdated.length; j++) {
                   const field = fieldsWithIsUpdated[j];
