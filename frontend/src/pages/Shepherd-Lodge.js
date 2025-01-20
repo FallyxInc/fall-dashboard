@@ -937,7 +937,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     { key: 'injury', label: 'Injury' },
     { key: 'transfer_to_hospital', label: 'Transfer to Hospital' },
     { key: 'pt_ref', label: 'PT Ref' },
-    { key: 'physician_notification', label: 'Physician/NP Notification (If Applicable)' },
+    { key: 'physicianRef', label: 'Physician/NP Notification' },
     { key: 'poa_contacted', label: 'POA Contacted' },
     { key: 'incidentReport', label: 'Risk Management Incident Fall Written' },
     { key: 'rnaoAssessment', label: 'RNAO Post Fall Assessment Done?' }
@@ -1145,12 +1145,22 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                       whiteSpace: col.key === 'date' ? 'nowrap' : 'normal',
                     }}
                   >
-                    {col.key === 'transfer_to_hospital' || 
-                     col.key === 'hir' || 
-                     col.key === 'pt_ref' || 
-                     col.key === 'poa_contacted' ||
-                     col.key === 'risk_management' ||
-                     col.key === 'rnaoAssessment' ? (
+                    {col.key === 'physicianRef' ? (
+                      <select
+                        value={item[col.key] || 'N/A'}
+                        onChange={(e) => handleUpdateCSV(data[i].id, e.target.value, 'shepherd', col.key)}
+                      >
+                        <option value="N/A">N/A</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                      </select>
+                    ) : col.key === 'transfer_to_hospital' || 
+                       col.key === 'hir' || 
+                       col.key === 'pt_ref' || 
+                       col.key === 'poa_contacted' ||
+                       col.key === 'risk_management' ||
+                       col.key === 'incidentReport' ||
+                       col.key === 'rnaoAssessment' ? (
                       <select
                         value={item[col.key] === 'yes' || item[col.key] === 'Yes' ? 'Yes' : 'No'}
                         onChange={(e) => handleUpdateCSV(data[i].id, e.target.value, 'shepherd', col.key)}
