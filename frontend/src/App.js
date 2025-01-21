@@ -13,6 +13,7 @@ import UpdatePasswordPage from './pages/ResetPassword';
 import DemoManagementDashboard from './pages/DemoManagementDashboard';
 import GenerationsDashboard from './pages/Generations';
 import ShepherdLodge from './pages/Shepherd-Lodge';
+import GoderichPlace from './pages/Goderich-Place';
 
 function App() {
   useEffect(() => {
@@ -273,6 +274,20 @@ function App() {
                   name="shepherd"
                   title="Shepherd Lodge Falls Dashboard"
                   goal={20}
+                
+                />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/goderich"
+            element={
+              <PrivateRoute rolesRequired={['goderich', 'responsive']}>
+                <GoderichPlace 
+                  name="goderich"
+                  title="Goderich Place Falls Dashboard"
+                  goal={22}
                 
                 />
               </PrivateRoute>
