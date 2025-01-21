@@ -83,13 +83,13 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   const [gaugeChart, setGaugeChart] = useState(true);
   const [fallsTimeRange, setFallsTimeRange] = useState('current');
   const [analysisType, setAnalysisType] = useState('timeOfDay');
-  const [analysisTimeRange, setAnalysisTimeRange] = useState('current');
   const [analysisUnit, setAnalysisUnit] = useState('allUnits');
   const [analysisHeaderText, setAnalysisHeaderText] = useState('Falls by Time of Day');
 
   const [currentIntervention, setCurrentIntervention] = useState('');
   const [currentRowIndex, setCurrentRowIndex] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedRowId, setSelectedRowId] = useState(null);
 
   const [currentCauseOfFall, setCurrentCauseOfFall] = useState('');
   const [currentCauseRowIndex, setCurrentCauseRowIndex] = useState(null);
@@ -107,6 +107,9 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   const [isLongTermInterventionModalOpen, setIsLongTermInterventionModalOpen] = useState(false);
 
   const [uploading, setUploading] = useState(false);
+
+  const [isDescriptionModalOpen, setIsDescriptionModalOpen] = useState(false);
+  const [currentDescription, setCurrentDescription] = useState('');
 
   function expandedLog(item, maxDepth = 100, depth = 0) {
     if (depth > maxDepth) {
@@ -192,30 +195,29 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     setIsModalOpen(true);
   };
 
-  const handleSubmitIntervention = () => {
-    if (currentIntervention === data[currentRowIndex].interventions) {
-      setIsModalOpen(false);
-      return;
-    }
-
-    const updatedData = [...data];
-    updatedData[currentRowIndex].interventions = currentIntervention;
-    updatedData[currentRowIndex].isInterventionsUpdated = 'yes';
-
-    console.log(updatedData);
-    const rowRef = ref(db, `/${name}/${desiredYear}/${months_backword[desiredMonth]}/row-${data[currentRowIndex].id}`);
-    update(rowRef, {
-      interventions: currentIntervention,
-      isInterventionsUpdated: 'yes',
-    })
-      .then(() => {
-        console.log('Intervention updated successfully');
-        setData(updatedData);
-        setIsModalOpen(false);
-      })
-      .catch((error) => {
-        console.error('Error updating intervention:', error);
+  const handleSubmitIntervention = async () => {
+    try {
+      const rowRef = ref(db, `${name}/${desiredYear}/${months_backword[desiredMonth]}/row-${selectedRowId}`);
+      
+      await update(rowRef, {
+        interventions: currentIntervention,
+        isInterventionsUpdated: 'yes',
+        updated_at: new Date().toISOString()
       });
+
+      setData(prevData =>
+        prevData.map(item =>
+          item.id === selectedRowId
+            ? { ...item, interventions: currentIntervention, isInterventionsUpdated: 'yes' }
+            : item
+        )
+      );
+
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error('Error updating intervention:', error);
+      alert('Failed to update intervention');
+    }
   };
 
   const handleEditCauseOfFall = (index) => {
@@ -347,6 +349,10 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
         threeMonthX = ['October', 'November', 'December'];
         threeMonthY = [19, 14, 11];
         break;
+      case 'goderich':
+        threeMonthX = ['October', 'November', 'December'];
+        threeMonthY = [25, 22, 22];
+        break;
       default:
         // Original logic for other homes
         for (const [key, value] of threeMonthData) {
@@ -408,18 +414,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   }
 
   const updateAnalysisChart = () => {
-    var selectedUnit = analysisUnit;
-    var filteredData = analysisTimeRange === '3months' ? Array.from(threeMonthData.values()).flat() : data;
-
-    if (selectedUnit !== 'allUnits') {
-      filteredData = filteredData.filter(
-        (fall) => {
-          // Get the unit from either homeUnit or room field
-          const unitValue = fall.homeUnit || fall.room;
-          return unitValue?.trim() === selectedUnit?.trim();
-        }
-      );
-    }
+    var filteredData = data; // Just use current data
 
     let newLabels = [];
     let newData = [];
@@ -427,8 +422,8 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     switch (analysisType) {
       case 'timeOfDay':
         setAnalysisHeaderText('Falls by Time of Day');
-        newLabels = ['Morning', 'Evening', 'Night'];
         var timeOfDayCounts = countFallsByTimeOfDay(filteredData, name);
+        newLabels = ['Morning', 'Evening', 'Night'];
         newData = [timeOfDayCounts.Morning, timeOfDayCounts.Evening, timeOfDayCounts.Night];
         break;
 
@@ -441,16 +436,13 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
 
       case 'injuries':
         setAnalysisHeaderText('Falls by Injury Description');
-        var injuryCounts = countFallsByExactInjury(filteredData);
+        var injuryCounts = {};
+        filteredData.forEach(fall => {
+          const injury = fall.injury || 'No Injury';
+          injuryCounts[injury] = (injuryCounts[injury] || 0) + 1;
+        });
         newLabels = Object.keys(injuryCounts);
         newData = Object.values(injuryCounts);
-        break;
-
-      case 'hir':
-        setAnalysisHeaderText('High Injury Risk (HIR) Falls');
-        var hirCount = countFallsByHIR(filteredData);
-        newLabels = [getMonthFromTimeRange(analysisTimeRange)];
-        newData = [hirCount];
         break;
 
       case 'residents':
@@ -531,64 +523,31 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     saveAs(blob, 'updated_fall_data.csv');
   };
 
-  const handleUpdateCSV = async (index, newValue, name, changeType) => {
-    const collectionRef = ref(db, `/shepherd/${desiredYear}/${months_backword[desiredMonth]}`);
-
+  const handleUpdateCSV = async (rowId, newValue, name, changeType) => {
     try {
-      const snapshot = await get(collectionRef);
+      const rowRef = ref(db, `${name}/${desiredYear}/${months_backword[desiredMonth]}/row-${rowId}`);
+      
+      // Create an update object with just the field being changed
+      const updates = {
+        [changeType]: newValue,
+        updated_at: new Date().toISOString()
+      };
 
-      if (snapshot.exists()) {
-        const rows = snapshot.val();
-        let targetRowKey = null;
+      // Update only the specific field
+      await update(rowRef, updates);
+      
+      // Update local state to reflect the change
+      setData(prevData => 
+        prevData.map(item => 
+          item.id === rowId 
+            ? { ...item, [changeType]: newValue }
+            : item
+        )
+      );
 
-        for (const [key, row] of Object.entries(rows)) {
-          if (row.id === String(index)) {
-            targetRowKey = key;
-            break;
-          }
-        }
-
-        if (targetRowKey) {
-          const rowRef = child(collectionRef, targetRowKey);
-          let updates = {};
-
-          switch (changeType) {
-            case 'hir':
-              updates = { hir: newValue, isHirUpdated: 'yes' };
-              break;
-            case 'hospital':
-              updates = { transfer_to_hospital: newValue, isHospitalUpdated: 'yes' };
-              break;
-            case 'ptRef':
-              updates = { ptRef: newValue, isPtRefUpdated: 'yes' };
-              break;
-            case 'poaContacted':
-              updates = { poaContacted: newValue, isPoaContactedUpdated: 'yes' };
-              break;
-            case 'physicianRef':
-              updates = { physicianRef: newValue, isPhysicianRefUpdated: 'yes' };
-              break;
-            case 'incidentReport':
-              updates = { incidentReport: newValue, isIncidentReportUpdated: 'yes' };
-              break;
-            case 'rnaoAssessment':  // Add this case for RNAO assessment
-              updates = { rnaoAssessment: newValue, isRnaoAssessmentUpdated: 'yes' };
-              break;
-            default:
-              console.error('Invalid changeType');
-              return;
-          }
-
-          await update(rowRef, updates);
-          console.log(`Row with id ${index} updated successfully.`);
-        } else {
-          console.error(`Row with id ${index} not found.`);
-        }
-      } else {
-        console.error('No data found in the specified path.');
-      }
     } catch (error) {
-      console.error('Error updating row:', error);
+      console.error('Error updating data:', error);
+      alert('Failed to update the field');
     }
   };
 
@@ -776,7 +735,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   useEffect(() => {
     updateAnalysisChart();
     // console.log('Analysis Chart');
-  }, [analysisType, analysisTimeRange, analysisUnit, data, desiredYear]);
+  }, [analysisType, data, desiredYear]);
 
   const handleYearChange = (e) => {
     const selectedYear = e.target.value;
@@ -924,23 +883,18 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     }
   };
 
-  // Update the columns array to match Dashboard.js headers
+  // Define the columns array at the top of your component
   const columns = [
-    { key: 'date', label: 'Date' },
-    { key: 'name', label: 'Name' },
-    { key: 'time', label: 'Time' },
+    { key: 'name', label: 'Resident Name' },
+    { key: 'room', label: 'Suite #' },
     { key: 'incident_location', label: 'Location' },
-    { key: 'homeUnit', label: 'RHA' },
-    { key: 'cause', label: 'Nature of Fall/Cause' },
-    { key: 'interventions', label: 'Interventions' },
-    { key: 'hir', label: 'HIR initiated' },
+    { key: 'witnessed', label: 'Witnessed' },
+    { key: 'time', label: 'Time (Day, Evening, Night)' },
     { key: 'injury', label: 'Injury' },
-    { key: 'transfer_to_hospital', label: 'Transfer to Hospital' },
-    { key: 'pt_ref', label: 'PT Ref' },
-    { key: 'physicianRef', label: 'Physician/NP Notification' },
-    { key: 'poa_contacted', label: 'POA Contacted' },
-    { key: 'incidentReport', label: 'Risk Management Incident Fall Written' },
-    { key: 'rnaoAssessment', label: 'RNAO Post Fall Assessment Done?' }
+    { key: 'cause', label: 'Cause (Environmental, Physical, etc.)' },
+    { key: 'description', label: 'Description' },
+    { key: 'interventions', label: 'Intervention/Response' },
+    { key: 'riskOfFall', label: 'Risk of Fall' }
   ];
 
   const getDuplicateNames = (data) => {
@@ -994,9 +948,42 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     return fallsByResident;
   };
 
+  // Add this array at the top of your component with the cause options
+  const causeOptions = [
+    'Environmental',
+    'Physical',
+    'Behavioral',
+    'Unknown'
+  ];
+
+  const handleSubmitDescription = async () => {
+    try {
+      const rowRef = ref(db, `${name}/${desiredYear}/${months_backword[desiredMonth]}/row-${selectedRowId}`);
+      
+      await update(rowRef, {
+        description: currentDescription,
+        isDescriptionUpdated: 'yes',
+        updated_at: new Date().toISOString()
+      });
+
+      setData(prevData =>
+        prevData.map(item =>
+          item.id === selectedRowId
+            ? { ...item, description: currentDescription, isDescriptionUpdated: 'yes' }
+            : item
+        )
+      );
+
+      setIsDescriptionModalOpen(false);
+    } catch (error) {
+      console.error('Error updating description:', error);
+      alert('Failed to update description');
+    }
+  };
+
   return (
     <div className={styles.dashboard} ref={tableRef}>
-      <h1>Shepherd Lodge Falls Dashboard</h1>
+      <h1>Goderich Place Falls Dashboard</h1>
 
       <div className={styles['chart-container']}>
         <div className={styles.chart}>
@@ -1049,34 +1036,8 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
           >
             <option value="timeOfDay">Time of Day</option>
             <option value="location">Location</option>
-            <option value="injury">Injuries</option>
-            {/* <option value="hir">Falls by HIR</option> */}
+            <option value="injuries">Injuries</option>
             <option value="residents">Residents w/ Recurring Falls</option>
-          </select>
-
-          <select
-            id="analysisTimeRange"
-            value={analysisTimeRange}
-            onChange={(e) => {
-              setAnalysisTimeRange(e.target.value);
-            }}
-          >
-            <option value="current">Current Month</option>
-            <option value="3months">Past 3 Months</option>
-          </select>
-
-          <select
-            id="unitSelection"
-            value={analysisUnit}
-            onChange={(e) => {
-              setAnalysisUnit(e.target.value);
-            }}
-          >
-            <option value="Lodge 2nd Floor">Lodge 2nd Floor</option>
-            <option value="Lodge 3rd Floor">Lodge 3rd Floor</option>
-            <option value="Lodge 4th Floor">Lodge 4th Floor</option>
-            <option value="Lodge 5th Floor">Lodge 5th Floor</option>
-            <option value="Lodge 6th Floor">Lodge 6th Floor</option>
           </select>
 
           {analysisChartData.datasets.length > 0 && <Bar data={analysisChartData} options={analysisChartOptions} />}
@@ -1085,7 +1046,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
       <div className={styles['table-header']}>
         <div className={styles['header']}>
           <h2>
-            Falls Tracking Table: {desiredMonth} {desiredYear}
+            Falls Report: {desiredMonth} {desiredYear}
           </h2>
           <select onChange={handleYearChange} value={desiredYear}>
             {Object.keys(availableYearMonth).map((year) => (
@@ -1112,80 +1073,16 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
           </button>
         </div>
       </div>
-      <table style={{ width: '100%' }}>
-        <thead>
-          <tr>
-            {columns.map(col => (
-              <th key={col.key} style={{ fontSize: '18px' }}>{col.label}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody id="fallsTableBody">
-          {data.map((item, i) => {
-            const residentsWithThreePlusFalls = getResidentsWithMultipleFalls(data);
-            const hasThreePlusFalls = residentsWithThreePlusFalls.includes(item.name);
-            
-            const fallsWithin24Hours = getFallsWithin24Hours(data);
-            const hasMultipleFalls24Hours = fallsWithin24Hours[item.name];
-
-            return (
-              <tr 
-                key={i}
-                style={{
-                  backgroundColor: hasThreePlusFalls ? '#ffebee' :  // Light red for 3+ falls
-                                  hasMultipleFalls24Hours ? '#e0e0e0' :  // Grey for 2 falls in 24hrs
-                                  'inherit'
-                }}
-              >
-                {columns.map(col => (
-                  <td 
-                    key={col.key} 
-                    style={{ 
-                      fontSize: '16px', 
-                      whiteSpace: col.key === 'date' ? 'nowrap' : 'normal',
-                    }}
-                  >
-                    {col.key === 'physicianRef' ? (
-                      <select
-                        value={item[col.key] || 'N/A'}
-                        onChange={(e) => handleUpdateCSV(data[i].id, e.target.value, 'shepherd', col.key)}
-                      >
-                        <option value="N/A">N/A</option>
-                        <option value="Yes">Yes</option>
-                        <option value="No">No</option>
-                      </select>
-                    ) : col.key === 'transfer_to_hospital' || 
-                       col.key === 'hir' || 
-                       col.key === 'pt_ref' || 
-                       col.key === 'poa_contacted' ||
-                       col.key === 'risk_management' ||
-                       col.key === 'incidentReport' ||
-                       col.key === 'rnaoAssessment' ? (
-                      <select
-                        value={item[col.key] === 'yes' || item[col.key] === 'Yes' ? 'Yes' : 'No'}
-                        onChange={(e) => handleUpdateCSV(data[i].id, e.target.value, 'shepherd', col.key)}
-                      >
-                        <option value="Yes">Yes</option>
-                        <option value="No">No</option>
-                      </select>
-                    ) : (
-                      item[col.key]
-                    )}
-                  </td>
-                ))}
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-
-      
       {isModalOpen && (
         <div className={styles.modal}>
           <div className={styles.modalContent}>
             <div>
               <h2>Edit Interventions</h2>
-              <textarea value={currentIntervention} onChange={(e) => setCurrentIntervention(e.target.value)} />
+              <textarea 
+                value={currentIntervention} 
+                onChange={(e) => setCurrentIntervention(e.target.value)}
+                style={{ width: '100%', minHeight: '100px' }}
+              />
               <br />
               <button onClick={handleSubmitIntervention}>Submit</button>
               <button onClick={() => setIsModalOpen(false)}>Cancel</button>
@@ -1269,6 +1166,110 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
           }
         />
       )}
+      {isDescriptionModalOpen && (
+        <div className={styles.modal}>
+          <div className={styles.modalContent}>
+            <div>
+              <h2>Edit Description</h2>
+              <textarea 
+                value={currentDescription} 
+                onChange={(e) => setCurrentDescription(e.target.value)}
+                style={{ width: '100%', minHeight: '100px' }}
+              />
+              <br />
+              <button onClick={handleSubmitDescription}>Submit</button>
+              <button onClick={() => setIsDescriptionModalOpen(false)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+      <div className={styles['table-container']} ref={tableRef}>
+      <table style={{ width: '100%' }}>
+        <thead>
+          <tr>
+            {columns.map(col => (
+              <th key={col.key} style={{ fontSize: '18px' }}>{col.label}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody id="fallsTableBody">
+          {data && data.map((item, i) => (
+            <tr key={i}>
+              {columns.map(col => (
+                <td key={col.key} style={{ 
+                  fontSize: '16px',
+                  ...(col.key === 'riskOfFall' && { 
+                    width: '150px', 
+                    minWidth: '150px' 
+                  })
+                }}>
+                  {col.key === 'interventions' || col.key === 'description' ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
+                      <span style={{ 
+                        color: item[`is${col.key.charAt(0).toUpperCase() + col.key.slice(1)}Updated`] === 'yes' 
+                          ? '#4CAF50' 
+                          : 'inherit' 
+                      }}>
+                        {item[col.key] || `No ${col.key} added`}
+                      </span>
+                      <button
+                        onClick={() => {
+                          setSelectedRowId(item.id);
+                          if (col.key === 'interventions') {
+                            setCurrentIntervention(item.interventions || '');
+                            setIsModalOpen(true);
+                          } else {
+                            setCurrentDescription(item.description || '');
+                            setIsDescriptionModalOpen(true);
+                          }
+                        }}
+                        style={{
+                          padding: '5px 10px',
+                          backgroundColor: '#4CAF50',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          width: 'fit-content'
+                        }}
+                      >
+                        Edit
+                      </button>
+                    </div>
+                  ) : col.key === 'cause' ? (
+                    <select
+                      value={item.cause || ''}
+                      onChange={(e) => handleUpdateCSV(item.id, e.target.value, name, 'cause')}
+                      style={{ width: '100%', padding: '5px' }}
+                    >
+                      <option value="">Select Cause</option>
+                      {causeOptions.map(option => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                  ) : col.key === 'riskOfFall' ? (
+                    <select
+                      value={item[col.key] || ''}
+                      onChange={(e) => handleUpdateCSV(item.id, e.target.value, name, 'riskOfFall')}
+                      style={{ width: '100%', padding: '5px' }}
+                    >
+                      <option value="">Select Risk Level</option>
+                      <option value="Low">Low</option>
+                      <option value="Medium">Medium</option>
+                      <option value="High">High</option>
+                    </select>
+                  ) : (
+                    item[col.key]
+                  )}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      </div>
     </div>
   );
 }

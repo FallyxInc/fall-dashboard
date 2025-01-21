@@ -64,59 +64,41 @@ const UpdateData = () => {
 
     if (selectedDashboard === 'goderich') {
       try {
-        console.log('Starting Goderich data upload process...'); // Debug log
         const snapshot = await get(dashboardRef);
-        const existingData = snapshot.exists() ? snapshot.val() : {};
+        console.log('Starting Goderich data upload process...');
 
-        // Remove old data
-        await remove(dashboardRef);
-        console.log('Previous data removed successfully');
-
-        // Log the file being processed
-        console.log('File to process:', file);
-
-        // Parse CSV with immediate logging
         Papa.parse(file, {
           header: true,
           skipEmptyLines: true,
           complete: async (results) => {
             console.log('CSV Parse complete. Row count:', results.data.length);
-            console.log('First row sample:', results.data[0]);
-            console.log('Headers found:', results.meta.fields);
-
-            const newData = results.data;
-            console.log('Starting row processing...');
-
-            for (let i = 0; i < newData.length; i++) {
-              const row = newData[i];
-              console.log(`Processing row ${i + 1}/${newData.length}`);
+            
+            for (let i = 0; i < results.data.length; i++) {
+              const row = results.data[i];
+              console.log(`Processing row ${i + 1}/${results.data.length}`);
               
+              // Keep original values if they exist, only clean if needed
               const cleanRow = {
-                name: row['Resident Name'] || '',
-                room: row['Suite #'] || '',
-                incident_location: row['Location'] || '',
-                witnessed: row['Witnessed'] || '',
-                time: row['Time'] || '',
-                injury: row['Injury'] || '',
-                cause: row['Cause'] || '',
-                description: row['Description'] || '',
-                interventions: row['Intervention/Response'] || '',
-                riskOfFall: row['Risk of Fall'] || ''
+                name: row['Resident Name'] || row['name'] || '',
+                room: row['Suite #'] || row['room'] || '',
+                incident_location: row['Location'] || row['incident_location'] || '',
+                witnessed: row['Witnessed'] || row['witnessed'] || '',
+                time: row['Time'] || row['time'] || '',
+                injury: row['Injury'] || row['injury'] || '',
+                cause: row['Cause'] || row['cause'] || '',
+                description: row['Description'] || row['description'] || '',
+                interventions: row['Intervention/Response'] || row['interventions'] || '',
+                riskOfFall: row['Risk of Fall'] || row['riskOfFall'] || ''
               };
 
               console.log(`Row ${i + 1} cleaned data:`, cleanRow);
 
               // Save to Firebase
               const rowRef = ref(db, `${selectedDashboard}/${selectedYear}/${selectedMonth}/row-${i}`);
-              try {
-                await set(rowRef, cleanRow);
-                console.log(`Row ${i + 1} uploaded successfully`);
-              } catch (error) {
-                console.error(`Failed to upload row ${i + 1}:`, error);
-              }
+              await set(rowRef, cleanRow);
+              console.log(`Row ${i + 1} uploaded successfully`);
             }
 
-            console.log('All rows processed');
             setUploading(false);
             alert('CSV file uploaded successfully!');
           },
