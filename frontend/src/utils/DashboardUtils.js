@@ -98,105 +98,156 @@ export function getMonthFromTimeRange(timeRange) {
 }
 
 export function getTimeShift(fallTime, home) {
-  const timeShifts = {
-    iggh: {
-      morning: [420, 900], // 7:00 AM to 3:00 PM
-      evening: [901, 1380], // 3:01 PM to 11:00 PM
-      night: [1381, 419], // 11:01 PM to 6:59 AM
-    },
-    millCreek: {
-      morning: [390, 870], // 6:30 AM to 2:30 PM
-      evening: [871, 1350], // 2:31 PM to 10:30 PM
-      night: [1351, 389], // 10:31 PM to 6:30 AM
-    },
-    niagara: {
-      morning: [360, 840], // 6:00 AM to 2:00 PM
-      evening: [841, 1320], // 2:01 PM to 10:00 PM
-      night: [1321, 359], // 10:01 PM to 5:59 AM
-    },
-    wellington: {
-      morning: [390, 870], // 6:30 AM to 2:30 PM
-      evening: [871, 1350], // 2:31 PM to 10:30 PM
-      night: [1351, 389], // 10:31 PM to 6:30 AM
-    },
-    home1: {
-      morning: [420, 900], // 7:00 AM to 3:00 PM
-      evening: [901, 1380], // 3:01 PM to 11:00 PM
-      night: [1381, 419], // 11:01 PM to 6:59 AM
-    },
-    home2: {
-      morning: [420, 900], // 7:00 AM to 3:00 PM
-      evening: [901, 1380], // 3:01 PM to 11:00 PM
-      night: [1381, 419], // 11:01 PM to 6:59 AM
-    },
-    home3: {
-      morning: [420, 900], // 7:00 AM to 3:00 PM
-      evening: [901, 1380], // 3:01 PM to 11:00 PM
-      night: [1381, 419], // 11:01 PM to 6:59 AM
-    },
-    home4: {
-      morning: [420, 900], // 7:00 AM to 3:00 PM
-      evening: [901, 1380], // 3:01 PM to 11:00 PM
-      night: [1381, 419], // 11:01 PM to 6:59 AM
-    },
-    bonairltc: {
-      morning: [390, 869],   // 6:30 AM to 2:29 PM
-      evening: [870, 1349],  // 2:30 PM to 10:29 PM
-      night: [1350, 389],    // 10:30 PM to 6:29 AM
-    },
-    champlain: {
-      morning: [360, 839],   // 6:00 AM to 1:59 PM
-      evening: [840, 1319],  // 2:00 PM to 9:59 PM
-      night: [1320, 359],    // 10:00 PM to 5:59 AM
-    },
-    lancaster: {
-      morning: [360, 839],   // 6:00 AM to 1:59 PM
-      evening: [840, 1319],  // 2:00 PM to 9:59 PM
-      night: [1320, 359],    // 10:00 PM to 5:59 AM
-    },
-    oneill: {
-      morning: [420, 899],   // 7:00 AM to 2:59 PM
-      evening: [900, 1379],  // 3:00 PM to 10:59 PM
-      night: [1380, 419],    // 11:00 PM to 6:59 AM
-    },
-    vmltc: {
-      morning: [420, 899],   // 7:00 AM to 2:59 PM
-      evening: [900, 1379],  // 3:00 PM to 10:59 PM
-      night: [1380, 419],    // 11:00 PM to 6:59 AM
-    },
-    generations: {
-      morning: [420, 899],   // 7:00 AM to 2:59 PM
-      evening: [900, 1379],  // 3:00 PM to 10:59 PM
-      night: [1380, 419],    // 11:00 PM to 6:59 AM
-    },
-    shepherd: {
-      morning: [420, 899],   // 7:00 AM to 2:59 PM
-      evening: [900, 1379],  // 3:00 PM to 10:59 PM
-      night: [1380, 419],    // 11:00 PM to 6:59 AM
-    }
-  };
+  // Debug logging
+  console.log('Analyzing time:', fallTime, 'for home:', home);
 
-  const shiftConfig = timeShifts[home];
-  if (!shiftConfig) {
-    throw new Error(`No configuration found for home: ${home}`);
+  // Handle empty/invalid time
+  if (!fallTime || fallTime === '') {
+    return 'Unknown';
   }
 
-  var parts = fallTime.split(':');
-  var hours = parseInt(parts[0], 10);
-  var minutes = parseInt(parts[1], 10);
-  var totalMinutes = hours * 60 + minutes;
-
-  if (totalMinutes >= shiftConfig.morning[0] && totalMinutes <= shiftConfig.morning[1]) {
-    return 'Morning';
-  } else if (totalMinutes >= shiftConfig.evening[0] && totalMinutes <= shiftConfig.evening[1]) {
-    return 'Evening';
-  } else {
-    if (totalMinutes >= shiftConfig.night[0] || totalMinutes <= shiftConfig.night[1]) {
-      return 'Night';
+  // Handle time format
+  let hours, minutes;
+  
+  try {
+    // Handle different time formats
+    if (fallTime.includes(':')) {
+      const timeParts = fallTime.split(':');
+      hours = parseInt(timeParts[0], 10);
+      minutes = parseInt(timeParts[1], 10);
+    } else {
+      // If time is in another format, return Unknown
+      return 'Unknown';
     }
-  }
 
-  throw new Error(`Time ${fallTime} does not match any shift for home: ${home}`);
+    // Validate parsed time
+    if (isNaN(hours) || isNaN(minutes)) {
+      console.log('Invalid time format:', fallTime);
+      return 'Unknown';
+    }
+
+    const totalMinutes = (hours * 60) + minutes;
+    console.log('Total minutes:', totalMinutes);
+
+    // Goderich-specific time shifts
+    if (home.toLowerCase() === 'goderich') {
+      // Morning: 7:00 AM (420) to 2:59 PM (899)
+      if (totalMinutes >= 420 && totalMinutes <= 899) return 'Morning';
+      
+      // Evening: 3:00 PM (900) to 10:59 PM (1379)
+      if (totalMinutes >= 900 && totalMinutes <= 1379) return 'Evening';
+      
+      // Night: 11:00 PM (1380) to 6:59 AM (419)
+      if (totalMinutes >= 1380 || totalMinutes <= 419) return 'Night';
+      
+      console.log(`Time ${fallTime} (${totalMinutes} minutes) outside shift ranges`);
+      return 'Unknown';
+    }
+
+    // Handle other homes' time shifts
+    const timeShifts = {
+      iggh: {
+        morning: [420, 900], // 7:00 AM to 3:00 PM
+        evening: [901, 1380], // 3:01 PM to 11:00 PM
+        night: [1381, 419], // 11:01 PM to 6:59 AM
+      },
+      millCreek: {
+        morning: [390, 870], // 6:30 AM to 2:30 PM
+        evening: [871, 1350], // 2:31 PM to 10:30 PM
+        night: [1351, 389], // 10:31 PM to 6:30 AM
+      },
+      niagara: {
+        morning: [360, 840], // 6:00 AM to 2:00 PM
+        evening: [841, 1320], // 2:01 PM to 10:00 PM
+        night: [1321, 359], // 10:01 PM to 5:59 AM
+      },
+      wellington: {
+        morning: [390, 870], // 6:30 AM to 2:30 PM
+        evening: [871, 1350], // 2:31 PM to 10:30 PM
+        night: [1351, 389], // 10:31 PM to 6:30 AM
+      },
+      home1: {
+        morning: [420, 900], // 7:00 AM to 3:00 PM
+        evening: [901, 1380], // 3:01 PM to 11:00 PM
+        night: [1381, 419], // 11:01 PM to 6:59 AM
+      },
+      home2: {
+        morning: [420, 900], // 7:00 AM to 3:00 PM
+        evening: [901, 1380], // 3:01 PM to 11:00 PM
+        night: [1381, 419], // 11:01 PM to 6:59 AM
+      },
+      home3: {
+        morning: [420, 900], // 7:00 AM to 3:00 PM
+        evening: [901, 1380], // 3:01 PM to 11:00 PM
+        night: [1381, 419], // 11:01 PM to 6:59 AM
+      },
+      home4: {
+        morning: [420, 900], // 7:00 AM to 3:00 PM
+        evening: [901, 1380], // 3:01 PM to 11:00 PM
+        night: [1381, 419], // 11:01 PM to 6:59 AM
+      },
+      bonairltc: {
+        morning: [390, 869],   // 6:30 AM to 2:29 PM
+        evening: [870, 1349],  // 2:30 PM to 10:29 PM
+        night: [1350, 389],    // 10:30 PM to 6:29 AM
+      },
+      champlain: {
+        morning: [360, 839],   // 6:00 AM to 1:59 PM
+        evening: [840, 1319],  // 2:00 PM to 9:59 PM
+        night: [1320, 359],    // 10:00 PM to 5:59 AM
+      },
+      lancaster: {
+        morning: [360, 839],   // 6:00 AM to 1:59 PM
+        evening: [840, 1319],  // 2:00 PM to 9:59 PM
+        night: [1320, 359],    // 10:00 PM to 5:59 AM
+      },
+      oneill: {
+        morning: [420, 899],   // 7:00 AM to 2:59 PM
+        evening: [900, 1379],  // 3:00 PM to 10:59 PM
+        night: [1380, 419],    // 11:00 PM to 6:59 AM
+      },
+      vmltc: {
+        morning: [420, 899],   // 7:00 AM to 2:59 PM
+        evening: [900, 1379],  // 3:00 PM to 10:59 PM
+        night: [1380, 419],    // 11:00 PM to 6:59 AM
+      },
+      generations: {
+        morning: [420, 899],   // 7:00 AM to 2:59 PM
+        evening: [900, 1379],  // 3:00 PM to 10:59 PM
+        night: [1380, 419],    // 11:00 PM to 6:59 AM
+      },
+      goderich: {
+        morning: [420, 899],   // 7:00 AM to 2:59 PM
+        evening: [900, 1379],  // 3:00 PM to 10:59 PM
+        night: [1380, 419],    // 11:00 PM to 6:59 AM
+      },
+      shepherd: {
+        morning: [420, 899],   // 7:00 AM to 2:59 PM
+        evening: [900, 1379],  // 3:00 PM to 10:59 PM
+        night: [1380, 419],    // 11:00 PM to 6:59 AM
+      }
+    };
+
+    const shiftConfig = timeShifts[home];
+    if (!shiftConfig) {
+      throw new Error(`No configuration found for home: ${home}`);
+    }
+
+    if (totalMinutes >= shiftConfig.morning[0] && totalMinutes <= shiftConfig.morning[1]) {
+      return 'Morning';
+    } else if (totalMinutes >= shiftConfig.evening[0] && totalMinutes <= shiftConfig.evening[1]) {
+      return 'Evening';
+    } else {
+      if (totalMinutes >= shiftConfig.night[0] || totalMinutes <= shiftConfig.night[1]) {
+        return 'Night';
+      }
+    }
+
+    throw new Error(`Time ${fallTime} does not match any shift for home: ${home}`);
+  } catch (error) {
+    console.error('Error processing time:', error);
+    return 'Unknown';
+  }
 }
 
 export function countResidentsWithRecurringFalls(data) {

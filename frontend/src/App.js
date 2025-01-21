@@ -253,20 +253,6 @@ function App() {
           />
 
           <Route
-            path="/goderich"
-            element={
-              <PrivateRoute rolesRequired={['goderich', 'responsive']}>
-                <GenerationsDashboard
-                  name="goderich"
-                  title="Goderich Falls Dashboard"
-                  unitSelectionValues={['allUnits', 'Unit 1', 'Unit 2', 'Unit 3']}
-                  goal={20}
-                />
-              </PrivateRoute>
-            }
-          />
-
-          <Route
             path="/shepherd"
             element={
               <PrivateRoute rolesRequired={['shepherd', 'responsive']}>
@@ -288,7 +274,6 @@ function App() {
                   name="goderich"
                   title="Goderich Place Falls Dashboard"
                   goal={22}
-                
                 />
               </PrivateRoute>
             }

@@ -477,7 +477,7 @@ export default function ManagementDashboard() {
   return (
     <div className={styles.dashboard}>
       <header className={styles.header}>
-        <h1 className={styles.h1}>Schlegel Villages Dashboard</h1>
+        <h1 className={styles.h1}>United Active Living Dashboard</h1>
         <div className={styles['button-container']}>
           <button className={styles['download-button']} onClick={downloadCSV}>
             Download CSV

@@ -23,9 +23,9 @@ const UpdateData = () => {
     { name: 'home2', label: 'Homes2' },
     { name: 'home3', label: 'Homes3' },
     { name: 'home4', label: 'Homes4' },
-    { name: 'generations', label: 'generations' },
+    { name: 'generations', label: 'Generations' },
     { name: 'shepherd', label: 'Shepherd Village' },
-    { name: 'goderich', label: 'goderich' }
+    { name: 'goderich', label: 'Goderich Place' }
   ];
 
   const months = [
@@ -50,6 +50,7 @@ const UpdateData = () => {
 
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
+    console.log('File selected:', file); // Debug log
 
     if (!file || !selectedDashboard || !selectedYear || !selectedMonth) {
       alert('Please ensure all fields are selected and a file is chosen.');
@@ -57,182 +58,237 @@ const UpdateData = () => {
     }
 
     setUploading(true);
+    console.log('Starting upload process for:', selectedDashboard); // Debug log
 
     const dashboardRef = ref(db, `${selectedDashboard}/${selectedYear}/${selectedMonth}`);
 
-    // Special fields list for generations
-    const fieldsWithIsUpdated = selectedDashboard === 'generations' || selectedDashboard === 'goderich' ? [
-      'interventions',
-      'type',
-      'incident_location',
-      'room',
-      'injuries',
-      'witnessed',
-      'fallsThisMonth',
-      'fallsInThreeMonths',
-      'nearMissesInThreeMonths',
-      'cause',
-      'poaContacted',
-      'transfer_to_hospital',
-      'postFallNotesColor',
-      'dayOfTheWeek',
-      'longTermIntervention'
-    ] : [
-      'incidentReport',
-      'physicianRef',
-      'poaContacted',
-      'postFallNotes',
-      'ptRef',
-      'transfer_to_hospital',
-      'hir',
-      'cause',
-      'interventions',
-    ];
+    if (selectedDashboard === 'goderich') {
+      try {
+        console.log('Starting Goderich data upload process...'); // Debug log
+        const snapshot = await get(dashboardRef);
+        const existingData = snapshot.exists() ? snapshot.val() : {};
 
-    try {
-      const snapshot = await get(dashboardRef);
-      const existingData = snapshot.exists() ? snapshot.val() : {};
-
-      remove(dashboardRef).then(() => {
+        // Remove old data
+        await remove(dashboardRef);
         console.log('Previous data removed successfully');
 
+        // Log the file being processed
+        console.log('File to process:', file);
+
+        // Parse CSV with immediate logging
         Papa.parse(file, {
           header: true,
           skipEmptyLines: true,
           complete: async (results) => {
+            console.log('CSV Parse complete. Row count:', results.data.length);
+            console.log('First row sample:', results.data[0]);
+            console.log('Headers found:', results.meta.fields);
+
             const newData = results.data;
+            console.log('Starting row processing...');
 
             for (let i = 0; i < newData.length; i++) {
               const row = newData[i];
+              console.log(`Processing row ${i + 1}/${newData.length}`);
+              
+              const cleanRow = {
+                name: row['Resident Name'] || '',
+                room: row['Suite #'] || '',
+                incident_location: row['Location'] || '',
+                witnessed: row['Witnessed'] || '',
+                time: row['Time'] || '',
+                injury: row['Injury'] || '',
+                cause: row['Cause'] || '',
+                description: row['Description'] || '',
+                interventions: row['Intervention/Response'] || '',
+                riskOfFall: row['Risk of Fall'] || ''
+              };
 
-              if (selectedDashboard === 'generations') {
-                // Special handling for generations
-                const updatedRow = {
-                  date: row.date,
-                  name: row.name,
-                  time: row.time,
-                  room: row.room || '',
-                  injuries: row.injuries || '',
-                  interventions: row.interventions || '',
-                  cause: row.cause || '',
-                  transfer_to_hospital: row.transfer_to_hospital || 'no',
-                  postFallNotesColor: 'default',
-                  witnessed: row.witnessed || 'N',
-                  id: row.id || String(i),
-                  'Falls This Month': row['Falls This Month'] || '',
-                  'Falls in 3 Months': row['Falls in 3 Months'] || '',
-                  'Near Missses in 3 Months': row['Near Missses in 3 Months'] || '',
-                  'Day of the Week': row['Day of the Week'] || '',
-                  type: row.type || '',
-                  incident_location: row.incident_location || '',
-                  longTermIntervention: row.longTermIntervention || 'Click here to add',
-                  poaContacted: row.poaContacted || 'no',
-                  isTransfer_to_hospitalUpdated: 'no',
-                  isPostFallNotesUpdated: 'no'
-                };
+              console.log(`Row ${i + 1} cleaned data:`, cleanRow);
 
-                const rowRef = ref(db, `${selectedDashboard}/${selectedYear}/${selectedMonth}/row-${i}`);
-                await set(rowRef, updatedRow);
-              } else if (selectedDashboard === 'goderich') {
-                // New mapping for Goderich's CSV format
-                const updatedRow = {
-                  name: row['Resident Name'] || '',
-                  room: row['Suite #'] || '',
-                  incident_location: row['Location'] || '',
-                  witnessed: row['Witnessed'] || '',
-                  time: row['Time (Period)'] || '',
-                  injuries: row['Injury'] || '',
-                  cause: row['Cause'] || '',
-                  description: row['Description'] || '',
-                  interventions: row['Intervention/Response'] || '',
-                  type: row['Risk of Fall'] || ''
-                };
-
-                const rowRef = ref(db, `${selectedDashboard}/${selectedYear}/${selectedMonth}/row-${i}`);
-                await set(rowRef, updatedRow);
-              } else {
-                // Original code for other dashboards remains unchanged
-                const { date, name, homeUnit, time, injury, ...otherFields } = row;
-                const updatedRow = { date, name, homeUnit, time, injury, ...otherFields }; // this is why don't work rn 
-
-                for (let j = 0; j < fieldsWithIsUpdated.length; j++) {
-                  const field = fieldsWithIsUpdated[j];
-                  const isUpdatedKey = `is${field.charAt(0).toUpperCase() + field.slice(1)}Updated`;
-
-                  if (!(isUpdatedKey in updatedRow)) {
-                    updatedRow[isUpdatedKey] = 'no';
-                  } else {
-                    updatedRow[isUpdatedKey] = updatedRow[isUpdatedKey].toLowerCase();
-                  }
-                }
-
-                // firebase data
-                const existingEntryKey = Object.keys(existingData).find((key) => {
-                  const existingRow = existingData[key];
-                  return existingRow.date === date && existingRow.name === name && existingRow.time === time;
-                });
-
-                const rowRef = ref(db, `${selectedDashboard}/${selectedYear}/${selectedMonth}/row-${i}`);
-
-                if (existingEntryKey) {
-                  const existingRow = existingData[existingEntryKey];
-
-                  for (let j = 0; j < fieldsWithIsUpdated.length; j++) {
-                    const field = fieldsWithIsUpdated[j];
-                    const isUpdatedKey = `is${field.charAt(0).toUpperCase() + field.slice(1)}Updated`;
-
-                    if (!(isUpdatedKey in existingRow)) {
-                      existingRow[isUpdatedKey] = 'no';
-                    }
-                  }
-
-                  for (let j = 0; j < fieldsWithIsUpdated.length; j++) {
-                    const field = fieldsWithIsUpdated[j];
-                    const isUpdatedKey = `is${field.charAt(0).toUpperCase() + field.slice(1)}Updated`;
-
-                    if (existingRow[isUpdatedKey] === 'yes') {
-                      console.log(`Conflict for field ${field} in row ${i}. Skipping update.`);
-                    } else {
-                      existingRow[field] = updatedRow[field];
-                    }
-                  }
-
-                  console.log('existingRow');
-                  console.log(existingRow);
-
-                  set(rowRef, existingRow)
-                    .then(() => {
-                      console.log(`Row ${i} uploaded successfully`);
-                    })
-                    .catch((error) => {
-                      console.error(`Failed to upload row ${i}:`, error);
-                    });
-                } else {
-                  set(rowRef, updatedRow)
-                    .then(() => {
-                      console.log(`Row ${i} uploaded successfully`);
-                    })
-                    .catch((error) => {
-                      console.error(`Failed to upload row ${i}:`, error);
-                    });
-                }
+              // Save to Firebase
+              const rowRef = ref(db, `${selectedDashboard}/${selectedYear}/${selectedMonth}/row-${i}`);
+              try {
+                await set(rowRef, cleanRow);
+                console.log(`Row ${i + 1} uploaded successfully`);
+              } catch (error) {
+                console.error(`Failed to upload row ${i + 1}:`, error);
               }
             }
 
+            console.log('All rows processed');
             setUploading(false);
             alert('CSV file uploaded successfully!');
           },
           error: (error) => {
-            console.error('Parsing error:', error);
+            console.error('Error parsing CSV:', error);
             setUploading(false);
             alert('Failed to parse the CSV file.');
           },
         });
-      });
-    } catch (error) {
-      console.error('Error during upload:', error);
-      setUploading(false);
-      alert('An error occurred while processing the upload.');
+      } catch (error) {
+        console.error('Upload process error:', error);
+        setUploading(false);
+        alert('An error occurred during the upload process.');
+      }
+    } else {
+      // Special fields list for generations
+      const fieldsWithIsUpdated = selectedDashboard === 'generations' ? [
+        'interventions',
+        'type',
+        'incident_location',
+        'room',
+        'injuries',
+        'witnessed',
+        'fallsThisMonth',
+        'fallsInThreeMonths',
+        'nearMissesInThreeMonths',
+        'cause',
+        'poaContacted',
+        'transfer_to_hospital',
+        'postFallNotesColor',
+        'dayOfTheWeek',
+        'longTermIntervention'
+      ] : [
+        'incidentReport',
+        'physicianRef',
+        'poaContacted',
+        'postFallNotes',
+        'ptRef',
+        'transfer_to_hospital',
+        'hir',
+        'cause',
+        'interventions',
+      ];
+
+      try {
+        const snapshot = await get(dashboardRef);
+        const existingData = snapshot.exists() ? snapshot.val() : {};
+
+        remove(dashboardRef).then(() => {
+          console.log('Previous data removed successfully');
+
+          Papa.parse(file, {
+            header: true,
+            skipEmptyLines: true,
+            complete: async (results) => {
+              const newData = results.data;
+
+              for (let i = 0; i < newData.length; i++) {
+                const row = newData[i];
+
+                if (selectedDashboard === 'generations') {
+                  // Special handling for generations
+                  const updatedRow = {
+                    date: row.date,
+                    name: row.name,
+                    time: row.time,
+                    room: row.room || '',
+                    injuries: row.injuries || '',
+                    interventions: row.interventions || '',
+                    cause: row.cause || '',
+                    transfer_to_hospital: row.transfer_to_hospital || 'no',
+                    postFallNotesColor: 'default',
+                    witnessed: row.witnessed || 'N',
+                    id: row.id || String(i),
+                    'Falls This Month': row['Falls This Month'] || '',
+                    'Falls in 3 Months': row['Falls in 3 Months'] || '',
+                    'Near Missses in 3 Months': row['Near Missses in 3 Months'] || '',
+                    'Day of the Week': row['Day of the Week'] || '',
+                    type: row.type || '',
+                    incident_location: row.incident_location || '',
+                    longTermIntervention: row.longTermIntervention || 'Click here to add',
+                    poaContacted: row.poaContacted || 'no',
+                    isTransfer_to_hospitalUpdated: 'no',
+                    isPostFallNotesUpdated: 'no'
+                  };
+
+                  const rowRef = ref(db, `${selectedDashboard}/${selectedYear}/${selectedMonth}/row-${i}`);
+                  await set(rowRef, updatedRow);
+                } else {
+                  // Original code for other dashboards remains unchanged
+                  const { date, name, homeUnit, time, injury, ...otherFields } = row;
+                  const updatedRow = { date, name, homeUnit, time, injury, ...otherFields }; // this is why don't work rn 
+
+                  for (let j = 0; j < fieldsWithIsUpdated.length; j++) {
+                    const field = fieldsWithIsUpdated[j];
+                    const isUpdatedKey = `is${field.charAt(0).toUpperCase() + field.slice(1)}Updated`;
+
+                    if (!(isUpdatedKey in updatedRow)) {
+                      updatedRow[isUpdatedKey] = 'no';
+                    } else {
+                      updatedRow[isUpdatedKey] = updatedRow[isUpdatedKey].toLowerCase();
+                    }
+                  }
+
+                  // firebase data
+                  const existingEntryKey = Object.keys(existingData).find((key) => {
+                    const existingRow = existingData[key];
+                    return existingRow.date === date && existingRow.name === name && existingRow.time === time;
+                  });
+
+                  const rowRef = ref(db, `${selectedDashboard}/${selectedYear}/${selectedMonth}/row-${i}`);
+
+                  if (existingEntryKey) {
+                    const existingRow = existingData[existingEntryKey];
+
+                    for (let j = 0; j < fieldsWithIsUpdated.length; j++) {
+                      const field = fieldsWithIsUpdated[j];
+                      const isUpdatedKey = `is${field.charAt(0).toUpperCase() + field.slice(1)}Updated`;
+
+                      if (!(isUpdatedKey in existingRow)) {
+                        existingRow[isUpdatedKey] = 'no';
+                      }
+                    }
+
+                    for (let j = 0; j < fieldsWithIsUpdated.length; j++) {
+                      const field = fieldsWithIsUpdated[j];
+                      const isUpdatedKey = `is${field.charAt(0).toUpperCase() + field.slice(1)}Updated`;
+
+                      if (existingRow[isUpdatedKey] === 'yes') {
+                        console.log(`Conflict for field ${field} in row ${i}. Skipping update.`);
+                      } else {
+                        existingRow[field] = updatedRow[field];
+                      }
+                    }
+
+                    console.log('existingRow');
+                    console.log(existingRow);
+
+                    set(rowRef, existingRow)
+                      .then(() => {
+                        console.log(`Row ${i} uploaded successfully`);
+                      })
+                      .catch((error) => {
+                        console.error(`Failed to upload row ${i}:`, error);
+                      });
+                  } else {
+                    set(rowRef, updatedRow)
+                      .then(() => {
+                        console.log(`Row ${i} uploaded successfully`);
+                      })
+                      .catch((error) => {
+                        console.error(`Failed to upload row ${i}:`, error);
+                      });
+                  }
+                }
+              }
+
+              setUploading(false);
+              alert('CSV file uploaded successfully!');
+            },
+            error: (error) => {
+              console.error('Parsing error:', error);
+              setUploading(false);
+              alert('Failed to parse the CSV file.');
+            },
+          });
+        });
+      } catch (error) {
+        console.error('Error during upload:', error);
+        setUploading(false);
+        alert('An error occurred while processing the upload.');
+      }
     }
   };
 
