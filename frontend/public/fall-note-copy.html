@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Incident Report Form | Oxford Living</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.js"></script>
+    <style>
+
+
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+        
+
+
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+        }
+
+
+        .incident-group {
+            border: 1px solid #E0E0E0;
+            border-radius: 8px;
+            padding: 16px;
+            background-color: #f8f9fa;
+            margin-bottom: 16px;
+        }
+
+        .main-category {
+            font-size: 15px;
+            font-weight: 500;
+            color: #1B5E20;
+            margin-bottom: 12px;
+        }
+
+        .subsection-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #2E7D32;
+            margin-bottom: 8px;
+            margin-top: 12px;
+        }
+
+        .subcategory-section {
+            margin-left: 24px;
+            margin-top: 12px;
+            padding-top: 8px;
+        }
+
+        .checkbox-grid-compact {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .witness-status .checkbox-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 6}
+            
+
+        .form-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 20px;
+            opacity: 0;
+            transform: translateY(50px);
+            animation: fadeInUp 1.2s ease forwards;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+        }
+
+        .form-title {
+            color: #2E7D32;
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 40px;
+        }
+
+        .form-label {
+            color: #2E7D32;
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .form-input, .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #E0E0E0;
+            border-radius: 8px;
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 20px;
+            transition: all 0.2s ease;
+            box-sizing: border-box;
+            max-width: 100%;
+        }
+
+        .checkbox-label input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        margin-right: 8px;
+        }
+
+        input[type="datetime-local"].form-input {
+            min-width: 0;
+            width: 100%;
+        }
+
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: #2E7D32;
+            box-shadow: 0 0 0 2px rgba(46, 125, 50, 0.1);
+        }
+
+        .section-title {
+            color: #1B5E20;
+            font-size: 24px;
+            font-weight: 600;
+            margin-top: 32px;
+            margin-bottom: 24px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #E0E0E0;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 24px;
+            width: 100%;
+        }
+
+        .grid-container > div {
+            min-width: 0; /* Prevents flex item overflow */
+        }
+
+        @media (max-width: 768px) {
+            .grid-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .submit-button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 16px 32px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            width: 100%;
+            max-width: 300px;
+            margin: 32px auto 0;
+            display: block;
+        }
+
+        .submit-button:hover {
+            background-color: #45a049;
+        }
+
+        .incident-type-container {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .incident-type-button {
+            flex: 1;
+            padding: 16px;
+            border: 2px solid #4CAF50;
+            border-radius: 8px;
+            background: white;
+            color: #4CAF50;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .incident-type-button.active {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .incident-section {
+            display: none;
+        }
+
+        .incident-section.active {
+            display: block;
+        }
+        
+        .section-subtitle {
+            color: #2E7D32;
+            font-size: 18px;
+            font-weight: 600;
+            margin-top: 24px;
+            margin-bottom: 16px;
+        }
+
+        .incident-type-groups {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .incident-group {
+            border: 1px solid #E0E0E0;
+            border-radius: 8px;
+            padding: 16px;
+            background-color: #f8f9fa;
+            margin-bottom: 16px;
+        }
+
+        .main-category {
+            font-size: 15px;
+            font-weight: 500;
+            color: #2E7D32;
+            margin-bottom: 12px;
+            text-transform: none;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+            margin-bottom: 24px;
+            padding: 12px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .witness-status-section {
+            margin-bottom: 24px;
+            padding: 16px;
+            background-color: white;
+            border: 1px solid #E0E0E0;
+            border-radius: 8px;
+        }
+
+        .subcategory-section {
+            margin-left: 24px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #E0E0E0;
+        }
+
+        .other-incident-container {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .disabled-section {
+            pointer-events: none;
+        }
+
+        .disabled-section h2.section-title,
+        .disabled-section .form-label,
+        .disabled-section input,
+        .disabled-section select,
+        .disabled-section textarea,
+        .disabled-section .checkbox-label,
+        .disabled-section .main-category,
+        .disabled-section .subsection-label {
+            color: #9e9e9e !important;
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .disabled-section input,
+        .disabled-section select,
+        .disabled-section textarea {
+            border-color: #e0e0e0;
+        }
+
+        .disabled-section input[type="checkbox"] {
+            opacity: 0.5;
+        }
+        .other-input {
+            flex: 1;
+            margin-bottom: 0;
+            margin-left: 8px;
+        }
+
+        .checkbox-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .checkbox-label input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+        }
+
+        .vital-signs-container,
+        .pain-assessment {
+            margin-bottom: 24px;
+            padding: 16px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        textarea.form-input {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .checkbox-label input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <div class="card">
+            <h1 class="form-title" style="text-align: center; font-size: 48px;">Incident Report Form</h1>
+            
+            <form id="incidentForm">
+                <div class="basic-details-section">
+                <h2 class="section-title">Basic Details</h2>
+                
+                <div class="form-group">
+                    <label class="form-label">Details of Incident (include factual information provided by the resident):</label>
+                    <textarea class="form-input" name="incidentDetails" style="min-height: 120px;" placeholder="Enter detailed description of the incident"></textarea>
+                </div>
+
+
+                <div class="grid-container">
+                    <div>
+                        <label class="form-label">Date and Time of Incident</label>
+                        <input type="datetime-local" class="form-input" required>
+                    </div>
+                    <div>
+                        <label class="form-label">Resident Name</label>
+                        <input type="text" class="form-input" placeholder="Enter resident's full name" >
+                    </div>
+                    <div>
+                        <label class="form-label">Location</label>
+                        <select class="form-input">
+                            <option value="">Select location</option>
+                            <option value="room">Resident Room</option>
+                            <option value="bathroom">Bathroom</option>
+                            <option value="hallway">Hallway</option>
+                            <option value="common">Common Area</option>
+                            <option value="dining">Dining Room</option>
+                            <option value="outside">Outside</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label">Resident Suite #</label>
+                        <input type="text" class="form-input" placeholder="Enter suite number">
+                    </div>
+                    <div class="witness-status">
+                        <label class="form-label">Incident Status</label>
+                        <div class="flex justify-between gap-6">
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="witnessStatus" value="witnessed"> Witnessed
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="witnessStatus" value="unwitnessed"> Un-witnessed
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="witnessStatus" value="foundOnFloor"> Found on Floor
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="witnessStatus" value="foundOutside"> Found Outside on Grounds
+                            </label>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="form-label">Witness Name</label>
+                        <input type="text" class="form-input" placeholder="Enter witness name if applicable">
+                    </div>
+                    <div>
+                        <label class="form-label">Title/Position</label>
+                        <input type="text" class="form-input" placeholder="Enter witness title/position">
+                    </div>
+                    <div>
+                        <label class="form-label">Telephone Number</label>
+                        <input type="tel" class="form-input" placeholder="Enter contact number">
+                    </div>
+                </div>
+                </div>
+                <div class="incident-type-container">
+                    <button type="button" class="incident-type-button active" data-type="fall" style="font-size: 22px;">Fall Incident</button>
+                    <button type="button" class="incident-type-button" data-type="other" style="font-size: 22px;">Other Incident</button>
+                    <button type="button" class="incident-type-button" data-type="post" style="font-size: 22px;">Post Incident</button>
+                </div>
+
+                
+                <div id="fallSection" class="incident-section active">
+                    <h2 class="section-title">FRAT Fall Information</h2>
+                    
+                    <!-- Injuries Section -->
+                    <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px solid #E0E0E0; margin-bottom: 24px;">
+                        <h3 class="section-subtitle" style="margin-top: 0;">Injuries</h3>
+                        <div class="checkbox-grid" style="grid-template-columns: repeat(3, 1fr); gap: 12px;">
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="injuries" value="none"> No Injuries
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="injuries" value="bleeding"> Bleeding
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="injuries" value="skinTear"> Skin Tear
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="injuries" value="abrasion"> Abrasion / Laceration
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="injuries" value="bruising"> Bruising
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="injuries" value="swelling"> Swelling
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="injuries" value="suspectedFracture"> Suspected Fracture
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="injuries" value="notApplicable"> Not Applicable
+                            </label>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0; margin-top: 16px;">
+                            <label class="form-label">Other Injuries</label>
+                            <textarea class="form-input" name="otherInjuries" placeholder="Describe any other injuries" style="margin-bottom: 0;"></textarea>
+                        </div>
+                    </div>
+
+
+                    <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px solid #E0E0E0; margin-bottom: 24px;">
+                        <h3 class="section-subtitle" style="margin-top: 0;">Probable Cause of Fall(s)</h3>
+                        <div class="grid-container" style="grid-template-columns: repeat(5, 1fr); gap: 16px;">
+                            <div>
+                                <h4 class="subsection-label" style="margin-top: 0;">Environmental Factors</h4>
+                                <div class="checkbox-grid" style="grid-template-columns: 1fr;">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="environmental" value="poorLighting"> Poor lighting
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input class="checkbox-input" type="checkbox" name="environmental" value="furniture"> Furniture in the way
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="environmental" value="pet"> Pet
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="environmental" value="scatterRug"> Scatter rug
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="environmental" value="clutteredArea"> Cluttered area
+                                    </label>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="subsection-label" style="margin-top: 0;">Resident Action</h4>
+                                <div class="checkbox-grid" style="grid-template-columns: 1fr;">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="cause" value="slipped"> Slipped
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="cause" value="tripped"> Tripped
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="cause" value="pushed"> Pushed
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="cause" value="mobileAids"> Improper use of mobility aids
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="cause" value="reach"> Reaching too far
+                                    </label>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="subsection-label" style="margin-top: 0;">Equipment</h4>
+                                <div class="checkbox-grid" style="grid-template-columns: 1fr;">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="equipment" value="wheelchairBrakes"> Wheelchair brakes not engaged
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="equipment" value="mobileAidsUse"> Improper use of a walker or cane
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="equipment" value="instableEquipment"> Loose or unstable medical equipment
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="equipment" value="defectiveEquipment"> Defective or unstable equipment
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="equipment" value="improperlySized"> Assistive devices not adjusted properly
+                                    </label>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="subsection-label" style="margin-top: 0;">Physiological</h4>
+                                <div class="checkbox-grid" style="grid-template-columns: 1fr;">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="cause" value="impairedVision"> Impaired vision
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="cause" value="lossOfBalance"> Loss of balance
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="cause" value="confusion"> Confusion
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="cause" value="newMedication"> New/recent change in medication
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="cause" value="fatigue"> Fatigue or weakness
+                                    </label>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="subsection-label" style="margin-top: 0;">Other</h4>
+                                <div class="checkbox-grid" style="grid-template-columns: 1fr;">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="cause" value="notSure"> Not sure
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="cause" value="notApplicable"> Not applicable
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="cause" value="externalDistraction"> External distractions (e.g., noise)
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="cause" value="unpredictableEvents"> Unpredictable events (e.g., seizures)
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="cause" value="unreportedInterference"> Unreported or unseen external interference
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    
+                        <div class="form-group" style="margin-bottom: 0; margin-top: 16px;">
+                            <label class="form-label">Other Cause</label>
+                            <input type="text" class="form-input" name="otherCause" placeholder="Specify other cause" style="margin-bottom: 0;">
+                        </div>
+                    </div>
+
+
+                    
+                    <!-- Response to Incident Section -->
+                    <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px solid #E0E0E0; margin-bottom: 24px;">
+                        <h3 class="section-subtitle" style="margin-top: 0;">Response to Incident</h3>
+                        <div class="checkbox-grid" style="margin-bottom: 20px;">
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="response" value="assessment"> Head-to-toe assessment completed
+                            </label>
+                        </div>
+                        
+                        <!-- Vital Signs -->
+                        <div style="margin-bottom: 24px;">
+                            <h4 class="form-label" style="font-size: 16px; font-weight: 600; color: #2E7D32; margin-bottom: 16px;">Vital Signs</h4>
+                            <div class="grid-container" style="grid-template-columns: repeat(3, 1fr); gap: 16px;">
+                                <div>
+                                    <label class="form-label">Blood Pressure</label>
+                                    <input type="text" class="form-input" name="bloodPressure">
+                                </div>
+                                <div>
+                                    <label class="form-label">Pulse</label>
+                                    <input type="text" class="form-input" name="pulse">
+                                </div>
+                                <div>
+                                    <label class="form-label">Respiration</label>
+                                    <input type="text" class="form-input" name="respiration">
+                                </div>
+                                <div>
+                                    <label class="form-label">Temperature</label>
+                                    <input type="text" class="form-input" name="temperature">
+                                </div>
+                                <div>
+                                    <label class="form-label">O2 Saturation</label>
+                                    <input type="text" class="form-input" name="o2sat">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Pain Assessment -->
+                        <div style="margin-bottom: 24px;">
+                            <h4 class="form-label" style="font-size: 16px; font-weight: 600; color: #2E7D32; margin-bottom: 16px;">Pain Assessment</h4>
+                            <div class="checkbox-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 16px;">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="painType" value="sharp"> Sharp
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="painType" value="dull"> Dull
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="painType" value="aching"> Aching
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="painType" value="na"> N/A
+                                </label>
+                            </div>
+                            <div class="grid-container" style="grid-template-columns: repeat(2, 1fr); gap: 16px;">
+                                <div>
+                                    <label class="form-label">Pain Intensity (1-10)</label>
+                                    <input type="number" class="form-input" name="painIntensity" min="1" max="10">
+                                </div>
+                                <div>
+                                    <label class="form-label">Pain Location</label>
+                                    <input type="text" class="form-input" name="painLocation">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Notifications -->
+                        <div style="margin-bottom: 24px;">
+                            <h4 class="form-label" style="font-size: 16px; font-weight: 600; color: #2E7D32; margin-bottom: 16px;">Notifications</h4>
+                            <div class="grid-container" style="grid-template-columns: repeat(2, 1fr); gap: 16px;">
+                                <div>
+                                    <label class="form-label">MD Notified (date and time)</label>
+                                    <input type="datetime-local" class="form-input" name="mdNotified">
+                                </div>
+                                <div>
+                                    <label class="form-label">SDM/Family Notified (date and time)</label>
+                                    <input type="datetime-local" class="form-input" name="familyNotified">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="checkbox-label" style="margin-bottom: 16px;">
+                                <input type="checkbox" name="hospitalization"> Hospitalization
+                            </label>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 24px;">
+                            <label class="form-label">Other Response Details</label>
+                            <textarea class="form-input" name="otherResponse" placeholder="Specify other response details"></textarea>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">Follow Up Action/Recommendations Initiated to Prevent Recurrence</label>
+                            <textarea class="form-input" name="followUpAction" rows="4" placeholder="Detail follow-up actions and recommendations" style="margin-bottom: 0;"></textarea>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="submit-button">Submit Report</button>
+                </div>
+          
+                
+
+                <div id="otherSection" class="incident-section">
+                    <h2 class="section-title">Other Incident Information</h2>
+
+                    <div class="incident-type-groups">
+                        <!-- Top Row Incidents -->
+                        <div class="grid-container" style="grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px;">
+                            <div class="incident-group" style="margin-bottom: 0; text-align: center;">
+                                <label class="checkbox-label main-category" style="justify-content: center; font-size: 17px; margin-top: 10px;">
+                                    <input type="checkbox" name="incidentType" value="injury" style="margin-right: 8px;"> Injury
+                                </label>
+                            </div>
+                            <div class="incident-group" style="margin-bottom: 0; text-align: center;">
+                                <label class="checkbox-label main-category" style="justify-content: center; font-size: 17px; margin-top: 10px;">
+                                    <input type="checkbox" name="incidentType" value="elopement" style="margin-right: 8px;"> Elopement
+                                </label>
+                            </div>
+                            <div class="incident-group" style="margin-bottom: 0; text-align: center;">
+                                <label class="checkbox-label main-category" style="justify-content: center; font-size: 17px; margin-top: 10px;">
+                                    <input type="checkbox" name="incidentType" value="fire" style="margin-right: 8px;"> Fire
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Abuse/Neglect -->
+                        <div class="incident-group">
+                            <label class="checkbox-label main-category" style="font-size: 17px;">
+                                <input type="checkbox" name="incidentType" value="abuse" > Abuse/Neglect/Personal Expression of Needs
+                            </label>
+                            <div class="subcategory-section">
+                                <h4 class="subsection-label">Type:</h4>
+                                <div class="grid-container" style="grid-template-columns: repeat(3, 1fr); gap: 8px;">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="abuseType" value="physical"> Physical
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="abuseType" value="verbal"> Verbal
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="abuseType" value="financial"> Financial
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="abuseType" value="sexual"> Sexual
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="abuseType" value="emotional"> Emotional
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="abuseType" value="neglect"> Neglect
+                                    </label>
+                                </div>
+                                <br>
+                                <h4 class="subsection-label">Involved Parties:</h4>
+                                <div class="grid-container" style="grid-template-columns: repeat(3, 1fr); gap: 8px;">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="abuseParties" value="residentToResident"> Resident to Resident
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="abuseParties" value="residentToStaff"> Resident to Staff
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="abuseParties" value="staffToResident"> Staff to Resident
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Death -->
+                        <div class="incident-group">
+                            <label class="checkbox-label main-category" style="font-size: 17px;">
+                                <input type="checkbox" name="incidentType" value="death"> Death
+                            </label>
+                            <div class="subcategory-section">
+                                <div class="grid-container" style="grid-template-columns: repeat(3, 1fr); gap: 8px;">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="deathType" value="expected"> Expected
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="deathType" value="unexpected"> Unexpected
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="deathType" value="maid"> M.A.I.D.
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Other -->
+                        <div class="incident-group" style="display: flex; align-items: center; gap: 16px; padding: 20px;">
+                            <label class="checkbox-label main-category" style="margin: 0; font-size: 16px; font-weight: 600; min-width: 80px;">
+                                <input type="checkbox" name="incidentType" value="other" style="margin-right: 8px;"> Other Incident Type
+                            </label>
+                            <input type="text" class="form-input" name="otherIncidentType" 
+                                   placeholder="Specify other incident type" 
+                                   style="margin: 0; flex: 1; border: 1px solid #e0e0e0; background-color: white;">
+                        </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Follow Up Action/Recommendations Initiated to Prevent Recurrence</label>
+                        <textarea class="form-input" rows="4" placeholder="Provide detailed description of the incident"></textarea>
+                    </div>
+
+                    <button type="submit" class="submit-button">Submit Report</button>
+                </div>
+
+                
+
+                
+                </div>
+
+            <div id="postSection" class="incident-section">
+                <h2 class="section-title">Post Incident Information</h2>
+                
+                <div class="form-group">
+                    <label class="form-label">Select Incident</label>
+                    <select class="form-select" id="incidentSelect" required>
+                        <option value="">Select Resident and Incident Type</option>
+                    </select>
+                </div>
+
+                <div class="post-incident-grid" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+                    <div class="shift-box">
+                        <h3 class="form-label">Day</h3>
+                        <textarea class="form-input" placeholder="Enter day shift notes"></textarea>
+                        <div class="signature-line">
+                            <select class="form-select nurse-select" style="margin-bottom: 10px;" onchange="toggleOtherNurse(this)">
+                                <option value="">Select Nurse</option>
+                                <option value="nurse1">Sarah Johnson, RN</option>
+                                <option value="nurse2">Michael Chen, RPN</option>
+                                <option value="nurse3">Emily Brown, RN</option>
+                                <option value="nurse4">David Wilson, RPN</option>
+                                <option value="nurse5">Jessica Lee, RN</option>
+                                <option value="other">Other</option>
+                            </select>
+                            <input type="text" class="form-input other-nurse" placeholder="Enter nurse name" style="display: none; margin-bottom: 10px;">
+                            <p class="current-date" style="color: #666;"></p>
+                        </div>
+                    </div>
+                
+                    <div class="shift-box">
+                        <h3 class="form-label">Evening</h3>
+                        <textarea class="form-input" placeholder="Enter evening shift notes"></textarea>
+                        <div class="signature-line">
+                            <select class="form-select nurse-select" style="margin-bottom: 10px;" onchange="toggleOtherNurse(this)">
+                                <option value="">Select Nurse</option>
+                                <option value="nurse1">Sarah Johnson, RN</option>
+                                <option value="nurse2">Michael Chen, RPN</option>
+                                <option value="nurse3">Emily Brown, RN</option>
+                                <option value="nurse4">David Wilson, RPN</option>
+                                <option value="nurse5">Jessica Lee, RN</option>
+                                <option value="other">Other</option>
+                            </select>
+                            <input type="text" class="form-input other-nurse" placeholder="Enter nurse name" style="display: none; margin-bottom: 10px;">
+                            <p class="current-date" style="color: #666;"></p>
+                        </div>
+                    </div>
+                
+                    <div class="shift-box">
+                        <h3 class="form-label">Night</h3>
+                        <textarea class="form-input" placeholder="Enter night shift notes"></textarea>
+                        <div class="signature-line">
+                            <select class="form-select nurse-select" style="margin-bottom: 10px;" onchange="toggleOtherNurse(this)">
+                                <option value="">Select Nurse</option>
+                                <option value="nurse1">Sarah Johnson, RN</option>
+                                <option value="nurse2">Michael Chen, RPN</option>
+                                <option value="nurse3">Emily Brown, RN</option>
+                                <option value="nurse4">David Wilson, RPN</option>
+                                <option value="nurse5">Jessica Lee, RN</option>
+                                <option value="other">Other</option>
+                            </select>
+                            <input type="text" class="form-input other-nurse" placeholder="Enter nurse name" style="display: none; margin-bottom: 10px;">
+                            <p class="current-date" style="color: #666;"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-button">Submit Report</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+               
+           
+           
+            </form>
+        </div>
+    </div>
+
+
+    <script>
+        document.querySelectorAll('.incident-type-button').forEach(button => {
+            button.addEventListener('click', function() {
+                // Update buttons
+                document.querySelectorAll('.incident-type-button').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                this.classList.add('active');
+
+                // Update sections
+                const type = this.dataset.type;
+                document.querySelectorAll('.incident-section').forEach(section => {
+                    section.classList.remove('active');
+                });
+                document.getElementById(type + 'Section').classList.add('active');
+
+                // Handle Basic Details section
+                const basicDetailsSection = document.querySelector('.basic-details-section'); // Add this class to your Basic Details section
+                if (type === 'post') {
+                    basicDetailsSection.classList.add('disabled-section');
+                } else {
+                    basicDetailsSection.classList.remove('disabled-section');
+                }
+            });
+        });
+
+        // Populate incident select
+        const residents = [
+            "Joe Smith",
+            "Robert Burns",
+            "Kyle Jack",
+            "Michael Johnson",
+            "John Doe"
+        ];
+
+        const incidentTypes = [
+            "Fall",
+            "Injury",
+            "Elopement",
+            "Fire"
+        ];
+
+        function populateIncidentSelect() {
+            const select = document.getElementById('incidentSelect');
+            const currentDate = new Date();
+            
+            residents.forEach(resident => {
+                incidentTypes.forEach(type => {
+                    const option = document.createElement('option');
+                    option.value = `${resident}-${type}`;
+                    option.textContent = `${resident} - ${type} - ${currentDate.toLocaleDateString()} - ${currentDate.toLocaleTimeString()}`;
+                    select.appendChild(option);
+                });
+            });
+        }
+
+        // Initialize form
+        document.addEventListener('DOMContentLoaded', function() {
+            populateIncidentSelect();
+            
+            // Form submission handler
+            document.getElementById('incidentForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                alert('Form submitted successfully!');
+                this.reset();
+            });
+        });
+
+        function toggleOtherNurse(selectElement) {
+            const otherInput = selectElement.parentNode.querySelector('.other-nurse');
+            if (selectElement.value === 'other') {
+                otherInput.style.display = 'block';
+                otherInput.required = true;
+            } else {
+                otherInput.style.display = 'none';
+                otherInput.required = false;
+                otherInput.value = '';
+            }
+        }
+    </script>
+
+    <script>
+        // Toggle between incident types
+        document.querySelectorAll('.incident-type-button').forEach(button => {
+            button.addEventListener('click', function() {
+                // Update buttons
+                document.querySelectorAll('.incident-type-button').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                this.classList.add('active');
+
+                // Update sections
+                const type = this.dataset.type;
+                document.querySelectorAll('.incident-section').forEach(section => {
+                    section.classList.remove('active');
+                });
+                document.getElementById(type + 'Section').classList.add('active');
+            });
+        });
+
+        // Form submission handling
+        document.getElementById('incidentForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            // Add your form submission logic here
+            alert('Form submitted successfully!');
+            this.reset();
+        });
+
+        function updateCurrentDates() {
+            const currentDate = new Date().toLocaleDateString();
+            document.querySelectorAll('.current-date').forEach(element => {
+                element.textContent = `Date: ${currentDate}`;
+            });
+        }
+
+        // Add this to your existing DOMContentLoaded event listener
+        updateCurrentDates();
+    </script>
+</body>
+</html>
