@@ -163,6 +163,76 @@
             color: white;
         }
 
+         /* Add new styles for review section */
+         .review-section {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .review-header {
+            font-size: 1.5em;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+
+        .review-item {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 30px;
+        }
+
+        .review-header-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+
+        .review-checkbox {
+            width: 20px;
+            height: 20px;
+        }
+
+        .signature-section {
+            margin-left: 35px;
+        }
+
+        .signature-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .signature-dropdown {
+            padding: 8px;
+            min-width: 300px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .date-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-left: 35px;
+        }
+
+        .date-display {
+            font-size: 14px;
+            color: #2c3e50;
+            padding: 8px;
+            background-color: #f8f9fa;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            min-width: 150px;
+        }
+
         @media (max-width: 768px) {
             .incident-details {
                 grid-template-columns: 1fr;
@@ -272,6 +342,57 @@
                     with no verbal complains of pain. Will continue to monitor.
                 </div>
             </div>
+
+        
+        
+            <div class="review-section">
+                <div class="review-header">Reviewed by:</div>
+                
+                <div class="review-item">
+                    <div class="review-header-row">
+                        <input type="checkbox" class="review-checkbox" id="health-manager">
+                        <label for="health-manager">Health and Wellness Manager (Signature)</label>
+                    </div>
+                    <div class="signature-section">
+                        <div class="signature-row">
+                            <label>eSignature:</label>
+                            <select class="signature-dropdown" id="health-manager-signature">
+                                <option value="">Select your name</option>
+                                <option value="Sarah Johnson">Sarah Johnson</option>
+                                <option value="Michael Smith">Michael Smith</option>
+                                <option value="Emily Brown">Emily Brown</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="date-row">
+                        <label>Date:</label>
+                        <span class="date-display" id="health-manager-date"></span>
+                    </div>
+                </div>
+    
+                <div class="review-item">
+                    <div class="review-header-row">
+                        <input type="checkbox" class="review-checkbox" id="general-manager">
+                        <label for="general-manager">General Manager (Signature)</label>
+                    </div>
+                    <div class="signature-section">
+                        <div class="signature-row">
+                            <label>eSignature:</label>
+                            <select class="signature-dropdown" id="general-manager-signature">
+                                <option value="">Select your name</option>
+                                <option value="David Wilson">David Wilson</option>
+                                <option value="Jennifer Lee">Jennifer Lee</option>
+                                <option value="Robert Taylor">Robert Taylor</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="date-row">
+                        <label>Date:</label>
+                        <span class="date-display" id="general-manager-date"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
         </div>
 
     <!-- Abuse/Neglect Incident -->
@@ -574,8 +695,43 @@
     </div>
 
     <script>
-        document.querySelector('.export-btn').addEventListener('click', function() {
+        // Handle export button
+        document.querySelector('.export-btn')?.addEventListener('click', function() {
             window.print();
+        });
+
+        // Function to format date
+        function formatDate(date) {
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        }
+
+        // Handle checkbox changes
+        document.querySelectorAll('.review-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const role = this.id;
+                const dateElement = document.getElementById(`${role}-date`);
+                if (this.checked) {
+                    dateElement.textContent = formatDate(new Date());
+                } else {
+                    dateElement.textContent = '';
+                }
+            });
+        });
+
+        // Handle signature selection
+        document.querySelectorAll('.signature-dropdown').forEach(dropdown => {
+            dropdown.addEventListener('change', function() {
+                const role = this.id.replace('-signature', '');
+                const checkbox = document.getElementById(role);
+                if (this.value) {
+                    checkbox.checked = true;
+                    document.getElementById(`${role}-date`).textContent = formatDate(new Date());
+                }
+            });
         });
     </script>
 </body>
