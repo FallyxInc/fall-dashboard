@@ -47,11 +47,11 @@ function App() {
           ></Route>
           <Route path="/demo-responsive" element={<DemoManagementDashboard></DemoManagementDashboard>}></Route>
           <Route
-            path="/home1"
+            path="/wynford"
             element={
               <Dashboard
-                name="home1"
-                title={'The Home 1 Falls dashboard'}
+                name="wynford"
+                title={'The Wynford Falls dashboard'}
                 unitSelectionValues={['allUnits', 'unit 1', 'unit 2', 'unit 3']}
                 goal={10}
               ></Dashboard>
@@ -266,16 +266,17 @@ function App() {
             }
           />
 
+
           <Route
             path="/goderich"
             element={
-              <PrivateRoute rolesRequired={['goderich', 'responsive']}>
+              
                 <GoderichPlace 
                   name="goderich"
                   title="Goderich Place Falls Dashboard"
                   goal={22}
                 />
-              </PrivateRoute>
+              
             }
           />
         </Routes>

@@ -468,59 +468,12 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
 
   const tableRef = useRef(null);
 
-  const handleSavePDF = async () => {
-    // work no blank but last pages lack
-
-    if (tableRef.current) {
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'px',
-        format: 'a4',
-      });
-      tableRef.current.style.overflowX = 'visible';
-      const pageHeight = pdf.internal.pageSize.height;
-      const pageWidth = pdf.internal.pageSize.width;
-      const totalHeight = tableRef.current.scrollHeight;
-      tableRef.current.scrollTop = totalHeight - pageHeight;
-      const canvas = await html2canvas(tableRef.current, {
-        scale: 2,
-        width: tableRef.current.scrollWidth,
-        height: 1.25 * totalHeight,
-      });
-      // console.log('canvas width');
-      // console.log(canvas.width);
-      // console.log('canvas height');
-      // console.log(canvas.height);
-      const imgData = canvas.toDataURL('image/png');
-      const imgWidth = pageWidth;
-      // const newWindow = window.open();
-      // newWindow.document.write(`<img src="${imgData}" alt="Captured Image"/>`);
-
-      // canvas.height / canvas.width = imgheight / imgwidth
-      // imgheight = canvas.height * imgwidth / canvas.width
-      const imgHeight = (canvas.height * imgWidth) / canvas.width; // 按比例压缩高度
-      let position = 0;
-
-      // Loop to split the canvas and add to each page
-      while (position < imgHeight) {
-        pdf.addImage(imgData, 'PNG', 0, -position, imgWidth, imgHeight);
-
-        position += pageHeight;
-
-        // If the current height has not reached the total image height, add a new page
-        if (position < imgHeight) {
-          pdf.addPage();
-        }
-      }
-      tableRef.current.style.overflowX = 'auto';
-      pdf.save('Falls_Tracking_Table.pdf');
-    }
+  const handleSavePDF = () => {
+    window.open('https://fallyx.com/incident-list', '_blank');
   };
 
   const handleSaveCSV = () => {
-    const csv = Papa.unparse(data);
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    saveAs(blob, 'updated_fall_data.csv');
+    window.open('https://fallyx.com/fall-note', '_blank');
   };
 
   const handleUpdateCSV = async (rowId, newValue, name, changeType) => {
@@ -1066,10 +1019,10 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
         </div>
         <div>
           <button className={styles['download-button']} onClick={handleSaveCSV}>
-            Download as CSV
+            Open New Incident
           </button>
           <button className={styles['download-button']} onClick={handleSavePDF}>
-            Download as PDF
+            Open Incident List
           </button>
         </div>
       </div>
