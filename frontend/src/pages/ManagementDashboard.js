@@ -12,13 +12,13 @@ Chart.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 export default function ManagementDashboard() {
   const navigate = useNavigate();
-  const months = ['10', '11', '12', '01'];
+  const months = ['10', '11', '12', '01', '02'];
   const [showModal, setShowModal] = useState(false);
   const [modalContent, setModalContent] = useState([]);
   const [modalTitle, setModalTitle] = useState('');
   const [fallsTimeRange, setFallsTimeRange] = useState('01');
   const [homesTimeRange, setHomesTimeRange] = useState('01');
-  const [currentMonth, setCurrentMonth] = useState('01');
+  const [currentMonth, setCurrentMonth] = useState('02');
   const [desiredYear, setDesiredYear] = useState(2025); // Set to 2025
   const [desiredMonth, setDesiredMonth] = useState(new Date().getMonth() + 1);
   const [availableYearMonth, setAvailableYearMonth] = useState({});
@@ -60,12 +60,10 @@ export default function ManagementDashboard() {
     await Promise.all(
       homes.map((home) => {
         return new Promise((resolve) => {
-        const homeRef = ref(db, `/${home}/${currentMonth === '01' ? 2025 : 2024}/${currentMonth}`);
-
+          const homeRef = ref(db, `/${home}/${currentMonth === '01' || currentMonth === '02' ? 2025 : 2024}/${currentMonth}`);
 
           onValue(homeRef, (snapshot) => {
             const data = snapshot.val();
-            // Count the number of items (rows) under each home
             dataLengths[home] = data ? Object.keys(data).length : 0;
             resolve();
           });
@@ -73,7 +71,7 @@ export default function ManagementDashboard() {
       })
     );
 
-    return dataLengths; // { niagara: X, millCreek: Y, wellington: Z, iggh: W }
+    return dataLengths;
   };
 
 
@@ -222,6 +220,8 @@ export default function ManagementDashboard() {
   };
 
   useEffect(() => {
+    console.log('Starting injury count effect for month:', currentMonth);
+    
     const homes = ['niagara', 'millCreek', 'wellington', 'iggh', 'bonairltc', 'champlain', 'lancaster', 'oneill', 'vmltc'];
     let injuryCounts = {
       iggh: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0, totalFalls: 0 },
@@ -236,10 +236,21 @@ export default function ManagementDashboard() {
     };
 
     const fetchDataForHome = (home) => {
-      const fallsRef = ref(db, `/${home}/${currentMonth === '01' ? 2025 : 2024}/${currentMonth}`);
+      const year = currentMonth === '01' || currentMonth === '02' ? 2025 : 2024;
+      const path = `/${home}/${year}/${currentMonth}`;
+      const fallsRef = ref(db, path);
+      
+      console.log(`Attempting to fetch data from path: ${path}`); // Log the exact path
+      
       return new Promise((resolve) => {
         onValue(fallsRef, (snapshot) => {
           const data = snapshot.val();
+          console.log(`Raw data for ${home}:`, data); // Log the raw data
+          console.log(`Data exists: ${!!data}`); // Log if data exists
+          console.log(`Data type: ${typeof data}`); // Log the data type
+          if (data) {
+            console.log(`Number of entries: ${Object.keys(data).length}`); // Log number of entries
+          }
           if (data) {
             Object.values(data).forEach((item) => {
               // Increment total falls for this home
@@ -264,6 +275,7 @@ export default function ManagementDashboard() {
                 injuryCounts[home].significantInjury += 1;
               }
             });
+            console.log(`${home} final injury counts:`, injuryCounts[home]);
           }
           resolve();
         });
@@ -393,10 +405,21 @@ export default function ManagementDashboard() {
 
     // LOGIC FOR graph of non-compliance!
     const fetchDataForHome = (home) => {
-      const fallsRef = ref(db, `/${home}/${currentMonth === '01' ? 2025 : 2024}/${currentMonth}`);
+      const year = currentMonth === '01' || currentMonth === '02' ? 2025 : 2024;
+      const path = `/${home}/${year}/${currentMonth}`;
+      const fallsRef = ref(db, path);
+      
+      console.log(`Attempting to fetch data from path: ${path}`); // Log the exact path
+      
       return new Promise((resolve) => {
         onValue(fallsRef, (snapshot) => {
           const data = snapshot.val();
+          console.log(`Raw data for ${home}:`, data); // Log the raw data
+          console.log(`Data exists: ${!!data}`); // Log if data exists
+          console.log(`Data type: ${typeof data}`); // Log the data type
+          if (data) {
+            console.log(`Number of entries: ${Object.keys(data).length}`); // Log number of entries
+          }
           if (data) {
             Object.values(data).forEach((fall) => {
               nonComplianceCounts[home].totalFalls++;
@@ -626,7 +649,7 @@ export default function ManagementDashboard() {
       'December',
     ];
     const monthIndex = parseInt(month, 10) - 1;
-    return `${monthNames[monthIndex]} ${month === '01' ? year + 1 : year}`;
+    return `${monthNames[monthIndex]} ${(month === '01' || month === '02') ? 2025 : 2024}`;
   };
   
 
@@ -817,10 +840,11 @@ export default function ManagementDashboard() {
           height: '40px',
         }}
       >
-        <option value="10">October - 2024</option>
-        <option value="11">November - 2024</option>
-        <option value="12">December - 2024</option>
-        <option value="01">January - 2025</option>
+        <option value="02">February 2025</option>
+        <option value="01">January 2025</option>
+        <option value="12">December 2024</option>
+        <option value="11">November 2024</option>
+        <option value="10">October 2024</option>
       </select>
       <div className={styles['chart-container']}>
         <div className={styles['chart']}>

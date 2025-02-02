@@ -147,9 +147,9 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
       y: {
         beginAtZero: true,
         min: 0,
-        max: 55,
+        max: 70,
         ticks: {
-          stepSize: 5,
+          stepSize: 10,
         },
       },
     },
@@ -647,10 +647,14 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   }, [analysisType, analysisTimeRange, analysisUnit, data, desiredYear]);
 
   const handleYearChange = (e) => {
-    const selectedYear = e.target.value;
+    const selectedYear = parseInt(e.target.value);
     setDesiredYear(selectedYear);
 
-    setDesiredMonth(availableYearMonth[selectedYear][0]);
+    // When year changes, set month to the latest available month for that year
+    const availableMonths = availableYearMonth[selectedYear] || [];
+    if (availableMonths.length > 0) {
+      setDesiredMonth(availableMonths[availableMonths.length - 1]);
+    }
   };
 
   const handleMonthChange = (event) => {
@@ -667,38 +671,41 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
       if (snapshot.exists()) {
         const data = snapshot.val();
         
-        // Get current date info
-        const currentDate = new Date();
-        const currentYear = currentDate.getFullYear();
-        const currentMonth = currentDate.getMonth() + 1; // 1-12
-
-        // Calculate the last 4 months
-        const months = [];
-        for (let i = 0; i < 4; i++) {
-          let month = currentMonth - i;
-          let year = currentYear;
-          
-          if (month <= 0) {
-            month += 12;
-            year -= 1;
-          }
-          
-          // Format month as two digits
-          const monthStr = month.toString().padStart(2, '0');
-          
+        // Get all available years and months from Firebase
+        Object.keys(data).forEach(year => {
           if (!yearMonthMapping[year]) {
             yearMonthMapping[year] = [];
           }
           
-          // Only add if the data exists in Firebase
-          if (data[year] && data[year][monthStr]) {
-            yearMonthMapping[year].push(months_forward[monthStr]);
-          }
-        }
+          // Get all months for this year
+          Object.keys(data[year] || {}).forEach(month => {
+            if (data[year][month]) {
+              yearMonthMapping[year].push(months_forward[month]);
+            }
+          });
+          
+          // Sort months chronologically
+          yearMonthMapping[year].sort((a, b) => {
+            return months_backword[a] - months_backword[b];
+          });
+        });
 
-        console.log('Final year/month mapping:', yearMonthMapping);
+        // Sort years in descending order
+        const sortedYears = Object.keys(yearMonthMapping).sort((a, b) => b - a);
+        const sortedMapping = {};
+        sortedYears.forEach(year => {
+          sortedMapping[year] = yearMonthMapping[year];
+        });
+
+        console.log('Available year/month mapping:', sortedMapping);
+        setAvailableYearMonth(sortedMapping);
+
+        // Always set to the latest available month/year
+        const latestYear = sortedYears[0];
+        const latestMonth = sortedMapping[latestYear][sortedMapping[latestYear].length - 1];
+        setDesiredYear(latestYear);
+        setDesiredMonth(latestMonth);
       }
-      setAvailableYearMonth(yearMonthMapping);
     });
   }, [name]);
 

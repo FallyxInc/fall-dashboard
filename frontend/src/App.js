@@ -190,7 +190,7 @@ function App() {
                   name="lancaster"
                   title="Lancaster LTC Falls Dashboard"
                   unitSelectionValues={['allUnits', 'East', 'North', 'South']}
-                  goal={7}
+                  goal={9}
                 />
               </PrivateRoute>
             }
