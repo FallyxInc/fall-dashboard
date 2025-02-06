@@ -238,20 +238,56 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        .filter-controls {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .filter-btn {
+            background-color: #f0f0f0;
+            border: none;
+            padding: 8px 16px;
+            margin: 0 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn:hover {
+            background-color: #e0e0e0;
+        }
+
+        .filter-btn.active {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .incident-entry.hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
     <div class="incident-container">
         <h1 class="page-title">Incident Reports List:</h1>
 
-        
+        <!-- Add filter controls -->
+        <div class="filter-controls">
+            <button class="filter-btn active" data-type="all">All Incidents</button>
+            <button class="filter-btn" data-type="falls">Falls</button>
+            <button class="filter-btn" data-type="abuse">Abuse/Neglect</button>
+            <button class="filter-btn" data-type="elopement">Elopement</button>
+        </div>
+
         <div class="export-controls">
             <!-- <button class="export-btn" onclick="window.print()">Export as PDF</button> -->
         </div>
 
         <!-- First Fall Incident -->
         <div class="incident-entry">
-            <div class="incident-header">
+            <div class="incident-header falls">
                 <div class="incident-meta">
                     <div class="incident-type">Fall Incident</div>
                     <div class="incident-datetime">January 10, 2025 04:57</div>
@@ -677,6 +713,54 @@
                     <div>SDM/Family Notified: Jan 20, 2025 17:00</div>
                 </div>
             </div>
+
+            <div class="review-section">
+                <div class="review-header">Reviewed by:</div>
+                
+                <div class="review-item">
+                    <div class="review-header-row">
+                        <input type="checkbox" class="review-checkbox" id="health-manager">
+                        <label for="health-manager">Health and Wellness Manager (Signature)</label>
+                    </div>
+                    <div class="signature-section">
+                        <div class="signature-row">
+                            <label>eSignature:</label>
+                            <select class="signature-dropdown" id="health-manager-signature">
+                                <option value="">Select your name</option>
+                                <option value="Sarah Johnson">Sarah Johnson</option>
+                                <option value="Michael Smith">Michael Smith</option>
+                                <option value="Emily Brown">Emily Brown</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="date-row">
+                        <label>Date:</label>
+                        <span class="date-display" id="health-manager-date"></span>
+                    </div>
+                </div>
+
+                <div class="review-item">
+                    <div class="review-header-row">
+                        <input type="checkbox" class="review-checkbox" id="general-manager">
+                        <label for="general-manager">General Manager (Signature)</label>
+                    </div>
+                    <div class="signature-section">
+                        <div class="signature-row">
+                            <label>eSignature:</label>
+                            <select class="signature-dropdown" id="general-manager-signature">
+                                <option value="">Select your name</option>
+                                <option value="David Wilson">David Wilson</option>
+                                <option value="Jennifer Lee">Jennifer Lee</option>
+                                <option value="Robert Taylor">Robert Taylor</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="date-row">
+                        <label>Date:</label>
+                        <span class="date-display" id="general-manager-date"></span>
+                    </div>
+                </div>
+            </div>
         </div>
 
 
@@ -776,6 +860,39 @@
                     checkbox.checked = true;
                     document.getElementById(`${role}-date`).textContent = formatDate(new Date());
                 }
+            });
+        });
+
+        // Handle incident filtering
+        document.querySelectorAll('.filter-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                // Remove active class from all buttons
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                
+                // Add active class to clicked button
+                this.classList.add('active');
+                
+                const filterType = this.dataset.type;
+                
+                // Show/hide incidents based on filter
+                document.querySelectorAll('.incident-entry').forEach(incident => {
+                    if (filterType === 'all') {
+                        incident.classList.remove('hidden');
+                    } else {
+                        const incidentType = incident.querySelector('.incident-type').textContent.toLowerCase();
+                        if (filterType === 'falls' && incidentType.includes('fall')) {
+                            incident.classList.remove('hidden');
+                        } else if (filterType === 'abuse' && incidentType.includes('abuse')) {
+                            incident.classList.remove('hidden');
+                        } else if (filterType === 'elopement' && incidentType.includes('elopement')) {
+                            incident.classList.remove('hidden');
+                        } else {
+                            incident.classList.add('hidden');
+                        }
+                    }
+                });
             });
         });
     </script>

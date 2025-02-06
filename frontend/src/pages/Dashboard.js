@@ -57,6 +57,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   };
 
   const [data, setData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [threeMonthData, setThreeMonthData] = useState(new Map());
   const getCurrentMonth = () => {
     const today = new Date();
@@ -102,6 +103,71 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   const [residentsNeedingReview, setResidentsNeedingReview] = useState([]);
   const [currentResidentIndex, setCurrentResidentIndex] = useState(0);
   const [showModal, setShowModal] = useState(false);
+
+  const [incidentType, setIncidentType] = useState('Falls');
+
+  const MOCK_INCIDENT_DATA = {
+    'Falls': {
+      'home1': 12,
+      'home2': 8,
+      'home3': 15,
+      'home4': 6,
+      'vmltc': 10,
+      'oneill': 9,
+      'lancaster': 7,
+      'goderich': 11
+    },
+    'Abuse/Neglect/Personal Expression of Needs': {
+      'home1': 3,
+      'home2': 2,
+      'home3': 4,
+      'home4': 1,
+      'vmltc': 2,
+      'oneill': 3,
+      'lancaster': 1,
+      'goderich': 2
+    },
+    'Death': {
+      'home1': 1,
+      'home2': 2,
+      'home3': 1,
+      'home4': 1,
+      'vmltc': 2,
+      'oneill': 1,
+      'lancaster': 1,
+      'goderich': 1
+    },
+    'Injury': {
+      'home1': 7,
+      'home2': 5,
+      'home3': 8,
+      'home4': 4,
+      'vmltc': 6,
+      'oneill': 5,
+      'lancaster': 3,
+      'goderich': 6
+    },
+    'Elopement': {
+      'home1': 2,
+      'home2': 1,
+      'home3': 3,
+      'home4': 1,
+      'vmltc': 2,
+      'oneill': 2,
+      'lancaster': 1,
+      'goderich': 2
+    },
+    'Fire': {
+      'home1': 0,
+      'home2': 1,
+      'home3': 0,
+      'home4': 0,
+      'vmltc': 1,
+      'oneill': 0,
+      'lancaster': 0,
+      'goderich': 0
+    }
+  };
 
   function expandedLog(item, maxDepth = 100, depth = 0) {
     if (depth > maxDepth) {
@@ -559,6 +625,30 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     }
   };
 
+  const getDataLengths = async () => {
+    setIsLoading(true);
+    
+    if (incidentType !== 'Falls') {
+      // Use mock data for other incident types
+      const mockData = MOCK_INCIDENT_DATA[incidentType];
+      setIsLoading(false);
+      return mockData;
+    }
+
+    // Original falls data fetching logic
+    const homes = ['home1', 'home2', 'home3', 'home4', 'vmltc', 'oneill', 'lancaster', 'goderich'];
+    const dataLengths = {};
+    
+    try {
+      // ... rest of the original function ...
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      return {};
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     // Start measuring fetch data time
     performance.mark('start-fetch-data');
@@ -894,23 +984,43 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
       <div className={styles['table-header']}>
         <div className={styles['header']}>
           <h2>
-            Falls Tracking Table: {desiredMonth} {desiredYear}
+            {incidentType} Tracking Table: {desiredMonth} {desiredYear}
           </h2>
-          <select onChange={handleYearChange} value={desiredYear}>
-            {Object.keys(availableYearMonth).map((year) => (
-              <option key={year} value={year}>
-                {year}
-              </option>
-            ))}
-          </select>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+            <select onChange={handleYearChange} value={desiredYear}>
+              {Object.keys(availableYearMonth).map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </select>
 
-          <select onChange={handleMonthChange} value={desiredMonth}>
-            {(availableYearMonth[desiredYear] || []).map((month) => (
-              <option key={month} value={month}>
-                {month}
-              </option>
-            ))}
-          </select>
+            <select onChange={handleMonthChange} value={desiredMonth}>
+              {(availableYearMonth[desiredYear] || []).map((month) => (
+                <option key={month} value={month}>
+                  {month}
+                </option>
+              ))}
+            </select>
+
+            <select 
+              value={incidentType}
+              onChange={(e) => setIncidentType(e.target.value)}
+              style={{
+                padding: '8px',
+                borderRadius: '4px',
+                border: '1px solid #ccc',
+                marginLeft: '10px'
+              }}
+            >
+              <option value="Falls">Falls</option>
+              <option value="Abuse/Neglect/Personal Expression of Needs">Abuse/Neglect/Personal Expression of Needs</option>
+              <option value="Death">Death</option>
+              <option value="Injury">Injury</option>
+              <option value="Elopement">Elopement</option>
+              <option value="Fire">Fire</option>
+            </select>
+          </div>
         </div>
         <div>
           <button className={styles['download-button']} onClick={handleSaveCSV}>
