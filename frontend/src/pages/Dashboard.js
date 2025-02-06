@@ -1026,7 +1026,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
       <div className={styles['table-header']}>
         <div className={styles['header']}>
           <h2>
-            {incidentType} Tracking Table: {desiredMonth} {desiredYear}
+            Falls Tracking Table: {desiredMonth} {desiredYear}
           </h2>
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
             <select onChange={handleYearChange} value={desiredYear}>
@@ -1045,23 +1045,6 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
               ))}
             </select>
 
-            <select 
-              value={incidentType}
-              onChange={(e) => setIncidentType(e.target.value)}
-              style={{
-                padding: '8px',
-                borderRadius: '4px',
-                border: '1px solid #ccc',
-                marginLeft: '10px'
-              }}
-            >
-              <option value="Falls">Falls</option>
-              <option value="Abuse/Neglect/Personal Expression of Needs">Abuse/Neglect/Personal Expression of Needs</option>
-              <option value="Death">Death</option>
-              <option value="Injury">Injury</option>
-              <option value="Elopement">Elopement</option>
-              <option value="Fire">Fire</option>
-            </select>
           </div>
         </div>
         <div>

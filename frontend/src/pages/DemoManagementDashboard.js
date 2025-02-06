@@ -19,266 +19,65 @@ export default function ManagementDashboard() {
   const [fallsTimeRange, setFallsTimeRange] = useState('12');
   const [homesTimeRange, setHomesTimeRange] = useState('12');
   const [currentMonth, setCurrentMonth] = useState('12');
-  const [isLoading, setIsLoading] = useState(true);
-  const [incidentType, setIncidentType] = useState('Falls');
 
   const [fallsChartData, setFallsChartData] = useState({
     labels: [],
     datasets: [],
   });
 
+  const [homesChartData, setHomesChartData] = useState({
+    labels: [],
+    datasets: [],
+  });
+
   const [fallsPopUpData, setFallsPopUpData] = useState([]);
+  const [homesPopUpData, setHomesPopUpData] = useState([]);
+  // console.log('hello');
+  // console.log('homesPopUpData');
+  // console.log(homesPopUpData);
   const [dataLengths, setDataLengths] = useState({});
 
-  // Add this mock data near the top of the component
-  const MOCK_INCIDENT_DATA = {
-    'Falls': {
-      'home1': 12,
-      'home2': 8,
-      'home3': 15,
-      'home4': 6,
-      'vmltc': 10,
-      'oneill': 9,
-      'lancaster': 7,
-      'goderich': 11
-    },
-    'Abuse/Neglect/Personal Expression of Needs': {
-      'home1': 3,
-      'home2': 2,
-      'home3': 4,
-      'home4': 1,
-      'vmltc': 2,
-      'oneill': 3,
-      'lancaster': 1,
-      'goderich': 2
-    },
-    'Death': {
-      'home1': 1,
-      'home2': 2,
-      'home3': 1,
-      'home4': 1,
-      'vmltc': 2,
-      'oneill': 1,
-      'lancaster': 1,
-      'goderich': 1
-    },
-    'Injury': {
-      'home1': 7,
-      'home2': 5,
-      'home3': 8,
-      'home4': 4,
-      'vmltc': 6,
-      'oneill': 5,
-      'lancaster': 3,
-      'goderich': 6
-    },
-    'Elopement': {
-      'home1': 2,
-      'home2': 1,
-      'home3': 3,
-      'home4': 1,
-      'vmltc': 2,
-      'oneill': 2,
-      'lancaster': 1,
-      'goderich': 2
-    },
-    'Fire': {
-      'home1': 0,
-      'home2': 1,
-      'home3': 0,
-      'home4': 0,
-      'vmltc': 1,
-      'oneill': 0,
-      'lancaster': 0,
-      'goderich': 0
-    }
-  };
-
   const getDataLengths = async () => {
-    setIsLoading(true);
-    
-    if (incidentType !== 'Falls') {
-      // Use mock data for other incident types
-      const mockData = MOCK_INCIDENT_DATA[incidentType];
-      setIsLoading(false);
-      setDataLengths(mockData);
-      return mockData;
-    }
-
-    const homes = ['home1', 'home2', 'home3', 'home4', 'vmltc', 'oneill', 'lancaster', 'goderich'];
+    const homes = ['home1', 'home2', 'home3', 'home4'];
     const dataLengths = {};
 
-    try {
-      await Promise.all(
-        homes.map((home) => {
-          return new Promise((resolve) => {
-            const year = home === 'goderich' ? '2025' : '2024';
-            const month = home === 'goderich' ? '01' : currentMonth;
-            const homeRef = ref(db, `/${home}/${year}/${month}`);
-            
-            onValue(homeRef, (snapshot) => {
-              const data = snapshot.val();
-              if (data) {
-                if (home === 'goderich') {
-                  const rowCount = Object.keys(data).filter(key => key.startsWith('row-')).length;
-                  dataLengths[home] = rowCount;
-                } else {
-                  dataLengths[home] = Object.keys(data).length;
-                }
-              } else {
-                dataLengths[home] = 0;
-              }
-              resolve();
-            }, {
-              onlyOnce: true
-            });
-          });
-        })
-      );
+    await Promise.all(
+      homes.map((home) => {
+        return new Promise((resolve) => {
+          const homeRef = ref(db, `/${home}/2024/${currentMonth}`); // Reference to the home in Firebase
 
-      setDataLengths(dataLengths);
-      return dataLengths;
-    } catch (error) {
-      console.error('Error fetching data:', error);
-      return {};
-    } finally {
-      setIsLoading(false);
-    }
+          onValue(homeRef, (snapshot) => {
+            const data = snapshot.val();
+            // Count the number of items (rows) under each home
+            dataLengths[home] = data ? Object.keys(data).length : 0;
+            resolve();
+          });
+        });
+      })
+    );
+
+    return dataLengths; // { niagara: X, millCreek: Y, wellington: Z, iggh: W }
   };
 
-  // Modify the useEffect that updates the chart
   useEffect(() => {
     const fetchData = async () => {
-      setIsLoading(true);
       const lengths = await getDataLengths();
-      
-      if (Object.keys(lengths).length > 0) {
-        setDataLengths(lengths);
-        
-        // Update chart data
-        const newData = Object.entries(lengths).map(([home, count]) => ({
-          name: home,
-          value: count
-        }));
-
-        newData.sort((a, b) => b.value - a.value);
-
-        setFallsChartData({
-          labels: newData.map((item) => shortToFull(item.name)),
-          datasets: [
-            {
-              label: `Total ${incidentType}`,
-              data: newData.map((item) => item.value),
-              backgroundColor: 'rgba(76, 175, 80, 0.6)',
-              borderColor: 'rgb(76, 175, 80)',
-              borderWidth: 1,
-              indexAxis: 'x',
-            },
-          ],
-        });
-
-        // Update summary cards data without fall rate for non-Falls incidents
-        const updatedSummaryData = [
-          {
-            value: lengths['home1'],
-            subtitle: 'Wynford',
-            linkTo: '/home1',
-            // Only include fallrate for Falls incident type
-            ...(incidentType === 'Falls' && {
-              fallrate: (lengths['home1'] / HOME_POPULATIONS['home1']) * 100
-            })
-          },
-          {
-            value: lengths['home2'],
-            subtitle: 'Burlington',
-            linkTo: '/home2',
-            ...(incidentType === 'Falls' && {
-              fallrate: (lengths['home2'] / HOME_POPULATIONS['home2']) * 100
-            })
-          },
-          {
-            value: lengths['home3'],
-            subtitle: 'Unionville',
-            linkTo: '/home3',
-            ...(incidentType === 'Falls' && {
-              fallrate: (lengths['home3'] / HOME_POPULATIONS['home3']) * 100
-            })
-          },
-          {
-            value: lengths['home4'],
-            subtitle: 'Watford',
-            linkTo: '/home4',
-            ...(incidentType === 'Falls' && {
-              fallrate: (lengths['home4'] / HOME_POPULATIONS['home4']) * 100
-            })
-          },
-          {
-            value: lengths['vmltc'],
-            subtitle: 'Victoria Manor',
-            linkTo: '/vmltc',
-            ...(incidentType === 'Falls' && {
-              fallrate: (lengths['vmltc'] / HOME_POPULATIONS['vmltc']) * 100
-            })
-          },
-          {
-            value: lengths['oneill'],
-            subtitle: "O'James Centre",
-            linkTo: '/oneill',
-            ...(incidentType === 'Falls' && {
-              fallrate: (lengths['oneill'] / HOME_POPULATIONS['oneill']) * 100
-            })
-          },
-          {
-            value: lengths['lancaster'],
-            subtitle: 'Lancasie Living',
-            linkTo: '/lancaster',
-            ...(incidentType === 'Falls' && {
-              fallrate: (lengths['lancaster'] / HOME_POPULATIONS['lancaster']) * 100
-            })
-          },
-          {
-            value: lengths['goderich'],
-            subtitle: 'Goderich Place',
-            linkTo: '/goderich',
-            ...(incidentType === 'Falls' && {
-              fallrate: (lengths['goderich'] / HOME_POPULATIONS['goderich']) * 100
-            })
-          }
-        ];
-
-        // Only sort by fallrate if we're showing Falls
-        if (incidentType === 'Falls') {
-          updatedSummaryData.sort((a, b) => b.fallrate - a.fallrate);
-        } else {
-          updatedSummaryData.sort((a, b) => b.value - a.value);
-        }
-        
-        setSummaryData(updatedSummaryData);
-      }
-      setIsLoading(false);
+      setDataLengths(lengths);
     };
 
     fetchData();
-  }, [currentMonth, incidentType]);
+  }, [currentMonth]);
 
   const shortToFull = (home) => {
     switch (home) {
       case 'home1':
-        return 'Wynford';
+        return 'Home 1';
       case 'home2':
-        return 'Burlington';
+        return 'Home 2';
       case 'home3':
-        return 'Unionville';
+        return 'Home 3';
       case 'home4':
-        return 'Watford';
-      case 'vmltc':
-        return 'Victoria Manor';
-      case 'oneill':
-        return "O'James Centre";
-      case 'lancaster':
-        return 'Lancasie Living';
-      case 'goderich':
-        return 'Goderich Place';
+        return 'Home 4';
       default:
         return home;
     }
@@ -310,32 +109,19 @@ export default function ManagementDashboard() {
     openModal(locationName, content);
   };
 
-  const updateFallsChart = () => {
-    console.log('Updating chart with dataLengths:', dataLengths); // Debug log
-    
-    // Make sure we have data to work with
-    if (!dataLengths || Object.keys(dataLengths).length === 0) {
-      console.log('No data lengths available');
-      return;
-    }
-
-    const newData = Object.entries(dataLengths).map(([home, count]) => {
-      console.log(`Processing ${home}: ${count} falls`); // Debug each entry
-      return {
-        name: home,
-        value: count
-      };
-    });
+  const updateFallsChart = (injuryCounts) => {
+    const newData = Object.entries(injuryCounts).map(([home, counts]) => ({
+      name: home,
+      value: counts.significantInjury,
+    }));
 
     newData.sort((a, b) => b.value - a.value);
-    console.log('Processed chart data:', newData);
 
-    // Update the chart data state
     setFallsChartData({
       labels: newData.map((item) => shortToFull(item.name)),
       datasets: [
         {
-          label: `Total ${incidentType}`,  // Update label to reflect incident type
+          label: 'Total Significant Injuries',
           data: newData.map((item) => item.value),
           backgroundColor: 'rgba(76, 175, 80, 0.6)',
           borderColor: 'rgb(76, 175, 80)',
@@ -347,17 +133,28 @@ export default function ManagementDashboard() {
   };
 
   useEffect(() => {
-    const homes = ['home1', 'home2', 'home3', 'home4', 'vmltc', 'oneill', 'lancaster', 'goderich'];
+    const homes = ['home1', 'home2', 'home3', 'home4'];
 
     const injuryCounts = {
       home1: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0 },
-      home2: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0 },
-      home3: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0 },
-      home4: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0 },
-      vmltc: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0 },
-      oneill: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0 },
-      lancaster: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0 },
-      goderich: { headInjury: 0, fracture: 0, skinTear: 0, significantInjury: 0 }
+      home2: {
+        headInjury: 0,
+        fracture: 0,
+        skinTear: 0,
+        significantInjury: 0,
+      },
+      home3: {
+        headInjury: 0,
+        fracture: 0,
+        skinTear: 0,
+        significantInjury: 0,
+      },
+      home4: {
+        headInjury: 0,
+        fracture: 0,
+        skinTear: 0,
+        significantInjury: 0,
+      },
     };
 
     const fetchDataForHome = async (home) => {
@@ -367,10 +164,10 @@ export default function ManagementDashboard() {
           const data = snapshot.val();
           if (data) {
             Object.values(data).forEach((item) => {
-              const injury = item.injury || ''; // Add default empty string
-              const hasHeadInjury = injury.includes('head injury') || injury.includes('Head Injury');
-              const hasFracture = injury.includes('fracture') || injury.includes('Fracture');
-              const hasSkinTear = injury.includes('skin tear') || injury.includes('Skin Tear');
+              const lowerCaseInjury = item.injury.toLowerCase();
+              const hasHeadInjury = lowerCaseInjury.includes('head injury');
+              const hasFracture = lowerCaseInjury.includes('fracture');
+              const hasSkinTear = lowerCaseInjury.includes('skin tear');
 
               if (hasHeadInjury) injuryCounts[home].headInjury += 1;
               if (hasFracture) injuryCounts[home].fracture += 1;
@@ -400,7 +197,108 @@ export default function ManagementDashboard() {
       }
 
       setFallsPopUpData(popupData);
-      updateFallsChart();
+      updateFallsChart(injuryCounts);
+    };
+
+    fetchAllData();
+  }, [currentMonth]);
+
+  const updateHomesChart = (nonComplianceCounts) => {
+    const newData = Object.entries(nonComplianceCounts).map(([home, counts]) => ({
+      name: home,
+      totalNonCompliance: counts.poaNotNotified + counts.unwrittenNotes,
+    }));
+
+    newData.sort((a, b) => b.totalNonCompliance - a.totalNonCompliance);
+
+    setHomesChartData({
+      labels: newData.map((item) => shortToFull(item.name)),
+      datasets: [
+        {
+          label: 'Total Non-Compliance',
+          data: newData.map((item) => item.totalNonCompliance),
+          backgroundColor: 'rgba(76, 175, 80, 0.6)',
+          borderColor: 'rgb(76, 175, 80)',
+          borderWidth: 1,
+          indexAxis: 'x',
+        },
+      ],
+    });
+  };
+
+  const onClickHomes = (event, elements) => {
+    if (!elements.length) return;
+
+    const index = elements[0].index;
+    const locationName = homesChartData.labels[index];
+    const homeData = homesPopUpData[locationName];
+
+    const content = [
+      <div style={{ textAlign: 'left', fontSize: '16px' }}>
+        <div style={{ marginLeft: '20px' }}>
+          <div style={{ fontSize: '22px', marginBottom: '10px'}}>
+            <b style={{fontWeight: 'bold',}}>Incidents of Non-Compliance</b>
+          </div>
+          <ul>
+            <li style={{ marginBottom: '8px', fontSize: '19px'}}>POAs Not Notified: {homeData.poaNotNotified}</li>
+            <li style={{ marginBottom: '8px', fontSize: '19px' }}>Unwritten Post-Fall Notes: {homeData.unwrittenNotes}</li>
+          </ul>
+        </div>
+      </div>
+    ];
+    
+    openModal(locationName, content);
+  };
+
+  useEffect(() => {
+    const homes = ['home1', 'home2', 'home3', 'home4'];
+    let nonComplianceCounts = {
+      home1: { poaNotNotified: 0, unwrittenNotes: 0 },
+      home2: { poaNotNotified: 0, unwrittenNotes: 0 },
+      home3: { poaNotNotified: 0, unwrittenNotes: 0 },
+      home4: { poaNotNotified: 0, unwrittenNotes: 0 },
+    };
+
+    const fetchDataForHome = (home) => {
+      const fallsRef = ref(db, `/${home}/2024/${currentMonth}`);
+      return new Promise((resolve) => {
+        onValue(fallsRef, (snapshot) => {
+          const data = snapshot.val();
+          if (data) {
+            Object.values(data).forEach((item) => {
+              const fallDate = new Date(item.date);
+              const currentDate = new Date();
+              const daysDifference = Math.abs(currentDate - fallDate) / (1000 * 60 * 60 * 24);
+
+              // Count POAs not contacted
+              if (item.poaContacted.toLowerCase() !== 'yes') {
+                nonComplianceCounts[home].poaNotNotified += 1;
+              }
+
+              // Count unwritten post-fall notes (if more than 3 days after the fall and postFallNotes < 3)
+              if (daysDifference > 3 && parseInt(item.postFallNotes) < 3) {
+                nonComplianceCounts[home].unwrittenNotes += 1;
+              }
+            });
+          } else {
+            console.warn(`No data found in Firebase for ${home}`);
+          }
+          resolve();
+        });
+      });
+    };
+
+    const fetchAllData = async () => {
+      const allDataPromises = homes.map(fetchDataForHome);
+      await Promise.all(allDataPromises);
+
+      updateHomesChart(nonComplianceCounts);
+      const popupData = {};
+      for (const key in nonComplianceCounts) {
+        const newKey = shortToFull(key);
+        popupData[newKey] = nonComplianceCounts[key];
+      }
+      setHomesPopUpData(popupData);
     };
 
     fetchAllData();
@@ -418,8 +316,6 @@ export default function ManagementDashboard() {
 
   const baseOptions = {
     responsive: true,
-    maintainAspectRatio: true,
-    aspectRatio: 4.5,
     scales: {
       y: {
         beginAtZero: true,
@@ -444,17 +340,38 @@ export default function ManagementDashboard() {
 
   const [summaryData, setSummaryData] = useState([]);
 
-  // Add population constants if not already present
-  const HOME_POPULATIONS = {
-    'home1': 110,  // Need this number
-    'home2': 125,  // Need this number
-    'home3': 111,  // Need this number
-    'home4': 95,   // Need this number
-    'vmltc': 175,  // Need this number
-    'oneill': 110, // Need this number
-    'lancaster': 50, // Need this number
-    'goderich': 100  // Need this number
-  };
+  useEffect(() => {
+    const updatedSummaryData = [
+      {
+        value: dataLengths['home1'],
+        subtitle: 'Home 1',
+        fallrate: (dataLengths['home1'] / 100) * 100, // Sample calculation
+        linkTo: '/home1',
+      },
+      {
+        value: dataLengths['home2'],
+        subtitle: 'Home 2',
+        fallrate: (dataLengths['home2'] / 150) * 100,
+        linkTo: '/home2',
+      },
+      {
+        value: dataLengths['home3'],
+        subtitle: 'Home 3',
+        fallrate: (dataLengths['home3'] / 50) * 100,
+        linkTo: '/home3',
+      },
+      {
+        value: dataLengths['home4'],
+        subtitle: 'Home 4',
+        fallrate: (dataLengths['home4'] / 75) * 100,
+        linkTo: '/home4',
+      },
+    ];
+
+    updatedSummaryData.sort((a, b) => b.fallrate - a.fallrate);
+
+    setSummaryData(updatedSummaryData);
+  }, [dataLengths]);
 
   const logout = () => {
     navigate('/login');
@@ -560,7 +477,7 @@ export default function ManagementDashboard() {
   return (
     <div className={styles.dashboard}>
       <header className={styles.header}>
-        <h1 className={styles.h1}>Delmanor's Incident Dashboard</h1>
+        <h1 className={styles.h1}>United Active Living Dashboard</h1>
         <div className={styles['button-container']}>
           <button className={styles['download-button']} onClick={downloadCSV}>
             Download CSV
@@ -570,54 +487,56 @@ export default function ManagementDashboard() {
           </button>
         </div>
       </header>
+      <select
+        value={currentMonth}
+        onChange={(e) => {
+          setCurrentMonth(e.target.value);
+        }}
+        style={{
+          fontSize: '16px',
+          padding: '10px',
+          height: '40px',
+        }}
+      >
+        <option value="10">October</option>
+        <option value="11">November</option>
+        <option value="12">December</option>
+      </select>
       <div className={styles['chart-container']}>
         <div className={styles['chart']}>
-          <h2>Total Incidents by Home</h2>
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '20px' }}>
-            <select
-              value={currentMonth}
-              onChange={(e) => {
-                setCurrentMonth(e.target.value);
-              }}
-              style={{
-                fontSize: '16px',
-                padding: '10px',
-                height: '40px',
-              }}
-            >
-              <option value="10">October</option>
-              <option value="11">November</option>
-              <option value="12">December</option>
-            </select>
+          <h2 id="fallsHeader">Falls with significant injury</h2>
+          {/* <select
+            id="fallsTimeRange"
+            value={fallsTimeRange}
+            className={styles.select}
+            onChange={(e) => {
+              setFallsTimeRange(e.target.value);
+            }}
+          >
+            <option value="12">Current Month</option>
+            <option value="11">November 2024</option>
+          </select> */}
+          {fallsChartData.datasets.length > 0 && <Bar data={fallsChartData} options={createOptions(onClickFalls)} />}
+        </div>
 
-            <select 
-              value={incidentType}
-              onChange={(e) => setIncidentType(e.target.value)}
-              style={{
-                fontSize: '16px',
-                padding: '10px',
-                height: '40px',
-              }}
-            >
-              <option value="Falls">Falls</option>
-              <option value="Abuse/Neglect/Personal Expression of Needs">Abuse/Neglect/Personal Expression of Needs</option>
-              <option value="Death">Death</option>
-              <option value="Injury">Injury</option>
-              <option value="Elopement">Elopement</option>
-              <option value="Fire">Fire</option>
-            </select>
-          </div>
-          {isLoading ? (
-            <div>Loading data...</div>
-          ) : (
-            fallsChartData.datasets.length > 0 && 
-            <Bar data={fallsChartData} options={createOptions(onClickFalls)} />
-          )}
+        <div className={styles['chart']}>
+          <h2 id="homesHeader">Number of incidents of non-compliance</h2>
+          {/* <select
+            id="homesTimeRange"
+            value={homesTimeRange}
+            onChange={(e) => {
+              setHomesTimeRange(e.target.value);
+            }}
+          >
+            <option value="12">Current Month</option>
+            <option value="11">November 2024</option>
+          </select> */}
+          {homesChartData.datasets.length > 0 && <Bar data={homesChartData} options={createOptions(onClickHomes)} />}
         </div>
       </div>
 
       <div className={styles['summary-container']}>
-        <h2>Data Summary</h2>
+        <h2>Fall Summary</h2>
         <div className={styles['summary-cards']}>
           {summaryData.map((item, index) => (
             <SummaryCard
