@@ -585,6 +585,9 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
 
         if (targetRowKey) {
           const rowRef = child(collectionRef, targetRowKey);
+          const currentRowData = rows[targetRowKey];
+
+          // Proceed with update only if not previously updated or value is different
           let updates = {};
 
           switch (changeType) {
@@ -610,9 +613,26 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
               console.error('Invalid changeType');
               return;
           }
+          // Check if the current column has been updated before
+          const updateKey = Object.keys(updates)[1]; // This will be the isUpdated key;
+          const hasBeenUpdated = currentRowData[updateKey] === 'yes';
 
-          // Apply the updates
+          // If the column has been updated, only allow changes if the new value is different
+          if (hasBeenUpdated && currentRowData[changeType] === newValue) {
+            return; // No change needed
+          }
+
           await update(rowRef, updates);
+          console.log(`Row with id ${index} updated successfully.`);
+
+          // Refresh local state to reflect changes
+          const updatedData = data.map(item => 
+            item.id === String(index) 
+              ? { ...item, [changeType]: newValue, [updateKey]: 'yes' } 
+              : item
+          );
+          setData(updatedData);
+
           console.log(`Row with id ${index} updated successfully.`);
         } else {
           console.error(`Row with id ${index} not found.`);
@@ -735,6 +755,28 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     updateAnalysisChart();
     // console.log('Analysis Chart');
   }, [analysisType, analysisTimeRange, analysisUnit, data, desiredYear]);
+
+  useEffect(() => {
+    if (data.length > 0) {
+      const processedData = data.map((item, index) => {
+        
+        // Determine color based on post-fall notes count and existing update status
+        const postFallNotesColor = 
+          item.isPostFallNotesUpdated !== 'yes' && item.postFallNotes < 3 ? 'red' : 'inherit';
+        
+        return {
+          ...item,
+          postFallNotesColor,
+        };
+      });
+  
+      // Only update if there's a change to prevent unnecessary re-renders
+      const dataChanged = JSON.stringify(processedData) !== JSON.stringify(data);
+      if (dataChanged) {
+        setData(processedData);
+      }
+    }
+  }, [data]);
 
   const handleYearChange = (e) => {
     const selectedYear = parseInt(e.target.value);
@@ -1054,39 +1096,45 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
         </thead>
         <tbody id="fallsTableBody">
           {data.map((item, i) => (
-            <tr key={i}>
+            <tr 
+              style={{ 
+                backgroundColor: item.cause === 'No Fall Note' ? '#f8b9c6' : 'inherit' 
+              }}
+              key={i}
+            >
               <td style={{ whiteSpace: 'nowrap', fontSize: '16px' }}>{item.date}</td> {/* Increased font size */}
               <td style={{ fontSize: '16px' }}>{item.name}</td>
               <td style={{ fontSize: '16px' }}>{item.time}</td>
               <td style={{ fontSize: '16px' }}>{item.location || item.incident_location}</td>
               <td style={{ fontSize: '16px' }}>{item.homeUnit || item.room}</td>
               {/* <td style={{ fontSize: '16px' }}>{item.cause}</td> */}
-              <td style={{ fontSize: '16px', color: item.isCauseUpdated === 'yes' ? 'green' : 'inherit' }}>
+              <td style={{ fontSize: '16px', backgroundColor: item.isCauseUpdated === 'yes' ? 'rgba(76, 175, 80, 0.3)' : 'inherit' }}>
                 {item.cause}
                 <br />
                 <button onClick={() => handleEditCauseOfFall(i)}>Edit</button>
               </td>
               <td
-                style={{
-                  fontSize: '16px',
-                  color: item.isInterventionsUpdated === 'yes' ? 'green' : 'inherit',
+                style={{ 
+                  fontSize: '16px', 
+                  backgroundColor: item.isInterventionsUpdated === 'yes' ? 'rgba(76, 175, 80, 0.3)' : 'inherit' 
                 }}
               >
                 {item.interventions}
                 <br></br>
                 <button onClick={() => handleEditIntervention(i)}>Edit</button>
               </td>
-              <td style={{ fontSize: '16px' }}>
+              <td style={{ fontSize: '16px', backgroundColor: item.isHirUpdated === 'yes' ? 'rgba(76, 175, 80, 0.3)' : 'inherit' }}>
                 <select
-                  value={item.hir === 'yes' || item.hir === 'Yes' ? 'Yes' : item.hir === 'no' || item.hir === 'No' ? 'No' : item.hir}
+                  value={item.hir === 'yes' || item.hir === 'Yes' ? 'Yes' : item.hir === 'no' || item.hir === 'No' ? 'No' : item.hir === 'not applicable' || item.hir === 'Not Applicable' ? 'Not Applicable' : item.hir}
                   onChange={(e) => handleUpdateCSV(data[i].id, e.target.value, name, 'hir')}
                 >
                   <option value="Yes">Yes</option>
                   <option value="No">No</option>
+                  <option value="Not Applicable">Not Applicable</option>
                 </select>
               </td>
               <td style={{ fontSize: '16px' }}>{item.injury || item.injuries}</td>
-              <td style={{ fontSize: '16px' }}>
+              <td style={{ fontSize: '16px', backgroundColor: item.isHospitalUpdated === 'yes' ? 'rgba(76, 175, 80, 0.3)' : 'inherit' }}>
                 <select
                   value={
                     (item.transfer_to_hospital) === 'yes' || 
@@ -1103,7 +1151,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                   <option value="No">No</option>
                 </select>
               </td>
-              <td style={{ fontSize: '16px' }}>
+              <td style={{ fontSize: '16px', backgroundColor: item.isPtRefUpdated === 'yes' ? 'rgba(76, 175, 80, 0.3)' : 'inherit' }}>
                 <select
                   value={item.ptRef === 'yes' || item.ptRef === 'Yes' ? 'Yes' : item.ptRef === 'no' || item.ptRef === 'No' ? 'No' : item.ptRef}
                   onChange={(e) => handleUpdateCSV(data[i].id, e.target.value, name, 'ptRef')}
@@ -1112,7 +1160,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                   <option value="No">No</option>
                 </select>
               </td>
-              <td style={{ fontSize: '16px' }}>
+              <td style={{ fontSize: '16px', backgroundColor: item.isPhysicianRefUpdated === 'yes' ? 'rgba(76, 175, 80, 0.3)' : 'inherit' }}>
                 <select
                   value={item.physicianRef === 'yes' || item.physicianRef === 'Yes'
                     ? 'Yes'
@@ -1126,7 +1174,11 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                   <option value="N/A">N/A</option>
                 </select>
               </td>
-              <td className={item.poaContacted === 'No' ? styles.cellRed : ''} style={{ fontSize: '16px' }}>
+              <td className={item.poaContacted === 'no' ? styles.cellRed : ''} 
+                style={{ 
+                  fontSize: '16px', 
+                }}
+              >
                 <select
                   value={item.poaContacted === 'yes' || item.poaContacted === 'Yes'
                     ? 'Yes'
@@ -1139,7 +1191,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                   <option value="No">No</option>
                 </select>
               </td>
-              <td style={{ fontSize: '16px' }}>
+              <td style={{ fontSize: '16px', backgroundColor: item.isIncidentReportUpdated === 'yes' ? 'rgba(76, 175, 80, 0.3)' : 'inherit' }}>
                 <select
                   value={
                     item.incidentReport === 'yes' || item.incidentReport === 'Yes'
