@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profit Calculator</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <style>
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-4">
+    <div class="max-w-4xl mx-auto bg-white rounded-lg shadow">
+        <div class="p-6">
+            <h1 class="text-2xl font-bold mb-6">Pricing Calculator Per Home</h1>
+            
+            <!-- Value Based Pricing Section -->
+            <div class="space-y-6">
+                <div>
+                    <h4 class="font-medium mb-2" style="font-size: 30px;">Value Based Pricing</h4>
+                    <div>
+                        <div class="grid grid-cols-2 gap-4 mb-2">
+                            <div>
+                                <label class="block text-sm">Nursing/Wellness Manager Hourly Rate ($)</label>
+                                <input 
+                                    type="number"
+                                    id="nursingRate"
+                                    value="45.50"
+                                    onInput="updateCalculations()"
+                                    class="w-full border rounded p-2"
+                                >
+                            </div>
+                            <div>
+                                <label class="block text-sm">Hours Saved</label>
+                                <input 
+                                    type="number"
+                                    id="nursingHours"
+                                    value="6"
+                                    onInput="updateCalculations()"
+                                    class="w-full border rounded p-2"
+                                >
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="grid grid-cols-2 gap-4 mb-2">
+                            <div>
+                                <label class="block text-sm">Executive Staff Hourly Rate ($)</label>
+                                <input 
+                                    type="number"
+                                    id="executiveRate"
+                                    value="53.00"
+                                    onInput="updateCalculations()"
+                                    class="w-full border rounded p-2"
+                                >
+                            </div>
+                            <div>
+                                <label class="block text-sm">Hours Saved</label>
+                                <input 
+                                    type="number"
+                                    id="executiveHours"
+                                    value="1"
+                                    onInput="updateCalculations()"
+                                    class="w-full border rounded p-2"
+                                >
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <div class="grid grid-cols-2 gap-4 mb-2">
+                            <div>
+                                <label class="block text-sm">Intangibles Value ($)</label>
+                                <input 
+                                    type="number"
+                                    id="intangiblesRate"
+                                    value="50.00"
+                                    onInput="updateCalculations()"
+                                    class="w-full border rounded p-2"
+                                >
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Value Summary Section -->
+                <div class="bg-purple-50 p-6 rounded-lg mb-6">
+                    <h3 class="text-2xl font-bold mb-4">How Much Value is Being Delivered?</h3>
+                    <div class="grid grid-cols-2 gap-8">
+                        <div class="bg-white p-6 rounded-lg shadow-lg">
+                            <h4 class="text-xl font-semibold mb-2 text-purple-800">Hours Saved Value</h4>
+                            <p class="text-4xl font-bold text-purple-600">$<span id="totalHoursValue">326.00</span></p>
+                            <p class="text-sm text-gray-600 mt-2">Total Hours Saved: <span id="totalHoursSaved">7</span></p>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-lg">
+                            <h4 class="text-xl font-semibold mb-2 text-purple-800">Total Value with Intangibles</h4>
+                            <p class="text-4xl font-bold text-purple-600">$<span id="finalValue">376.00</span></p>
+                            <p class="text-sm text-gray-600 mt-2">Intangibles Added: $<span id="intangiblesValue">50.00</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-6">
+                <!-- Costs Section -->
+                <div>
+                    <!-- Monthly Recurring Costs -->
+                    <div class="mb-6">
+                        <h4 class="font-medium mb-2" style="font-size: 30px;">Monthly People Costs</h4>
+                        <div>
+                            <div class="grid grid-cols-2 gap-4 mb-2">
+                                <div>
+                                    <label class="block text-sm">Customer Support Hourly Rate ($)</label>
+                                    <input 
+                                        type="number"
+                                        id="supportRate"
+                                        value="30"
+                                        onInput="updateCalculations()"
+                                        class="w-full border rounded p-2"
+                                    >
+                                </div>
+                                <div>
+                                    <label class="block text-sm">Hours</label>
+                                    <input 
+                                        type="number"
+                                        id="supportHours"
+                                        value="2.6"
+                                        onInput="updateCalculations()"
+                                        class="w-full border rounded p-2"
+                                    >
+                                </div>
+                            </div>
+                        </div>
+            
+                        <div>
+                            <div class="grid grid-cols-2 gap-4 mb-2">
+                                <div>
+                                    <label class="block text-sm">Human Data Scraper Hourly Rate ($)</label>
+                                    <input 
+                                        type="number"
+                                        id="scrapeRate"
+                                        value="34.50"
+                                        onInput="updateCalculations()"
+                                        class="w-full border rounded p-2"
+                                    >
+                                </div>
+                                <div>
+                                    <label class="block text-sm">Hours</label>
+                                    <input 
+                                        type="number"
+                                        id="scrapeHours"
+                                        value="1"
+                                        onInput="updateCalculations()"
+                                        class="w-full border rounded p-2"
+                                    >
+                                </div>
+                            </div>
+                        </div>
+                        <br>
+                        <h4 class="font-medium mb-2" style="font-size: 30px;">Monthly Tech Costs</h4>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm">Database & Hosting</label>
+                                <input 
+                                    type="number"
+                                    id="database"
+                                    value="20.00"
+                                    class="w-full border rounded p-2"
+                                >
+                            </div>
+                            <div>
+                                <label class="block text-sm">API Costs</label>
+                                <input 
+                                    type="number"
+                                    id="api"
+                                    value="105.00"
+                                    class="w-full border rounded p-2"
+                                >
+                            </div>
+                            <div>
+                                <label class="block text-sm">OpenAI</label>
+                                <input 
+                                    type="number"
+                                    id="openai"
+                                    value="25.00"
+                                    class="w-full border rounded p-2"
+                                >
+                            </div>
+                            <div>
+                                <label class="block text-sm">MedStack/Security</label>
+                                <input 
+                                    type="number"
+                                    id="medstack"
+                                    value="60.00"
+                                    class="w-full border rounded p-2"
+                                >
+                            </div>
+                        </div>
+                        <p class="text-sm font-medium mt-2">Total Monthly Recurring: $<span id="monthlyRecurringTotal">0</span></p>
+                    </div>
+
+                    <!-- Upfront Costs -->
+                    <div>
+                        <h4 class="font-medium mb-2" style="font-size: 30px;">Upfront Costs (per user)</h4>
+                        <div class="space-y-4">
+                            <div>
+                                <h5 class="font-medium">Backend Customization</h5>
+                                <div class="grid grid-cols-2 gap-4 mb-2">
+                                    <div>
+                                        <label class="block text-sm">Hourly Rate ($)</label>
+                                        <input 
+                                            type="number"
+                                            id="backendRate"
+                                            value="44.51"
+                                            class="w-full border rounded p-2"
+                                        >
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm">Hours</label>
+                                        <input 
+                                            type="number"
+                                            id="backendHours"
+                                            value="6"
+                                            class="w-full border rounded p-2"
+                                        >
+                                    </div>
+                                </div>
+                                <p class="text-sm font-medium">Total: $<span id="backendTotal">267.06</span></p>
+                            </div>
+
+                            <div>
+                                <h5 class="font-medium">UI/UX Customization</h5>
+                                <div class="grid grid-cols-2 gap-4 mb-2">
+                                    <div>
+                                        <label class="block text-sm">Hourly Rate ($)</label>
+                                        <input 
+                                            type="number"
+                                            id="uiuxRate"
+                                            value="44.51"
+                                            class="w-full border rounded p-2"
+                                        >
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm">Hours</label>
+                                        <input 
+                                            type="number"
+                                            id="uiuxHours"
+                                            value="6"
+                                            class="w-full border rounded p-2"
+                                        >
+                                    </div>
+                                </div>
+                                <p class="text-sm font-medium">Total: $<span id="uiuxTotal">267.06</span></p>
+                            </div>
+                        </div>
+                        <p class="text-sm font-medium mt-2">Total Upfront: $<span id="totalUpfront">534.12</span></p>
+                    </div>
+                </div>
+
+                <div class="bg-purple-50 p-6 rounded-lg mb-6">
+                    <h3 class="text-2xl font-bold mb-4">My Total Costs</h3>
+                    <div class="grid grid-cols-2 gap-8">
+                        <div class="bg-white p-6 rounded-lg shadow-lg">
+                            <h4 class="text-xl font-semibold mb-2 text-purple-800">Monthly Cost</h4>
+                            <p class="text-4xl font-bold text-purple-600">$<span id="totalMonthlyCostSummary">0</span></p>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-lg">
+                            <h4 class="text-xl font-semibold mb-2 text-purple-800">Upfront Cost</h4>
+                            <p class="text-4xl font-bold text-purple-600">$<span id="totalUpfrontCostSummary">0</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pricing Recommendations Section -->
+        <div class="bg-green-50 p-6 rounded-lg mb-6">
+            <h3 class="text-2xl font-bold mb-4">How Much Should I Charge?</h3>
+            <div class="mb-6">
+                <label class="block text-lg font-medium mb-2">Desired Profit Margin (%)</label>
+                <input 
+                    type="number"
+                    id="profitMargin"
+                    value="100"
+                    class="w-32 border rounded p-2 text-lg"
+                >
+            </div>
+            
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <h4 class="text-2xl font-bold mb-4">You Should Charge:</h4>
+                <div class="grid grid-cols-2 gap-8">
+                    <div>
+                        <p class="text-lg font-medium text-gray-600">One-Time Setup Fee:</p>
+                        <p class="text-3xl font-bold text-green-600 mb-2">$<span id="recommendedUpfrontPrice">0</span></p>
+                        <p class="text-sm text-gray-500">Your profit will be: $<span id="upfrontProfit">0</span></p>
+                    </div>
+                    <div>
+                        <p class="text-lg font-medium text-gray-600">Monthly Fee:</p>
+                        <p class="text-3xl font-bold text-green-600 mb-2">$<span id="recommendedMonthlyPrice">0</span></p>
+                        <p class="text-sm text-gray-500">Your profit will be: $<span id="monthlyProfit">0</span></p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-gray-50 p-4 rounded-lg mt-4">
+                <p class="text-sm text-gray-600">* These prices are calculated based on your costs plus the profit margin you specified above.</p>
+            </div>
+        </div>
+    </div>
+
+    
+
+    <script>
+        // Function to get numeric value from input
+        function getValue(id) {
+            const element = document.getElementById(id);
+            if (!element) {
+                console.warn(`Element with id ${id} not found`);
+                return 0;
+            }
+            return parseFloat(element.value) || 0;
+        }
+    
+        // Function to update calculations
+        function updateCalculations() {
+            try {
+                // Calculate support total
+                const supportTotal = getValue('supportRate') * getValue('supportHours');
+                
+                // Calculate scraper total
+                const scrapeTotal = getValue('scrapeRate') * getValue('scrapeHours');
+                
+                // Sum up all monthly tech costs
+                const techCosts = getValue('database') + getValue('api') + 
+                                getValue('openai') + getValue('medstack');
+                
+                // Calculate total monthly recurring
+                const monthlyRecurring = supportTotal + scrapeTotal + techCosts;
+                
+                // Update the monthly recurring total immediately
+                const monthlyRecurringElement = document.getElementById('monthlyRecurringTotal');
+                if (monthlyRecurringElement) {
+                    monthlyRecurringElement.textContent = monthlyRecurring.toFixed(2);
+                }
+                
+                // Upfront costs
+                const backendTotal = getValue('backendRate') * getValue('backendHours');
+                const uiuxTotal = getValue('uiuxRate') * getValue('uiuxHours');
+                const totalUpfront = backendTotal + uiuxTotal;
+                
+                // Value-based calculations
+                const nursingValue = getValue('nursingRate') * getValue('nursingHours');
+                const executiveValue = getValue('executiveRate') * getValue('executiveHours');
+                const intangiblesValue = getValue('intangiblesRate');
+                
+                const totalHoursValue = nursingValue + executiveValue;
+                const totalHoursSaved = getValue('nursingHours') + getValue('executiveHours');
+                const finalValue = totalHoursValue + intangiblesValue;
+                
+                // Get profit margin
+                const profitMargin = getValue('profitMargin') / 100;
+    
+                // Calculate monthly costs and recommended prices
+                const totalMonthlyCosts = monthlyRecurring;
+                const recommendedMonthlyPrice = totalMonthlyCosts * (1 + profitMargin);
+                const monthlyProfit = recommendedMonthlyPrice - totalMonthlyCosts;
+    
+                // Calculate upfront costs and recommended prices
+                const totalUpfrontCosts = totalUpfront;
+                const recommendedUpfrontPrice = totalUpfrontCosts * (1 + profitMargin);
+                const upfrontProfit = recommendedUpfrontPrice - totalUpfrontCosts;
+    
+                // Update all displays
+                const updates = {
+                    'backendTotal': backendTotal,
+                    'uiuxTotal': uiuxTotal,
+                    'totalUpfront': totalUpfront,
+                    'finalMonthlyCosts': totalMonthlyCosts,
+                    'finalUpfrontCosts': totalUpfrontCosts,
+                    'recommendedMonthlyPrice': recommendedMonthlyPrice,
+                    'recommendedUpfrontPrice': recommendedUpfrontPrice,
+                    'monthlyProfit': monthlyProfit,
+                    'upfrontProfit': upfrontProfit,
+                    'totalMonthlyCostSummary': totalMonthlyCosts,    
+                    'totalUpfrontCostSummary': totalUpfrontCosts,
+                    'totalHoursValue': totalHoursValue,
+                    'totalHoursSaved': totalHoursSaved,
+                    'intangiblesValue': intangiblesValue,
+                    'finalValue': finalValue
+                };
+    
+                Object.entries(updates).forEach(([id, value]) => {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        // Don't use decimals for hours saved count
+                        if (id === 'totalHoursSaved') {
+                            element.textContent = value.toString();
+                        } else {
+                            element.textContent = value.toFixed(2);
+                        }
+                    }
+                });
+    
+            } catch (error) {
+                console.error('Error in calculations:', error);
+            }
+        }
+    
+        // Wait for DOM to be fully loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add event listeners to all inputs
+            document.querySelectorAll('input').forEach(input => {
+                input.addEventListener('input', updateCalculations);
+            });
+    
+            // Initial calculation
+            updateCalculations();
+        });
+    </script>
+
+</body>
+</html>

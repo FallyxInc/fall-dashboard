@@ -1,0 +1,407 @@
+@use '../utils' as *;
+
+  /*
+ ::::::::::::::::::::::::::
+  OTHERS AREA CSS
+ ::::::::::::::::::::::::::
+ */
+
+// === solution sytle 2 ===
+
+.solution {
+  .item-box {
+    display: flex;
+    align-items: start;
+    margin-top: 30px;
+    .icon {
+      margin-right: 20px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 60px;
+      background-color: #a1e93418;
+      transition: all .4s;
+      img {
+        height: auto;
+        transition: all .4s;
+      }
+    }
+
+    &:hover {
+      .icon {
+        background-color: var(--ztc-bg-main-bg-4);
+        transition: all .4s;
+
+        img {
+          filter: brightness(0);
+          transition: all .4s;
+        }
+      }
+    }
+  }
+
+  .solution-images {
+    text-align: center;
+    height: 500px;
+    position: relative;
+
+    @media #{$md} {
+      margin-top: 40px;
+    }
+    @media #{$xs} {
+      margin-top: 40px;
+    }
+
+    .image1 {
+      position: absolute;
+      right: 0;
+      top: 0;
+      z-index: 9;
+    }
+    .image2 {
+      padding-top: 50px;
+    }
+    .image3 {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+    }
+  }
+}
+
+// === solution sytle 2 ===
+
+// === project sytle 4 ===
+
+.project4 {
+  background-color: var(--ztc-bg-bg-1);
+  .image-area {
+    position: relative;
+    overflow: hidden;
+    border-radius: 7px;
+
+    @media #{$xs} {
+      height: 300px;
+    }
+
+    .heading4-w {
+      position: absolute;
+      bottom: 30px;
+      left: 30px;
+      right: 30px;
+      opacity: 0;
+      transform: translateY(40px);
+      transition: all .4s;
+      z-index: 9;
+    }
+
+    &:hover {
+      .heading4-w {
+        opacity: 1;
+        transform: translateY(0);
+        transition: all .4s;
+      }
+
+      &::after {
+        opacity: 1;
+        transform: translateY(0);
+        transition: all .4s;
+      }
+
+      
+    }
+
+    &::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(187deg, rgba(0, 0, 0, 0.00) 49.94%, rgba(0, 0, 0, 0.80) 72.55%), url(<path-to-image>) rgba(211, 211, 211, 0) 50% / cover no-repeat;
+      transform: translateY(50px);
+      opacity: 0;
+      transition: all .4s;
+    }
+  }
+
+  .image-area.active {
+    .heading4-w {
+      opacity: 1;
+      transform: translateY(0);
+      transition: all .4s;
+    }
+
+    &::after {
+      opacity: 1;
+      transform: translateY(0);
+      transition: all .4s;
+    }
+  }
+
+  .image {
+    margin-top: 30px;
+    img {
+      width: 100%;
+    }
+  }
+}
+
+// === project sytle 4 ===
+
+// === project page style ===
+
+.project-page-box {
+  position: relative;
+  margin-bottom: 40px;
+
+  .image {
+    overflow: hidden;
+    border-radius: 7px;
+    img {
+      width: 100%;
+      transition: all .4s;
+    }
+  }
+  .heading2 {
+    padding: 24px;
+    border-radius: 7px;
+    background-color: var(--ztc-bg-main-bg-1);
+    position: absolute;
+    bottom: 24px;
+    margin: 0px 24px;
+    transform: translateY(60px) scale(0.4);
+    opacity: 0;
+    transition: all .4s;
+
+
+    h4 {
+      a {
+        line-height: 28px;
+
+        &:hover {
+          color: #fff;
+        }
+      }
+    }
+
+    a.learn {
+      display: inline-block;
+      color: #fff;
+      font-size: var(--f-fs-font-fs16);
+      line-height: var(--f-fs-font-fs16);
+      font-weight: var(--f-fw-blod);
+
+      span {
+        display: inline-block;
+        transform: rotate(-45deg);
+        margin-top: 16px;
+      }
+    }
+  }
+
+  &:hover {
+    .heading2 {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      transition: all .4s;
+    }
+    .image {
+      img {
+        transition: all .4s;
+        transform: scale(1.1) rotate(2deg);
+      }
+    }
+  }
+}
+
+// === project page style ===
+
+.comon-body {
+  .project-page-box {
+    position: relative;
+    margin-bottom: 40px;
+  
+    .image {
+      overflow: hidden;
+      border-radius: 7px;
+      img {
+        width: 100%;
+        transition: all .4s;
+      }
+    }
+    .heading2 {
+      padding: 24px;
+      border-radius: 7px;
+      background-color: var(--ztc-bg-bg-4);
+      border: 1px solid var(--ztc-bg-bg-5);
+      position: absolute;
+      bottom: 24px;
+      margin: 0px 24px;
+      transform: translateY(60px) scale(0.4);
+      opacity: 0;
+      transition: all .4s;
+  
+  
+      h4 {
+        a {
+          line-height: 28px;
+        }
+      }
+  
+      a.learn {
+        display: inline-block;
+        color: var(--ztc-bg-main-bg-4);
+        font-size: var(--f-fs-font-fs16);
+        line-height: var(--f-fs-font-fs16);
+        font-weight: var(--f-fw-blod);
+  
+        span {
+          display: inline-block;
+          transform: rotate(-45deg);
+          margin-top: 16px;
+        }
+      }
+    }
+  
+    &:hover {
+      .heading2 {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        transition: all .4s;
+      }
+      .image {
+        img {
+          transition: all .4s;
+          transform: scale(1.1) rotate(2deg);
+        }
+      }
+    }
+  }
+
+
+  .details-post-area {
+    .image {
+      img {
+        width: 100%;
+      }
+    }
+  
+    .expart-list {
+      li {
+        font-size: var(--f-fs-font-fs16);
+        line-height: var(--f-fs-font-fs16);
+        font-weight: var(--f-fw-regular);
+        color: #ffffffc5;
+        padding-top: 16px;
+  
+        span.check {
+          display: inline-block;
+          font-size: 12px;
+          height: 20px;
+          width: 20px;
+          border-radius: 50%;
+          color: var(--ztc-text-text-1);
+          background-color: var(--ztc-bg-main-bg-4);
+          text-align: center;
+          line-height: 20px;
+          margin-right: 6px;
+        }
+  
+        span.text{
+          font-weight: var(--f-fw-semibold);
+          display: inline-block;
+          color: var(--ztc-bg-color-w);
+        }
+      }
+    }
+  
+    //== boxs-area ===
+  
+    .boxs-area {
+      ul {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        li {
+          display: inline-block;
+          font-size: var(--f-fs-font-fs16);
+          line-height: var(--f-fs-font-fs16);
+          font-weight: var(--f-fw-blod);
+          color: var(--ztc-bg-color-w);
+          padding: 18px 16px;
+          background-color: var(--ztc-bg-bg-4);
+          border: 1px solid var(--ztc-bg-bg-5);
+          border-radius: 7px;
+          margin-top: 20px;
+          min-width: 250px;
+          transition: all .4s;
+  
+          span.check {
+            display: inline-block;
+            font-size: 12px;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            color: var(--ztc-text-text-1);
+            background-color: var(--ztc-bg-main-bg-4);
+            text-align: center;
+            line-height: 20px;
+            margin-right: 6px;
+          }
+  
+          &:hover {
+            border: 1px solid var(--ztc-bg-main-bg-4);
+            transition: all .4s;
+            transform: translateY(-6px);
+          }
+        }
+      }
+    }
+  
+  }
+
+  .project-details-box {
+    background-color: var(--ztc-bg-bg-4);
+    border-radius: 7px;
+    border: 1px solid var(--ztc-bg-bg-5);
+    margin-top: 30px;
+    padding: 24px;
+    transition: all .4s;
+  
+    &:hover {
+      border: 1px solid var(--ztc-bg-main-bg-4);
+      transition: all .4s;
+      transform: translateY(-5px);
+    }
+  }
+  
+  .get-started-box {
+    background-color: var(--ztc-bg-main-bg-4);
+    border-radius: 4px;
+    padding: 24px;
+  
+    h3 {
+      font-size: var(--f-fs-font-fs32);
+      line-height: var(--f-fs-font-fs32);
+      font-weight: var(--f-fw-semibold);
+      color: var(--ztc-text-text-1);
+    }
+  
+    p {
+      font-size: var(--f-fs-font-fs16);
+      line-height: var(--f-fs-font-fs28);
+      font-weight: var(--f-fw-regular);
+      color: var(--ztc-text-text-1);
+    }
+  }
+  
+}
+
+
+   /*
+ ::::::::::::::::::::::::::
+  OTHERS AREA CSS
+ ::::::::::::::::::::::::::
+ */

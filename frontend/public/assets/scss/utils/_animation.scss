@@ -1,0 +1,85 @@
+
+/*
+ ::::::::::::::::::::::::::
+  ANIMATION AREA CSS
+ ::::::::::::::::::::::::::
+ */
+
+ @keyframes shape-animaiton1 {
+    0% {
+        transform: translateY(0);
+    }
+    100% {
+        transform: translateY(100px);
+    }
+  }
+
+  @keyframes shape-animaiton2 {
+    0% {
+        transform: translateY(0);
+    }
+    100% {
+        transform: translateY(30px);
+    }
+  }
+
+  @keyframes shape-animaiton3 {
+    0% {
+        transform: translateY(0);
+    }
+    100% {
+        transform: translateY(10px);
+    }
+  }
+
+  @keyframes shape-animaiton4 {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(1000deg);
+    }
+  }
+
+
+.shape-animaiton1 {
+position: relative;
+animation-name: shape-animaiton1;
+animation-duration: 2s;
+animation-iteration-count: infinite;
+animation-direction: alternate;
+animation-timing-function: cubic-bezier(0.59, 0.59, 1, 1);
+}
+
+.shape-animaiton2 {
+position: relative;
+animation-name: shape-animaiton2;
+animation-duration: 2s;
+animation-iteration-count: infinite;
+animation-direction: alternate;
+animation-timing-function: ease-in-out;
+}
+
+.shape-animaiton3 {
+position: relative;
+animation-name: shape-animaiton3;
+animation-duration: 2s;
+animation-iteration-count: infinite;
+animation-direction: alternate;
+animation-timing-function: ease-in-out;
+}
+
+.shape-animaiton4 {
+    position: relative;
+    animation-name: shape-animaiton4;
+    animation-duration: 62s;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+    animation-timing-function: linear;
+}
+
+/*
+::::::::::::::::::::::::::
+ANIMATION AREA CSS
+::::::::::::::::::::::::::
+*/

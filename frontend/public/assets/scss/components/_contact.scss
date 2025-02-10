@@ -1,0 +1,158 @@
+@use '../utils' as *;
+
+//=== contact page ====
+
+.contact-page {
+    .contact-boxs {
+        padding-right: 60px;
+
+        @media #{$md} {
+            padding-right: 0;
+        }
+
+        @media #{$xs} {
+            padding-right: 0;
+        }
+
+        .contact-box {
+            display: flex;
+            align-items: center;
+            background-color: #F8F9FA;
+            border-radius: 7px;
+            padding: 20px 24px;
+            margin-top: 30px;
+            transition: all .4s;
+
+            .icon {
+                height: 60px;
+                width: 60px;
+                background-color: #0e37b12c;
+                border-radius: 50%;
+                text-align: center;
+                line-height: 60px;
+            }
+
+            .heading {
+                padding-left: 16px;
+                h5 {
+                    font-size: var(--f-fs-font-fs20);
+                    line-height: var(--f-fs-font-fs20);
+                    font-weight: var(--f-fw-blod);
+                    color: var(--ztc-text-text-1);
+                }
+
+                a {
+                    font-size: var(--f-fs-font-fs16);
+                    line-height: var(--f-fs-font-fs28);
+                    font-weight: var(--f-fw-regular);
+                    color: var(--ztc-text-pera-text-1);
+                    padding-top: 14px;
+                    display: inline-block;
+                }
+            }
+
+            &:hover {
+                transition: all .4s;
+                transform: translateY(-6px);
+            }
+        }
+    }
+
+    .contact-form-details {
+        @media #{$md} {
+            margin-top: 40px;
+        }
+
+        @media #{$xs} {
+            margin-top: 40px;
+        }
+    }
+}
+
+.contact-map-page {
+    iframe {
+        width: 100%;
+        margin-bottom: -10px;
+    }
+}
+
+//=== contact page ====
+
+.comon-body {
+
+    .contact-page {
+        .contact-boxs {
+            padding-right: 60px;
+    
+            @media #{$md} {
+                padding-right: 0;
+            }
+    
+            @media #{$xs} {
+                padding-right: 0;
+            }
+    
+            .contact-box {
+                display: flex;
+                align-items: center;
+                background-color: var(--ztc-bg-bg-4);
+                border: 1px solid var(--ztc-bg-bg-5);
+                border-radius: 7px;
+                padding: 16px 20px;
+                margin-top: 30px;
+                transition: all .4s;
+    
+                .icon {
+                    height: 60px;
+                    width: 60px;
+                    background-color: #a1e9342f;
+                    border-radius: 50%;
+                    text-align: center;
+                    line-height: 60px;
+                }
+    
+                .heading {
+                    padding-left: 16px;
+                    h5 {
+                        font-size: var(--f-fs-font-fs20);
+                        line-height: var(--f-fs-font-fs20);
+                        font-weight: var(--f-fw-blod);
+                        color: var(--ztc-text-text-2);
+                    }
+    
+                    a {
+                        font-size: var(--f-fs-font-fs16);
+                        line-height: var(--f-fs-font-fs28);
+                        font-weight: var(--f-fw-regular);
+                        color: #ffffffb7;
+                        padding-top: 14px;
+                        display: inline-block;
+                    }
+                }
+    
+                &:hover {
+                    border: 1px solid var(--ztc-bg-main-bg-4);
+                    transition: all .4s;
+                    transform: translateY(-6px);
+                }
+            }
+        }
+    
+        .contact-form-details {
+            @media #{$md} {
+                margin-top: 40px;
+            }
+    
+            @media #{$xs} {
+                margin-top: 40px;
+            }
+        }
+    }
+    
+    .contact-map-page {
+        iframe {
+            width: 100%;
+        }
+    }
+    
+}
