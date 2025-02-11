@@ -82,7 +82,7 @@
                                 <input 
                                     type="number"
                                     id="intangiblesRate"
-                                    value="50.00"
+                                    value="45.00"
                                     onInput="updateCalculations()"
                                     class="w-full border rounded p-2"
                                 >
@@ -95,6 +95,7 @@
                 <!-- Value Summary Section -->
                 <div class="bg-purple-50 p-6 rounded-lg mb-6">
                     <h3 class="text-2xl font-bold mb-4">How Much Value is Being Delivered?</h3>
+                    <br>
                     <div class="grid grid-cols-2 gap-8">
                         <div class="bg-white p-6 rounded-lg shadow-lg">
                             <h4 class="text-xl font-semibold mb-2 text-purple-800">Hours Saved Value</h4>
@@ -113,6 +114,7 @@
             <div class="space-y-6">
                 <!-- Costs Section -->
                 <div>
+                    <br>
                     <!-- Monthly Recurring Costs -->
                     <div class="mb-6">
                         <h4 class="font-medium mb-2" style="font-size: 30px;">Monthly People Costs</h4>
@@ -286,18 +288,63 @@
         <!-- Pricing Recommendations Section -->
         <div class="bg-green-50 p-6 rounded-lg mb-6">
             <h3 class="text-2xl font-bold mb-4">How Much Should I Charge?</h3>
-            <div class="mb-6">
-                <label class="block text-lg font-medium mb-2">Desired Profit Margin (%)</label>
-                <input 
-                    type="number"
-                    id="profitMargin"
-                    value="100"
-                    class="w-32 border rounded p-2 text-lg"
-                >
-            </div>
+            <div class="mb-6 grid grid-cols-2 gap-8">
+                <div>
+                    <label class="block text-lg font-medium mb-2">Upfront Profit Margin (%)</label>
+                    <input 
+                        type="number"
+                        id="upfrontMargin"
+                        value="100"
+                        class="w-32 border rounded p-2 text-lg"
+                        onInput="updateCalculations()"
+                    >
+                </div>
+                <div>
+                    <label class="block text-lg font-medium mb-2">Monthly Profit Margin (%)</label>
+                    <input 
+                        type="number"
+                        id="monthlyMargin"
+                        value="100"
+                        class="w-32 border rounded p-2 text-lg"
+                        onInput="updateCalculations()"
+                    >
+                </div>
+
             
+
+                <div>
+                    <label class="block text-lg font-medium mb-2">Number of Homes in Chain</label>
+                    <input 
+                        type="number"
+                        id="numberOfHomes"
+                        value="1"
+                        min="1"
+                        class="w-32 border rounded p-2 text-lg"
+                        onInput="updateCalculations()"
+                    >
+                </div>
+
+                <div>
+                    <label class="block text-lg font-medium mb-2">Total Number of Beds</label>
+                    <input 
+                        type="number"
+                        id="totalBeds"
+                        value="100"
+                        min="1"
+                        class="w-32 border rounded p-2 text-lg"
+                        onInput="updateCalculations()"
+                    >
+                </div>
+
+            </div>
+
+
+            
+           
+            <br>
+
             <div class="bg-white p-6 rounded-lg shadow-lg">
-                <h4 class="text-2xl font-bold mb-4">You Should Charge:</h4>
+                <h4 class="text-2xl font-bold mb-4">Per Home Charge:</h4>
                 <div class="grid grid-cols-2 gap-8">
                     <div>
                         <p class="text-lg font-medium text-gray-600">One-Time Setup Fee:</p>
@@ -308,125 +355,160 @@
                         <p class="text-lg font-medium text-gray-600">Monthly Fee:</p>
                         <p class="text-3xl font-bold text-green-600 mb-2">$<span id="recommendedMonthlyPrice">0</span></p>
                         <p class="text-sm text-gray-500">Your profit will be: $<span id="monthlyProfit">0</span></p>
+                       
                     </div>
                 </div>
             </div>
+       
+
+            <br>
+             
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h4 class="text-2xl font-bold mb-4">Chain Level Summary:</h4>
+                    <div class="grid grid-cols-2 gap-8">
+                        <div>
+                            <p class="text-lg font-medium text-gray-600">Total Monthly Chain Fee:</p>
+                            <p class="text-3xl font-bold text-green-600 mb-2">$<span id="totalChainMonthly">0</span></p>
+                            <p class="text-sm text-gray-500">Your monthly chain revenue</p>
+                        </div>
+                        <div>
+                            <p class="text-lg font-medium text-gray-600">Price Per Bed Per Day:</p>
+                            <p class="text-3xl font-bold text-green-600 mb-2">$<span id="chainBedDayRate">0</span></p>
+                            <p class="text-sm text-gray-500">Your daily bed rate</p>
+                        </div>
+                    </div>
+                </div>
+        
+
             
             <div class="bg-gray-50 p-4 rounded-lg mt-4">
-                <p class="text-sm text-gray-600">* These prices are calculated based on your costs plus the profit margin you specified above.</p>
+                <p class="text-sm text-gray-600">* These prices are calculated based on your costs plus the separate profit margins you specified above.</p>
             </div>
         </div>
     </div>
 
     
-
     <script>
-        // Function to get numeric value from input
-        function getValue(id) {
-            const element = document.getElementById(id);
-            if (!element) {
-                console.warn(`Element with id ${id} not found`);
-                return 0;
-            }
-            return parseFloat(element.value) || 0;
+    // Function to get numeric value from input
+    function getValue(id) {
+        const element = document.getElementById(id);
+        if (!element) {
+            console.warn(`Element with id ${id} not found`);
+            return 0;
         }
-    
-        // Function to update calculations
-        function updateCalculations() {
-            try {
-                // Calculate support total
-                const supportTotal = getValue('supportRate') * getValue('supportHours');
-                
-                // Calculate scraper total
-                const scrapeTotal = getValue('scrapeRate') * getValue('scrapeHours');
-                
-                // Sum up all monthly tech costs
-                const techCosts = getValue('database') + getValue('api') + 
-                                getValue('openai') + getValue('medstack');
-                
-                // Calculate total monthly recurring
-                const monthlyRecurring = supportTotal + scrapeTotal + techCosts;
-                
-                // Update the monthly recurring total immediately
-                const monthlyRecurringElement = document.getElementById('monthlyRecurringTotal');
-                if (monthlyRecurringElement) {
-                    monthlyRecurringElement.textContent = monthlyRecurring.toFixed(2);
-                }
-                
-                // Upfront costs
-                const backendTotal = getValue('backendRate') * getValue('backendHours');
-                const uiuxTotal = getValue('uiuxRate') * getValue('uiuxHours');
-                const totalUpfront = backendTotal + uiuxTotal;
-                
-                // Value-based calculations
-                const nursingValue = getValue('nursingRate') * getValue('nursingHours');
-                const executiveValue = getValue('executiveRate') * getValue('executiveHours');
-                const intangiblesValue = getValue('intangiblesRate');
-                
-                const totalHoursValue = nursingValue + executiveValue;
-                const totalHoursSaved = getValue('nursingHours') + getValue('executiveHours');
-                const finalValue = totalHoursValue + intangiblesValue;
-                
-                // Get profit margin
-                const profitMargin = getValue('profitMargin') / 100;
-    
-                // Calculate monthly costs and recommended prices
-                const totalMonthlyCosts = monthlyRecurring;
-                const recommendedMonthlyPrice = totalMonthlyCosts * (1 + profitMargin);
-                const monthlyProfit = recommendedMonthlyPrice - totalMonthlyCosts;
-    
-                // Calculate upfront costs and recommended prices
-                const totalUpfrontCosts = totalUpfront;
-                const recommendedUpfrontPrice = totalUpfrontCosts * (1 + profitMargin);
-                const upfrontProfit = recommendedUpfrontPrice - totalUpfrontCosts;
-    
-                // Update all displays
-                const updates = {
-                    'backendTotal': backendTotal,
-                    'uiuxTotal': uiuxTotal,
-                    'totalUpfront': totalUpfront,
-                    'finalMonthlyCosts': totalMonthlyCosts,
-                    'finalUpfrontCosts': totalUpfrontCosts,
-                    'recommendedMonthlyPrice': recommendedMonthlyPrice,
-                    'recommendedUpfrontPrice': recommendedUpfrontPrice,
-                    'monthlyProfit': monthlyProfit,
-                    'upfrontProfit': upfrontProfit,
-                    'totalMonthlyCostSummary': totalMonthlyCosts,    
-                    'totalUpfrontCostSummary': totalUpfrontCosts,
-                    'totalHoursValue': totalHoursValue,
-                    'totalHoursSaved': totalHoursSaved,
-                    'intangiblesValue': intangiblesValue,
-                    'finalValue': finalValue
-                };
-    
-                Object.entries(updates).forEach(([id, value]) => {
-                    const element = document.getElementById(id);
-                    if (element) {
-                        // Don't use decimals for hours saved count
-                        if (id === 'totalHoursSaved') {
-                            element.textContent = value.toString();
-                        } else {
-                            element.textContent = value.toFixed(2);
-                        }
+        return parseFloat(element.value) || 0;
+    }
+
+    // Function to update calculations
+    function updateCalculations() {
+        try {
+            // Calculate support total
+            const supportTotal = getValue('supportRate') * getValue('supportHours');
+            
+            // Calculate scraper total
+            const scrapeTotal = getValue('scrapeRate') * getValue('scrapeHours');
+            
+            // Sum up all monthly tech costs
+            const techCosts = getValue('database') + getValue('api') + 
+                            getValue('openai') + getValue('medstack');
+            
+            // Calculate total monthly recurring
+            const monthlyRecurring = supportTotal + scrapeTotal + techCosts;
+            
+            // Update the monthly recurring total immediately
+            const monthlyRecurringElement = document.getElementById('monthlyRecurringTotal');
+            if (monthlyRecurringElement) {
+                monthlyRecurringElement.textContent = monthlyRecurring.toFixed(2);
+            }
+            
+            // Upfront costs
+            const backendTotal = getValue('backendRate') * getValue('backendHours');
+            const uiuxTotal = getValue('uiuxRate') * getValue('uiuxHours');
+            const totalUpfront = backendTotal + uiuxTotal;
+            
+            // Value-based calculations
+            const nursingValue = getValue('nursingRate') * getValue('nursingHours');
+            const executiveValue = getValue('executiveRate') * getValue('executiveHours');
+            const intangiblesValue = getValue('intangiblesRate');
+            
+            const totalHoursValue = nursingValue + executiveValue;
+            const totalHoursSaved = getValue('nursingHours') + getValue('executiveHours');
+            const finalValue = totalHoursValue + intangiblesValue;
+            
+            // Get separate profit margins
+            const monthlyMargin = getValue('monthlyMargin') / 100;
+            const upfrontMargin = getValue('upfrontMargin') / 100;
+
+            // Calculate monthly costs and recommended prices
+            const totalMonthlyCosts = monthlyRecurring;
+            const recommendedMonthlyPrice = totalMonthlyCosts * (1 + monthlyMargin);
+            const monthlyProfit = recommendedMonthlyPrice - totalMonthlyCosts;
+
+            // Calculate upfront costs and recommended prices
+            const totalUpfrontCosts = totalUpfront;
+            const recommendedUpfrontPrice = totalUpfrontCosts * (1 + upfrontMargin);
+            const upfrontProfit = recommendedUpfrontPrice - totalUpfrontCosts;
+
+            // Chain-specific calculations
+            const numberOfHomes = getValue('numberOfHomes') || 1;
+            const totalBeds = getValue('totalBeds') || 100;
+            const totalChainMonthly = recommendedMonthlyPrice * numberOfHomes;
+            const chainBedDayRate = (totalChainMonthly / totalBeds / 31).toFixed(2);
+
+            // Update all displays
+            const updates = {
+                'backendTotal': backendTotal,
+                'uiuxTotal': uiuxTotal,
+                'totalUpfront': totalUpfront,
+                'finalMonthlyCosts': totalMonthlyCosts,
+                'finalUpfrontCosts': totalUpfrontCosts,
+                'recommendedMonthlyPrice': recommendedMonthlyPrice,
+                'recommendedUpfrontPrice': recommendedUpfrontPrice,
+                'monthlyProfit': monthlyProfit,
+                'upfrontProfit': upfrontProfit,
+                'totalMonthlyCostSummary': totalMonthlyCosts,    
+                'totalUpfrontCostSummary': totalUpfrontCosts,
+                'totalHoursValue': totalHoursValue,
+                'totalHoursSaved': totalHoursSaved,
+                'intangiblesValue': intangiblesValue,
+                'finalValue': finalValue,
+                'totalChainMonthly': totalChainMonthly,
+                'chainBedDayRate': chainBedDayRate
+            };
+
+            Object.entries(updates).forEach(([id, value]) => {
+                const element = document.getElementById(id);
+                if (element) {
+                    // Don't use decimals for hours saved count
+                    if (id === 'totalHoursSaved') {
+                        element.textContent = value.toString();
+                    } else if (id === 'chainBedDayRate') {
+                        element.textContent = value; // Already formatted to 2 decimals
+                    } else {
+                        element.textContent = value.toFixed(2);
                     }
-                });
-    
-            } catch (error) {
-                console.error('Error in calculations:', error);
-            }
-        }
-    
-        // Wait for DOM to be fully loaded
-        document.addEventListener('DOMContentLoaded', function() {
-            // Add event listeners to all inputs
-            document.querySelectorAll('input').forEach(input => {
-                input.addEventListener('input', updateCalculations);
+                }
             });
-    
-            // Initial calculation
-            updateCalculations();
+
+        } catch (error) {
+            console.error('Error in calculations:', error);
+        }
+    }
+
+    // Wait for DOM to be fully loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add event listeners to all inputs
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('input', updateCalculations);
         });
-    </script>
+
+        // Initial calculation
+        updateCalculations();
+    });
+        
+
+
+   </script>
 
 </body>
 </html>
