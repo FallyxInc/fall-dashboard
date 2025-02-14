@@ -1121,61 +1121,134 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
           </tr>
         </thead>
         <tbody id="fallsTableBody">
-          {data.map((item, i) => {
-            const residentsWithThreePlusFalls = getResidentsWithMultipleFalls(data);
-            const hasThreePlusFalls = residentsWithThreePlusFalls.includes(item.name);
-            
-            const fallsWithin24Hours = getFallsWithin24Hours(data);
-            const hasMultipleFalls24Hours = fallsWithin24Hours[item.name];
-
-            return (
-              <tr 
-                key={i}
-                style={{
-                  backgroundColor: hasThreePlusFalls ? '#ffebee' :  // Light red for 3+ falls
-                                  hasMultipleFalls24Hours ? '#e0e0e0' :  // Grey for 2 falls in 24hrs
-                                  'inherit'
+          {data.map((item, i) => (
+            <tr 
+              style={{ 
+                backgroundColor: item.cause === 'No Fall Note' ? '#f8b9c6' : 'inherit' 
+              }}
+              key={i}
+            >
+              <td style={{ whiteSpace: 'nowrap', fontSize: '16px' }}>{item.date}</td> {/* Increased font size */}
+              <td style={{ fontSize: '16px' }}>{item.name}</td>
+              <td style={{ fontSize: '16px' }}>{item.time}</td>
+              <td style={{ fontSize: '16px' }}>{item.location || item.incident_location}</td>
+              <td style={{ fontSize: '16px' }}>{item.homeUnit || item.room}</td>
+              {/* <td style={{ fontSize: '16px' }}>{item.cause}</td> */}
+              <td style={{ fontSize: '16px', backgroundColor: item.isCauseUpdated === 'yes' ? 'rgba(76, 175, 80, 0.3)' : 'inherit' }}>
+                {item.cause}
+                <br />
+                <button onClick={() => handleEditCauseOfFall(i)}>Edit</button>
+              </td>
+              <td
+                style={{ 
+                  fontSize: '16px', 
+                  backgroundColor: item.isInterventionsUpdated === 'yes' ? 'rgba(76, 175, 80, 0.3)' : 'inherit' 
                 }}
               >
-                {columns.map(col => (
-                  <td 
-                    key={col.key} 
-                    style={{ 
-                      fontSize: '16px', 
-                      whiteSpace: col.key === 'date' ? 'nowrap' : 'normal',
-                    }}
-                  >
-                    {col.key === 'physicianRef' ? (
-                      <select
-                        value={item[col.key] || 'N/A'}
-                        onChange={(e) => handleUpdateCSV(data[i].id, e.target.value, 'shepherd', col.key)}
-                      >
-                        <option value="N/A">N/A</option>
-                        <option value="Yes">Yes</option>
-                        <option value="No">No</option>
-                      </select>
-                    ) : col.key === 'transfer_to_hospital' || 
-                       col.key === 'hir' || 
-                       col.key === 'pt_ref' || 
-                       col.key === 'poa_contacted' ||
-                       col.key === 'risk_management' ||
-                       col.key === 'incidentReport' ||
-                       col.key === 'rnaoAssessment' ? (
-                      <select
-                        value={item[col.key] === 'yes' || item[col.key] === 'Yes' ? 'Yes' : 'No'}
-                        onChange={(e) => handleUpdateCSV(data[i].id, e.target.value, 'shepherd', col.key)}
-                      >
-                        <option value="Yes">Yes</option>
-                        <option value="No">No</option>
-                      </select>
-                    ) : (
-                      item[col.key]
-                    )}
-                  </td>
-                ))}
-              </tr>
-            );
-          })}
+                {item.interventions}
+                <br></br>
+                <button onClick={() => handleEditIntervention(i)}>Edit</button>
+              </td>
+              <td style={{ fontSize: '16px', backgroundColor: item.isHirUpdated === 'yes' ? 'rgba(76, 175, 80, 0.3)' : 'inherit' }}>
+                <select
+                  value={item.hir === 'yes' || item.hir === 'Yes' ? 'Yes' : item.hir === 'no' || item.hir === 'No' ? 'No' : item.hir === 'not applicable' || item.hir === 'Not Applicable' ? 'Not Applicable' : item.hir}
+                  onChange={(e) => handleUpdateCSV(data[i].id, e.target.value, name, 'hir')}
+                >
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                  <option value="Not Applicable">Not Applicable</option>
+                </select>
+              </td>
+              <td style={{ fontSize: '16px' }}>{item.injury || item.injuries}</td>
+              <td style={{ fontSize: '16px', backgroundColor: item.isHospitalUpdated === 'yes' ? 'rgba(76, 175, 80, 0.3)' : 'inherit' }}>
+                <select
+                  value={
+                    (item.transfer_to_hospital) === 'yes' || 
+                    (item.transfer_to_hospital) === 'Yes' 
+                      ? 'Yes' 
+                      : (item.transfer_to_hospital) === 'no' || 
+                        (item.transfer_to_hospital) === 'No'
+                        ? 'No' 
+                        : (item.transfer_to_hospital)
+                  }
+                  onChange={(e) => handleUpdateCSV(data[i].id, e.target.value, name, 'hospital')}
+                >
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </select>
+              </td>
+              <td style={{ fontSize: '16px', backgroundColor: item.isPtRefUpdated === 'yes' ? 'rgba(76, 175, 80, 0.3)' : 'inherit' }}>
+                <select
+                  value={item.ptRef === 'yes' || item.ptRef === 'Yes' ? 'Yes' : item.ptRef === 'no' || item.ptRef === 'No' ? 'No' : item.ptRef}
+                  onChange={(e) => handleUpdateCSV(data[i].id, e.target.value, name, 'ptRef')}
+                >
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </select>
+              </td>
+              <td style={{ fontSize: '16px', backgroundColor: item.isPhysicianRefUpdated === 'yes' ? 'rgba(76, 175, 80, 0.3)' : 'inherit' }}>
+                <select
+                  value={item.physicianRef === 'yes' || item.physicianRef === 'Yes'
+                    ? 'Yes'
+                    : item.physicianRef === 'no' || item.physicianRef === 'No'
+                    ? 'No'
+                    : item.physicianRef}
+                  onChange={(e) => handleUpdateCSV(data[i].id, e.target.value, name, 'physicianRef')}
+                >
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                  <option value="N/A">N/A</option>
+                </select>
+              </td>
+              <td className={item.poaContacted === 'no' ? styles.cellRed : ''} 
+                style={{ 
+                  fontSize: '16px', 
+                }}
+              >
+                <select
+                  value={item.poaContacted === 'yes' || item.poaContacted === 'Yes'
+                    ? 'Yes'
+                    : item.poaContacted === 'no' || item.poaContacted === 'No'
+                    ? 'No'
+                    : item.poaContacted}
+                  onChange={(e) => handleUpdateCSV(data[i].id, e.target.value, name, 'poaContacted')}
+                >
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </select>
+              </td>
+              <td style={{ fontSize: '16px', backgroundColor: item.isIncidentReportUpdated === 'yes' ? 'rgba(76, 175, 80, 0.3)' : 'inherit' }}>
+                <select
+                  value={
+                    item.incidentReport === 'yes' || item.incidentReport === 'Yes'
+                      ? 'Yes'
+                      : item.incidentReport === 'no' || item.incidentReport === 'No'
+                      ? 'No'
+                      : item.incidentReport
+                  }
+                  onChange={(e) => handleUpdateCSV(data[i].id, e.target.value, name, 'incidentReport')}
+                >
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </select>
+              </td>
+              {/* <td className={item.postFallNotesColor === 'red' ? styles.cellRed : ''} style={{ fontSize: '16px' }}>
+                {item.postFallNotes}
+              </td> */}
+              <td
+                className={item.postFallNotesColor === 'red' ? styles.cellRed : ''}
+                style={{
+                  fontSize: '16px',
+                  color: item.isPostFallNotesUpdated === 'yes' ? '#179c4e' : '#000000',
+                  fontWeight: 'bold',
+                }}
+              >
+                {item.postFallNotes}
+                <br />
+                <button onClick={() => handleEditPostFallNotes(i)}>Edit</button>
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
 
