@@ -939,8 +939,8 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     { key: 'pt_ref', label: 'PT Ref' },
     { key: 'physicianRef', label: 'Physician/NP Notification' },
     { key: 'poa_contacted', label: 'POA Contacted' },
-    { key: 'incidentReport', label: 'Risk Management Incident Fall Written' },
-    { key: 'rnaoAssessment', label: 'RNAO Post Fall Assessment Done?' }
+    { key: 'rnaoAssessment', label: 'RNAO Post Fall Note Completed?' },
+  
   ];
 
   const getDuplicateNames = (data) => {
@@ -1217,16 +1217,16 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                   <option value="No">No</option>
                 </select>
               </td>
-              <td style={{ fontSize: '16px', backgroundColor: item.isIncidentReportUpdated === 'yes' ? 'rgba(76, 175, 80, 0.3)' : 'inherit' }}>
+              <td style={{ fontSize: '16px', backgroundColor: item.isRnaoAssessmentUpdated === 'yes' ? 'rgba(76, 175, 80, 0.3)' : 'inherit' }}>
                 <select
                   value={
-                    item.incidentReport === 'yes' || item.incidentReport === 'Yes'
+                    item.rnaoAssessment === 'yes' || item.rnaoAssessment === 'Yes'
                       ? 'Yes'
-                      : item.incidentReport === 'no' || item.incidentReport === 'No'
+                      : item.rnaoAssessment === 'no' || item.rnaoAssessment === 'No'
                       ? 'No'
-                      : item.incidentReport
+                      : item.rnaoAssessment
                   }
-                  onChange={(e) => handleUpdateCSV(data[i].id, e.target.value, name, 'incidentReport')}
+                  onChange={(e) => handleUpdateCSV(data[i].id, e.target.value, name, 'rnaoAssessment')}
                 >
                   <option value="Yes">Yes</option>
                   <option value="No">No</option>
@@ -1235,18 +1235,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
               {/* <td className={item.postFallNotesColor === 'red' ? styles.cellRed : ''} style={{ fontSize: '16px' }}>
                 {item.postFallNotes}
               </td> */}
-              <td
-                className={item.postFallNotesColor === 'red' ? styles.cellRed : ''}
-                style={{
-                  fontSize: '16px',
-                  color: item.isPostFallNotesUpdated === 'yes' ? '#179c4e' : '#000000',
-                  fontWeight: 'bold',
-                }}
-              >
-                {item.postFallNotes}
-                <br />
-                <button onClick={() => handleEditPostFallNotes(i)}>Edit</button>
-              </td>
+             
             </tr>
           ))}
         </tbody>
