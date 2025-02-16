@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Fallyx Onboarding Form</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+        
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+        }
+
+        .form-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            margin-bottom: 32px;
+            opacity: 0;
+            transform: translateY(50px);
+            animation: fadeInUp 1.2s ease forwards;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-title {
+            color: #2E7D32;
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .section-title {
+            color: #1B5E20;
+            font-size: 24px;
+            font-weight: 600;
+            margin-top: 32px;
+            margin-bottom: 24px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #E0E0E0;
+        }
+
+        .form-label {
+            color: #2E7D32;
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+    
+        
+        .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #E0E0E0;
+            border-radius: 8px;
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 20px;
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: #2E7D32;
+            box-shadow: 0 0 0 2px rgba(46, 125, 50, 0.1);
+        }
+
+        .unit-container {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .unit-input {
+            flex: 1;
+        }
+
+        .add-unit-btn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .submit-button, .add-home-button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 16px 32px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            width: 100%;
+            max-width: 300px;
+            margin: 32px auto 0;
+            display: block;
+        }
+
+        .add-home-button {
+            background-color: #1976D2;
+            margin-bottom: 32px;
+        }
+
+        .submit-button:hover, .add-home-button:hover {
+            opacity: 0.9;
+        }
+
+        .falls-history-container {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #E0E0E0;
+            margin-bottom: 24px;
+        }
+
+        .falls-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .home-form {
+            position: relative;
+        }
+
+        .home-number {
+            position: absolute;
+            top: -12px;
+            right: -12px;
+            background-color: #1976D2;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .chain-name-container {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #E0E0E0;
+            margin-bottom: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <div id="formsContainer">
+            <div class="chain-name-container">
+                <label class="form-label">Chain Name</label>
+                <input type="text" class="form-input" name="chainName" required placeholder="Enter your chain name">
+            </div>
+            
+            <div class="card home-form">
+                <div class="home-number">Home #1</div>
+                <h1 class="form-title">Fallyx Onboarding Form</h1>
+                
+                <form class="onboarding-form">
+                    <div class="form-group">
+                        <label class="form-label">Which home are you apart of?</label>
+                        <input type="text" class="form-input" name="homeName" required placeholder="Enter your home name">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Which email(s) are the main contact for Fallyx at this home?</label>
+                        <textarea class="form-input" name="emails" required placeholder="Enter email addresses (one per line)" rows="3"></textarea>
+                        <p class="text-sm text-gray-600 mt-1">Note: We will be sending monthly falls reports to these emails</p>
+                    </div>
+
+                    <div class="falls-history-container">
+                        <h2 class="section-title" style="margin-top: 0;">Falls History</h2>
+                        <div class="falls-grid">
+                            <div>
+                                <label class="form-label">How many falls did you have 3 months ago?</label>
+                                <input style="width: 90%;" type="number" class="form-input" name="falls3MonthsAgo" required min="0">
+                            </div>
+                            <div>
+                                <label class="form-label">How many falls did you have 2 months ago?</label>
+                                <input style="width: 90%;" type="number" class="form-input" name="falls2MonthsAgo" required min="0">
+                            </div>
+                            <div>
+                                <label class="form-label">How many falls did you have last month?</label>
+                                <input style="width: 90%;" type="number" class="form-input" name="fallsLastMonth" required min="0">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="shift-timing-container">
+                        <h2 class="section-title" style="margin-top: 0; color: #2E7D32;">Shift Timings</h2>
+                        <div class="shift-grid">
+                            <div class="shift-box">
+                                <label class="form-label" style="color: #2E7D32;">Morning Shift</label>
+                                <input type="text" class="form-input" name="morningShift" required 
+                                       placeholder="e.g., 7:00 AM - 3:00 PM"
+                                       style="width: 90%; border: 1px solid #E0E0E0; border-radius: 8px; padding: 12px;">
+                            </div>
+                            <div class="shift-box">
+                                <label class="form-label" style="color: #2E7D32;">Evening Shift</label>
+                                <input type="text" class="form-input" name="eveningShift" required 
+                                       placeholder="e.g., 3:00 PM - 11:00 PM"
+                                       style="width: 90%; border: 1px solid #E0E0E0; border-radius: 8px; padding: 12px;">
+                            </div>
+                            <div class="shift-box">
+                                <label class="form-label" style="color: #2E7D32;">Night Shift</label>
+                                <input type="text" class="form-input" name="nightShift" required 
+                                       placeholder="e.g., 11:00 PM - 7:00 AM"
+                                       style="width: 90%; border: 1px solid #E0E0E0; border-radius: 8px; padding: 12px;">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <style>
+                    .shift-timing-container {
+                        background-color: #f8f9fa;
+                        padding: 24px;
+                        border-radius: 8px;
+                        border: 1px solid #E0E0E0;
+                        margin-bottom: 24px;
+                    }
+                    
+                    .shift-grid {
+                        display: grid;
+                        grid-template-columns: repeat(3, 1fr);
+                        gap: 16px;
+                    }
+                    
+                    .shift-box {
+                        background-color: white;
+                        padding: 16px;
+                        border-radius: 8px;
+                        border: 1px solid #E0E0E0;
+                    }
+                    
+                    .form-input {
+                        width: 100%;
+                        padding: 12px;
+                        border: 1px solid #E0E0E0;
+                        border-radius: 8px;
+                        font-size: 16px;
+                        color: #333;
+                    }
+                    </style>
+
+                    <div class="form-group">
+                        <label class="form-label">What are the different home units?</label>
+                        <div class="units-container">
+                            <div class="unit-container">
+                                <input type="text" class="form-input unit-input" name="units[]" required placeholder="Unit #1">
+                            </div>
+                        </div>
+                        <button type="button" class="add-unit-btn" onclick="addUnit(this)">+ Add Another Unit</button>
+                    </div>
+
+                    <div class="form-group">
+                        <br>
+                        <br>
+                        <label class="form-label">What is your monthly falls goal?</label>
+                        <input type="number" class="form-input" name="monthlyFallsGoal" required min="0" placeholder="Enter target number of falls">
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <button type="button" class="add-home-button" onclick="addHome()">Add Another Home</button>
+        <button type="button" class="submit-button" onclick="submitForms()">Submit All Forms</button>
+    </div>
+
+    <script>
+        function addUnit(button) {
+            const container = button.previousElementSibling;
+            const unitCount = container.children.length + 1;
+            
+            const unitDiv = document.createElement('div');
+            unitDiv.className = 'unit-container';
+            
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'form-input unit-input';
+            input.name = 'units[]';
+            input.required = true;
+            input.placeholder = `Unit #${unitCount}`;
+            
+            unitDiv.appendChild(input);
+            container.appendChild(unitDiv);
+        }
+
+        function addHome() {
+            const container = document.getElementById('formsContainer');
+            const homeCount = document.querySelectorAll('.home-form').length + 1;
+            
+            const newForm = document.querySelector('.home-form').cloneNode(true);
+            newForm.querySelector('.home-number').textContent = `Home #${homeCount}`;
+            
+            // Reset all form inputs
+            newForm.querySelectorAll('input, textarea').forEach(input => {
+                input.value = '';
+            });
+            
+            // Reset unit containers to just one
+            const unitsContainer = newForm.querySelector('.units-container');
+            const firstUnit = unitsContainer.querySelector('.unit-container').cloneNode(true);
+            firstUnit.querySelector('input').value = '';
+            unitsContainer.innerHTML = '';
+            unitsContainer.appendChild(firstUnit);
+            
+            // Add animation class
+            newForm.style.animation = 'none';
+            newForm.offsetHeight; // Trigger reflow
+            newForm.style.animation = 'fadeInUp 1.2s ease forwards';
+            
+            container.appendChild(newForm);
+        }
+
+        function submitForms() {
+            const forms = document.querySelectorAll('.onboarding-form');
+            const chainName = document.querySelector('input[name="chainName"]').value;
+            
+            if (!chainName) {
+                alert('Please enter a Chain Name');
+                return;
+            }
+            
+            const formData = {
+                chainName: chainName,
+                homes: []
+            };
+            
+            forms.forEach((form, index) => {
+                const homeData = {
+                    homeNumber: index + 1,
+                    homeName: form.querySelector('input[name="homeName"]').value,
+                    emails: form.querySelector('textarea[name="emails"]').value,
+                    fallsHistory: {
+                        threeMonthsAgo: form.querySelector('input[name="falls3MonthsAgo"]').value,
+                        twoMonthsAgo: form.querySelector('input[name="falls2MonthsAgo"]').value,
+                        lastMonth: form.querySelector('input[name="fallsLastMonth"]').value
+                    },
+                    shiftTimings: {
+                        morning: form.querySelector('input[name="morningShift"]').value,
+                        evening: form.querySelector('input[name="eveningShift"]').value,
+                        night: form.querySelector('input[name="nightShift"]').value
+                    },
+                    units: Array.from(form.querySelectorAll('input[name="units[]"]')).map(input => input.value),
+                    monthlyFallsGoal: form.querySelector('input[name="monthlyFallsGoal"]').value
+                };
+                formData.homes.push(homeData);
+            });
+            
+            // Here you would typically send formData to your server
+            console.log('Form Data:', formData);
+            alert('All forms submitted successfully!');
+            
+            // Reset all forms
+            document.querySelector('input[name="chainName"]').value = '';
+            const firstForm = document.querySelector('.home-form');
+            document.getElementById('formsContainer').innerHTML = '';
+            document.getElementById('formsContainer').appendChild(firstForm);
+            firstForm.querySelector('form').reset();
+        }
+    </script>
+</body>
+</html>
