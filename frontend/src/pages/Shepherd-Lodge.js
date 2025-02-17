@@ -1065,19 +1065,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
             <option value="3months">Past 3 Months</option>
           </select>
 
-          <select
-            id="unitSelection"
-            value={analysisUnit}
-            onChange={(e) => {
-              setAnalysisUnit(e.target.value);
-            }}
-          >
-            <option value="Lodge 2nd Floor">Lodge 2nd Floor</option>
-            <option value="Lodge 3rd Floor">Lodge 3rd Floor</option>
-            <option value="Lodge 4th Floor">Lodge 4th Floor</option>
-            <option value="Lodge 5th Floor">Lodge 5th Floor</option>
-            <option value="Lodge 6th Floor">Lodge 6th Floor</option>
-          </select>
+       
 
           {analysisChartData.datasets.length > 0 && <Bar data={analysisChartData} options={analysisChartOptions} />}
         </div>
