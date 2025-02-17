@@ -1216,14 +1216,19 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                     <option value="No">No</option>
                   </select>
                 </td>
-                <td style={{ fontSize: '16px', backgroundColor: item.isRnaoAssessmentUpdated === 'yes' ? 'rgba(76, 175, 80, 0.3)' : 'inherit' }}>
+                <td className={item.rnaoAssessment === 'no' ? styles.cellRed : ''} 
+                  style={{ 
+                    fontSize: '16px', 
+                  }}
+                >
                   <select
                     value={
                       item.rnaoAssessment === 'yes' || item.rnaoAssessment === 'Yes'
                         ? 'Yes'
                         : item.rnaoAssessment === 'no' || item.rnaoAssessment === 'No'
                         ? 'No'
-                        : item.rnaoAssessment}
+                        : item.rnaoAssessment
+                    }
                     onChange={(e) => handleUpdateCSV(item.id, e.target.value, name, 'rnaoAssessment')}
                   >
                     <option value="Yes">Yes</option>
