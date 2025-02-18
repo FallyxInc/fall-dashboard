@@ -532,64 +532,37 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   };
 
   const handleUpdateCSV = async (index, newValue, name, changeType) => {
-    const collectionRef = ref(db, `/shepherd/${desiredYear}/${months_backword[desiredMonth]}`);
+    const rowRef = ref(db, `/shepherd/${desiredYear}/${months_backword[desiredMonth]}/row-${index}`);
+    let updates = {};
 
-    try {
-      const snapshot = await get(collectionRef);
-
-      if (snapshot.exists()) {
-        const rows = snapshot.val();
-        let targetRowKey = null;
-
-        for (const [key, row] of Object.entries(rows)) {
-          if (row.id === String(index)) {
-            targetRowKey = key;
-            break;
-          }
-        }
-
-        if (targetRowKey) {
-          const rowRef = child(collectionRef, targetRowKey);
-          let updates = {};
-
-          switch (changeType) {
-            case 'hir':
-              updates = { hir: newValue, isHirUpdated: 'yes' };
-              break;
-            case 'hospital':
-              updates = { transfer_to_hospital: newValue, isHospitalUpdated: 'yes' };
-              break;
-            case 'ptRef':
-              updates = { ptRef: newValue, isPtRefUpdated: 'yes' };
-              break;
-            case 'poaContacted':
-              updates = { poaContacted: newValue, isPoaContactedUpdated: 'yes' };
-              break;
-            case 'physicianRef':
-              updates = { physicianRef: newValue, isPhysicianRefUpdated: 'yes' };
-              break;
-            case 'incidentReport':
-              updates = { incidentReport: newValue, isIncidentReportUpdated: 'yes' };
-              break;
-            case 'rnaoAssessment':  // Add this case for RNAO assessment
-              updates = { rnaoAssessment: newValue, isRnaoAssessmentUpdated: 'yes' };
-              break;
-            default:
-              console.error('Invalid changeType');
-              return;
-          }
-
-          await update(rowRef, updates);
-          console.log(`Row with id ${index} updated successfully.`);
-        } else {
-          console.error(`Row with id ${index} not found.`);
-        }
-      } else {
-        console.error('No data found in the specified path.');
-      }
-    } catch (error) {
-      console.error('Error updating row:', error);
+    if (changeType === 'hospital') {
+      updates['transfer_to_hospital'] = newValue;
+      updates['isHospitalUpdated'] = 'yes';
+    } else if (changeType === 'poa_contacted') {
+      updates['poaContacted'] = newValue;
+      updates['isPoaContactedUpdated'] = 'yes';
+    } else {
+      updates[changeType] = newValue;
+      updates[`is${changeType.charAt(0).toUpperCase() + changeType.slice(1)}Updated`] = 'yes';
     }
+
+    await update(rowRef, updates);
+    console.log(`Row at index ${index} updated successfully.`);
+
+    setData(prevData => {
+      const newData = [...prevData];
+      if (changeType === 'hospital') {
+        newData[index]['transfer_to_hospital'] = newValue;
+        newData[index]['isHospitalUpdated'] = 'yes';
+      } else if (changeType === 'poa_contacted') {
+        newData[index]['poaContacted'] = newValue;
+        newData[index]['isPoaContactedUpdated'] = 'yes';
+      } else {
+        newData[index][changeType] = newValue;
+        newData[index][`is${changeType.charAt(0).toUpperCase() + changeType.slice(1)}Updated`] = 'yes';
+      }
+      return newData;
+    });
   };
 
   const handleFileUpload = (event) => {
@@ -638,16 +611,16 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
               rnaoAssessment: row.rnaoAssessment?.toLowerCase() === 'yes' ? 'Yes' : 'No',
               witnessed: row.witnessed?.toLowerCase() === 'yes' ? 'Yes' : 'No',
               
-              // Update flags - always start as 'no'
-              isHirUpdated: 'no',
-              isTransferToHospitalUpdated: 'no',
-              isPtRefUpdated: 'no',
-              isPhysicianNotificationUpdated: 'no',
-              isPoaContactedUpdated: 'no',
-              isRiskManagementUpdated: 'no',
-              isRnaoAssessmentUpdated: 'no',
-              isInterventionsUpdated: 'no',
-              isCauseUpdated: 'no',
+              // // Update flags - always start as 'no'
+              // isHirUpdated: 'no',
+              // isTransferToHospitalUpdated: 'no',
+              // isPtRefUpdated: 'no',
+              // isPhysicianNotificationUpdated: 'no',
+              // isPoaContactedUpdated: 'no',
+              // isRiskManagementUpdated: 'no',
+              // isRnaoAssessmentUpdated: 'no',
+              // isInterventionsUpdated: 'no',
+              // isCauseUpdated: 'no',
               
               // Timestamps and metadata
               created_at: new Date().toISOString(),
@@ -1151,7 +1124,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                 <td style={{ fontSize: '16px', backgroundColor: item.isHirUpdated === 'yes' ? 'rgba(76, 175, 80, 0.3)' : 'inherit' }}>
                   <select
                     value={item.hir === 'yes' || item.hir === 'Yes' ? 'Yes' : item.hir === 'no' || item.hir === 'No' ? 'No' : item.hir === 'not applicable' || item.hir === 'Not Applicable' ? 'Not Applicable' : item.hir}
-                    onChange={(e) => handleUpdateCSV(item.id, e.target.value, name, 'hir')}
+                    onChange={(e) => handleUpdateCSV(i, e.target.value, name, 'hir')}
                   >
                     <option value="Yes">Yes</option>
                     <option value="No">No</option>
@@ -1170,7 +1143,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                           ? 'No' 
                           : (item.transfer_to_hospital)
                     }
-                    onChange={(e) => handleUpdateCSV(item.id, e.target.value, name, 'hospital')}
+                    onChange={(e) => handleUpdateCSV(i, e.target.value, name, 'hospital')}
                   >
                     <option value="Yes">Yes</option>
                     <option value="No">No</option>
@@ -1179,7 +1152,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                 <td style={{ fontSize: '16px', backgroundColor: item.isPtRefUpdated === 'yes' ? 'rgba(76, 175, 80, 0.3)' : 'inherit' }}>
                   <select
                     value={item.ptRef === 'yes' || item.ptRef === 'Yes' ? 'Yes' : item.ptRef === 'no' || item.ptRef === 'No' ? 'No' : item.ptRef}
-                    onChange={(e) => handleUpdateCSV(item.id, e.target.value, name, 'ptRef')}
+                    onChange={(e) => handleUpdateCSV(i, e.target.value, name, 'ptRef')}
                   >
                     <option value="Yes">Yes</option>
                     <option value="No">No</option>
@@ -1192,25 +1165,29 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                       : item.physicianRef === 'no' || item.physicianRef === 'No'
                       ? 'No'
                       : item.physicianRef}
-                    onChange={(e) => handleUpdateCSV(item.id, e.target.value, name, 'physicianRef')}
+                    onChange={(e) => handleUpdateCSV(i, e.target.value, name, 'physicianRef')}
                   >
                     <option value="Yes">Yes</option>
                     <option value="No">No</option>
                     <option value="N/A">N/A</option>
                   </select>
                 </td>
-                <td className={item.poaContacted === 'no' ? styles.cellRed : ''} 
+                <td 
+                  className={item.poaContacted === 'no' || item.poaContacted === 'No' ? styles.cellRed : ''} 
                   style={{ 
-                    fontSize: '16px', 
+                    fontSize: '16px',
+                    backgroundColor: item.isPoaContactedUpdated === 'yes' ? 'rgba(76, 175, 80, 0.3)' : 'white'
                   }}
                 >
                   <select
-                    value={item.poaContacted === 'yes' || item.poaContacted === 'Yes'
-                      ? 'Yes'
-                      : item.poaContacted === 'no' || item.poaContacted === 'No'
-                      ? 'No'
-                      : item.poaContacted}
-                    onChange={(e) => handleUpdateCSV(item.id, e.target.value, name, 'poaContacted')}
+                    value={
+                      item.poaContacted === 'yes' || item.poaContacted === 'Yes' 
+                        ? 'Yes' 
+                        : item.poaContacted === 'no' || item.poaContacted === 'No'
+                        ? 'No' 
+                        : item.poaContacted
+                    }
+                    onChange={(e) => handleUpdateCSV(i, e.target.value, name, 'poaContacted')}
                   >
                     <option value="Yes">Yes</option>
                     <option value="No">No</option>
@@ -1229,7 +1206,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                         ? 'No'
                         : item.rnaoAssessment
                     }
-                    onChange={(e) => handleUpdateCSV(item.id, e.target.value, name, 'rnaoAssessment')}
+                    onChange={(e) => handleUpdateCSV(i, e.target.value, name, 'rnaoAssessment')}
                   >
                     <option value="Yes">Yes</option>
                     <option value="No">No</option>
