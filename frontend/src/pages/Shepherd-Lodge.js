@@ -151,10 +151,10 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     scales: {
       y: {
         beginAtZero: true,
-        min: 0,
-        max: 55,
+        min: 20,
+        max: 80,
         ticks: {
-          stepSize: 5,
+          stepSize: 10,
         },
       },
     },
@@ -330,6 +330,10 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
       case 'vmltc':
         threeMonthX = ['October', 'November', 'December'];
         threeMonthY = [39, 27, 33];  // Replace with your desired values
+        break;
+      case 'shepherd':
+        threeMonthX = ['November', 'December', 'January'];
+        threeMonthY = [60, 57, 72];  // Replace with your desired values
         break;
       case 'bonairltc':
         threeMonthX = ['October', 'November', 'December'];
