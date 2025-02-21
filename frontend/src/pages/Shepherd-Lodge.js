@@ -1045,17 +1045,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
             <option value="residents">Residents w/ Recurring Falls</option>
           </select>
 
-          <select
-            id="analysisTimeRange"
-            value={analysisTimeRange}
-            onChange={(e) => {
-              setAnalysisTimeRange(e.target.value);
-            }}
-          >
-            <option value="current">Current Month</option>
-            <option value="3months">Past 3 Months</option>
-          </select>
-
+          
        
 
           {analysisChartData.datasets.length > 0 && <Bar data={analysisChartData} options={analysisChartOptions} />}
