@@ -457,6 +457,32 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
         newLabels = Object.keys(recurringFalls);
         newData = Object.values(recurringFalls);
         break;
+
+      case 'unit':
+        setAnalysisHeaderText('Falls by Unit');
+        
+        // Count falls for each unit
+        const unitCounts = {};
+        filteredData.forEach(fall => {
+          // Check both homeUnit and room fields
+          const unit = fall.homeUnit || fall.room || 'Unknown';  
+          console.log('Fall unit data:', { unit, homeUnit: fall.homeUnit, room: fall.room, fall }); // Debug log
+          unitCounts[unit] = (unitCounts[unit] || 0) + 1;
+        });
+
+        // Set the chart data
+        setAnalysisChartData({
+          labels: Object.keys(unitCounts),
+          datasets: [
+            {
+              data: Object.values(unitCounts),
+              backgroundColor: 'rgba(76, 175, 80, 0.6)',
+              borderColor: 'rgb(76, 175, 80)',
+              borderWidth: 1,
+            },
+          ],
+        });
+        break;
     }
 
     setAnalysisChartData({
@@ -910,6 +936,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
             <option value="injury">Injuries</option>
             {/* <option value="hir">Falls by HIR</option> */}
             <option value="residents">Residents w/ Recurring Falls</option>
+            <option value="unit">Falls by Unit</option>
           </select>
 
           <select
