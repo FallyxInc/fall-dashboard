@@ -14,6 +14,10 @@ import DemoManagementDashboard from './pages/DemoManagementDashboard';
 import GenerationsDashboard from './pages/Generations';
 import ShepherdLodge from './pages/Shepherd-Lodge';
 import GoderichPlace from './pages/Goderich-Place';
+import Palisade from './pages/Palisade';
+
+
+
 
 function App() {
   useEffect(() => {
@@ -260,6 +264,20 @@ function App() {
                   name="shepherd"
                   title="Shepherd Lodge Falls Dashboard"
                   goal={60}
+                
+                />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/palisade"
+            element={
+              <PrivateRoute rolesRequired={['palisade', 'responsive']}>
+                <Palisade 
+                  name="palisade"
+                  title="Palisade Gardens Falls Dashboard"
+                  goal={20}
                 
                 />
               </PrivateRoute>

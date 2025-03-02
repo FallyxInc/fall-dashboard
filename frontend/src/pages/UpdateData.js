@@ -25,7 +25,8 @@ const UpdateData = () => {
     { name: 'home4', label: 'Homes4' },
     { name: 'generations', label: 'Generations' },
     { name: 'shepherd', label: 'Shepherd Village' },
-    { name: 'goderich', label: 'Goderich Place' }
+    { name: 'goderich', label: 'Goderich Place' },
+    { name: 'palisade', label: 'Palisade Gardens' }
   ];
 
   const months = [
