@@ -22,7 +22,6 @@ import {
   countFallsByTimeOfDay,
 } from '../utils/DashboardUtils';
 import Modal from './Modal';
-import { TableHead, TableRow, TableCell, TableBody } from '@mui/material';
 
 Chart.register(ArcElement, PointElement, LineElement);
 
@@ -111,83 +110,6 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
 
   const [isDescriptionModalOpen, setIsDescriptionModalOpen] = useState(false);
   const [currentDescription, setCurrentDescription] = useState('');
-  const [currentRowId, setCurrentRowId] = useState(null);
-
-  const [expandedRows, setExpandedRows] = useState({});
-
-  const tableStyles = {
-    showMoreBtn: {
-      background: 'none',
-      border: 'none',
-      color: '#0066cc',
-      padding: 0,
-      marginLeft: '5px',
-      cursor: 'pointer',
-      fontSize: '1.0em',
-      textDecoration: 'underline'
-    },
-    showLessBtn: {
-      background: 'none',
-      border: 'none',
-      color: '#0066cc',
-      padding: 0,
-      marginLeft: '5px',
-      cursor: 'pointer',
-      fontSize: '1.0em',
-      textDecoration: 'underline'
-    },
-    descriptionCell: {
-      maxWidth: '600px',
-      wordWrap: 'break-word',
-      fontSize: '1.3em'
-    },
-    interventionCell: {
-      maxWidth: '200px',
-      wordWrap: 'break-word',
-      fontSize: '1.3em'
-    },
-    injuryCell: {
-      width: '20px',
-      minWidth: '20px',
-      maxWidth: '20px',
-      wordWrap: 'break-word',
-      fontSize: '1.3em',
-      overflow: 'hidden'
-    },
-    tableCell: {
-      fontSize: '1.3em',
-      padding: '10px'
-    },
-    headerCell: {
-      fontSize: '1.6em',
-      fontWeight: 'bold',
-      padding: '15px'
-    },
-    select: {
-      fontSize: '0.8em',
-      padding: '5px'
-    }
-  };
-
-  const riskOptions = ['Minor', 'Moderate', 'Medium'];
-  
-  const columns = [
-    { key: 'name', label: 'Resident' },
-    { key: 'Suite', label: 'Suite' },
-    { key: 'location', label: 'Location' },
-    { key: 'Witnessed', label: 'Witnessed' },
-    { key: 'time', label: 'Time' },
-    { key: 'injury', label: 'Injury' },
-    { key: 'Cause', label: 'Cause' },
-    { key: 'Description', label: 'Description' },
-    { key: 'Risk', label: 'Risk of Fall' },
-    { key: 'interventions', label: 'Intervention' }
-  ];
-
-  const truncateToTwoSentences = (text) => {
-    if (!text) return '';
-    return text.length > 90 ? text.slice(0, 90) + '...' : text;
-  };
 
   function expandedLog(item, maxDepth = 100, depth = 0) {
     if (depth > maxDepth) {
@@ -270,13 +192,12 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   const handleEditIntervention = (index) => {
     setCurrentIntervention(data[index].interventions);
     setCurrentRowIndex(index);
-    setSelectedRowId(index);
     setIsModalOpen(true);
   };
 
   const handleSubmitIntervention = async () => {
     try {
-      const rowRef = ref(db, `${name}/${desiredYear}/${months_backword[desiredMonth]}/${selectedRowId}`);
+      const rowRef = ref(db, `${name}/${desiredYear}/${months_backword[desiredMonth]}/row-${selectedRowId}`);
       
       await update(rowRef, {
         interventions: currentIntervention,
@@ -285,8 +206,8 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
       });
 
       setData(prevData =>
-        prevData.map((item, idx) =>
-          idx === selectedRowId
+        prevData.map(item =>
+          item.id === selectedRowId
             ? { ...item, interventions: currentIntervention, isInterventionsUpdated: 'yes' }
             : item
         )
@@ -300,29 +221,26 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   };
 
   const handleEditCauseOfFall = (index) => {
-    setCurrentCauseOfFall(data[index].Cause);
+    setCurrentCauseOfFall(data[index].cause);
     setCurrentCauseRowIndex(index);
     setIsCauseModalOpen(true);
   };
 
   const handleSubmitCauseOfFall = () => {
-    if (currentCauseOfFall === data[currentCauseRowIndex].Cause) {
+    if (currentCauseOfFall === data[currentCauseRowIndex].cause) {
       setIsCauseModalOpen(false);
       return;
     }
 
     const updatedData = [...data];
-    updatedData[currentCauseRowIndex].Cause = currentCauseOfFall;
+    updatedData[currentCauseRowIndex].cause = currentCauseOfFall;
     updatedData[currentCauseRowIndex].isCauseUpdated = 'yes';
 
     const rowRef = ref(
       db,
-      `/${name}/${desiredYear}/${months_backword[desiredMonth]}/${currentCauseRowIndex}`
+      `/${name}/${desiredYear}/${months_backword[desiredMonth]}/row-${data[currentCauseRowIndex].id}`
     );
-    update(rowRef, { 
-      Cause: currentCauseOfFall, 
-      isCauseUpdated: 'yes' 
-    })
+    update(rowRef, { cause: currentCauseOfFall, isCauseUpdated: 'yes' })
       .then(() => {
         console.log('Cause of fall updated successfully');
         setData(updatedData);
@@ -918,6 +836,20 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     }
   };
 
+  // Define the columns array at the top of your component
+  const columns = [
+    { key: 'name', label: 'Resident Name' },
+    { key: 'room', label: 'Suite #' },
+    { key: 'incident_location', label: 'Location' },
+    { key: 'witnessed', label: 'Witnessed' },
+    { key: 'time', label: 'Time (Day, Evening, Night)' },
+    { key: 'injury', label: 'Injury' },
+    { key: 'cause', label: 'Cause (Environmental, Physical, etc.)' },
+    { key: 'description', label: 'Description' },
+    { key: 'interventions', label: 'Intervention/Response' },
+    { key: 'riskOfFall', label: 'Risk of Fall' }
+  ];
+
   const getDuplicateNames = (data) => {
     const nameCounts = {};
     data.forEach(item => {
@@ -977,38 +909,29 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     'Unknown'
   ];
 
-  const handleEditDescription = (index) => {
-    setCurrentDescription(data[index].Description);
-    setCurrentRowIndex(index);
-    setIsDescriptionModalOpen(true);
-  };
-
-  const handleSubmitDescription = () => {
-    if (currentDescription === data[currentRowIndex].Description) {
-      setIsDescriptionModalOpen(false);
-      return;
-    }
-
-    const updatedData = [...data];
-    updatedData[currentRowIndex].Description = currentDescription;
-    updatedData[currentRowIndex].isDescriptionUpdated = 'yes';
-
-    const rowRef = ref(
-      db,
-      `/${name}/${desiredYear}/${months_backword[desiredMonth]}/row-${data[currentRowIndex].id}`
-    );
-    update(rowRef, { 
-      Description: currentDescription, 
-      isDescriptionUpdated: 'yes' 
-    })
-      .then(() => {
-        console.log('Description updated successfully');
-        setData(updatedData);
-        setIsDescriptionModalOpen(false);
-      })
-      .catch((error) => {
-        console.error('Error updating description:', error);
+  const handleSubmitDescription = async () => {
+    try {
+      const rowRef = ref(db, `${name}/${desiredYear}/${months_backword[desiredMonth]}/row-${selectedRowId}`);
+      
+      await update(rowRef, {
+        description: currentDescription,
+        isDescriptionUpdated: 'yes',
+        updated_at: new Date().toISOString()
       });
+
+      setData(prevData =>
+        prevData.map(item =>
+          item.id === selectedRowId
+            ? { ...item, description: currentDescription, isDescriptionUpdated: 'yes' }
+            : item
+        )
+      );
+
+      setIsDescriptionModalOpen(false);
+    } catch (error) {
+      console.error('Error updating description:', error);
+      alert('Failed to update description');
+    }
   };
 
   return (
@@ -1094,62 +1017,28 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
             ))}
           </select>
         </div>
-        {/* <div>
+        <div>
           <button className={styles['download-button']} onClick={handleSaveCSV}>
             Open New Incident
           </button>
           <button className={styles['download-button']} onClick={handleSavePDF}>
             Open Incident List
           </button>
-        </div> */}
+        </div>
       </div>
       {isModalOpen && (
         <div className={styles.modal}>
-          <div className={styles.modalContent} style={{ width: '90%', maxWidth: '800px' }}>
+          <div className={styles.modalContent}>
             <div>
               <h2>Edit Interventions</h2>
               <textarea 
                 value={currentIntervention} 
                 onChange={(e) => setCurrentIntervention(e.target.value)}
-                style={{ 
-                  width: '100%', 
-                  minHeight: '50px',
-                  padding: '15px',
-                  fontSize: '1.2em',
-                  marginBottom: '10px',
-                  fontFamily: 'inherit'
-                }}
+                style={{ width: '100%', minHeight: '100px' }}
               />
               <br />
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-                <button 
-                  onClick={() => setIsModalOpen(false)}
-                  style={{
-                    padding: '8px 16px',
-                    fontSize: '1.2em',
-                    cursor: 'pointer',
-                    backgroundColor: '#ccc',
-                    border: 'none',
-                    borderRadius: '4px'
-                  }}
-                >
-                  Cancel
-                </button>
-                <button 
-                  onClick={handleSubmitIntervention}
-                  style={{
-                    padding: '8px 16px',
-                    fontSize: '1.2em',
-                    cursor: 'pointer',
-                    backgroundColor: '#4CAF50',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px'
-                  }}
-                >
-                  Save
-                </button>
-              </div>
+              <button onClick={handleSubmitIntervention}>Submit</button>
+              <button onClick={() => setIsModalOpen(false)}>Cancel</button>
             </div>
           </div>
         </div>
@@ -1231,227 +1120,109 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
         />
       )}
       {isDescriptionModalOpen && (
-        <Modal
-          isOpen={isDescriptionModalOpen}
-          onClose={() => setIsDescriptionModalOpen(false)}
-          title="Edit Description"
-        >
-          <div style={{ padding: '20px' }}>
-            <textarea
-              value={currentDescription}
-              onChange={(e) => setCurrentDescription(e.target.value)}
-              style={{
-                width: '100%',
-                minHeight: '150px',
-                padding: '10px',
-                fontSize: '1.2em',
-                marginBottom: '20px'
-              }}
-            />
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-              <button
-                onClick={() => setIsDescriptionModalOpen(false)}
-                style={{
-                  padding: '8px 16px',
-                  fontSize: '1.2em',
-                  cursor: 'pointer',
-                  backgroundColor: '#ccc',
-                  border: 'none',
-                  borderRadius: '4px'
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSubmitDescription}
-                style={{
-                  padding: '8px 16px',
-                  fontSize: '1.2em',
-                  cursor: 'pointer',
-                  backgroundColor: '#4CAF50',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px'
-                }}
-              >
-                Save
-              </button>
+        <div className={styles.modal}>
+          <div className={styles.modalContent}>
+            <div>
+              <h2>Edit Description</h2>
+              <textarea 
+                value={currentDescription} 
+                onChange={(e) => setCurrentDescription(e.target.value)}
+                style={{ width: '100%', minHeight: '100px' }}
+              />
+              <br />
+              <button onClick={handleSubmitDescription}>Submit</button>
+              <button onClick={() => setIsDescriptionModalOpen(false)}>Cancel</button>
             </div>
           </div>
-        </Modal>
+        </div>
       )}
-      <div className={styles['table-container']}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              {columns.map((column) => (
-                <th key={column.key} className={styles.th} style={tableStyles.headerCell}>
-                  {column.label}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {data.map((row, index) => (
-              <tr key={index} className={styles.tr}>
-                {columns.map((column) => (
-                  <td 
-                    key={column.key} 
-                    className={styles.td} 
-                    style={{
-                      ...tableStyles.tableCell,
-                      ...(column.key === 'Description' ? tableStyles.descriptionCell : {}),
-                      ...(column.key === 'interventions' ? tableStyles.interventionCell : {}),
-                      ...(column.key === 'Injury' ? tableStyles.injuryCell : {})
-                    }}
-                  >
-                    {column.key === 'Description' ? (
-                      <div style={{ display: 'flex', alignItems: 'flex-start' }}>
-                        <div>
-                          {expandedRows[row.id] ? (
-                            <>
-                              {row[column.key]}
-                              <button
-                                style={tableStyles.showLessBtn}
-                                onClick={() => setExpandedRows(prev => ({
-                                  ...prev,
-                                  [row.id]: false
-                                }))}
-                              >
-                                Show Less
-                              </button>
-                            </>
-                          ) : (
-                            <>
-                              {truncateToTwoSentences(row[column.key])}
-                              {(row[column.key]?.match(/[^.!?]+[.!?]+/g) || []).length > 2 && (
-                                <button
-                                  style={tableStyles.showMoreBtn}
-                                  onClick={() => setExpandedRows(prev => ({
-                                    ...prev,
-                                    [index]: true
-                                  }))}
-                                >
-                                  Show More
-                                </button>
-                              )}
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    ) : column.key === 'Risk' ? (
-                      <select
-                        style={tableStyles.select}
-                        value={row[column.key] || ''}
-                        onChange={(e) => {
-                          const newValue = e.target.value;
-                          const rowRef = ref(db, `${name}/${desiredYear}/${months_backword[desiredMonth]}/${index}`);
-                          update(rowRef, {
-                            'Risk': newValue
-                          });
-                          setData(prevData => 
-                            prevData.map((item, idx) => 
-                              idx === index 
-                                ? {...item, 'Risk': newValue}
-                                : item
-                            )
-                          );
+      <div className={styles['table-container']} ref={tableRef}>
+      <table style={{ width: '100%' }}>
+        <thead>
+          <tr>
+            {columns.map(col => (
+              <th key={col.key} style={{ fontSize: '18px' }}>{col.label}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody id="fallsTableBody">
+          {data && data.map((item, i) => (
+            <tr key={i}>
+              {columns.map(col => (
+                <td key={col.key} style={{ 
+                  fontSize: '16px',
+                  ...(col.key === 'riskOfFall' && { 
+                    width: '150px', 
+                    minWidth: '150px' 
+                  })
+                }}>
+                  {col.key === 'interventions' || col.key === 'description' ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
+                      <span style={{ 
+                        color: item[`is${col.key.charAt(0).toUpperCase() + col.key.slice(1)}Updated`] === 'yes' 
+                          ? '#4CAF50' 
+                          : 'inherit' 
+                      }}>
+                        {item[col.key] || `No ${col.key} added`}
+                      </span>
+                      <button
+                        onClick={() => {
+                          setSelectedRowId(item.id);
+                          if (col.key === 'interventions') {
+                            setCurrentIntervention(item.interventions || '');
+                            setIsModalOpen(true);
+                          } else {
+                            setCurrentDescription(item.description || '');
+                            setIsDescriptionModalOpen(true);
+                          }
+                        }}
+                        style={{
+                          padding: '5px 10px',
+                          backgroundColor: '#4CAF50',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          width: 'fit-content'
                         }}
                       >
-                        <option value="">Select Risk Level</option>
-                        {riskOptions.map(option => (
-                          <option key={option} value={option}>
-                            {option}
-                          </option>
-                        ))}
-                      </select>
-                    ) : column.key === 'interventions' ? (
-                      <div style={{ display: 'flex', alignItems: 'flex-start' }}>
-                        <div>
-                          {row[column.key]}
-                          <button
-                            onClick={() => handleEditIntervention(index)}
-                            style={{
-                              ...tableStyles.showMoreBtn,
-                              marginLeft: '10px',
-                              color: '#4CAF50'
-                            }}
-                          >
-                            Edit
-                          </button>
-                        </div>
-                      </div>
-                    ) : column.key === 'Cause' ? (
-                      <div style={{ display: 'flex', alignItems: 'flex-start' }}>
-                        <div>
-                          {expandedRows[index] ? (
-                            <>
-                              {row[column.key]}
-                              
-                            </>
-                          ) : (
-                            <>
-                              {truncateToTwoSentences(row[column.key])}
-                              {(row[column.key]?.match(/[^.!?]+[.!?]+/g) || []).length > 2 && (
-                                <button
-                                  style={tableStyles.showMoreBtn}
-                                  onClick={() => setExpandedRows(prev => ({
-                                    ...prev,
-                                    [index]: true
-                                  }))}
-                                >
-                                  Show More
-                                </button>
-                              )}
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    ) : column.key === 'Description' ? (
-                      <div style={{ display: 'flex', alignItems: 'flex-start' }}>
-                        <div>
-                          {expandedRows[index] ? (
-                            <>
-                              {row[column.key]}
-                              <button
-                                style={tableStyles.showLessBtn}
-                                onClick={() => setExpandedRows(prev => ({
-                                  ...prev,
-                                  [index]: false
-                                }))}
-                              >
-                                Show Less
-                              </button>
-                            </>
-                          ) : (
-                            <>
-                              {truncateToTwoSentences(row[column.key])}
-                              {(row[column.key]?.match(/[^.!?]+[.!?]+/g) || []).length > 2 && (
-                                <button
-                                  style={tableStyles.showMoreBtn}
-                                  onClick={() => setExpandedRows(prev => ({
-                                    ...prev,
-                                    [index]: true
-                                  }))}
-                                >
-                                  Show More
-                                </button>
-                              )}
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    ) : (
-                      row[column.key]
-                    )}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                        Edit
+                      </button>
+                    </div>
+                  ) : col.key === 'cause' ? (
+                    <select
+                      value={item.cause || ''}
+                      onChange={(e) => handleUpdateCSV(item.id, e.target.value, name, 'cause')}
+                      style={{ width: '100%', padding: '5px' }}
+                    >
+                      <option value="">Select Cause</option>
+                      {causeOptions.map(option => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                  ) : col.key === 'riskOfFall' ? (
+                    <select
+                      value={item[col.key] || ''}
+                      onChange={(e) => handleUpdateCSV(item.id, e.target.value, name, 'riskOfFall')}
+                      style={{ width: '100%', padding: '5px' }}
+                    >
+                      <option value="">Select Risk Level</option>
+                      <option value="Low">Low</option>
+                      <option value="Medium">Medium</option>
+                      <option value="High">High</option>
+                    </select>
+                  ) : (
+                    item[col.key]
+                  )}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
       </div>
     </div>
   );
 }
-
