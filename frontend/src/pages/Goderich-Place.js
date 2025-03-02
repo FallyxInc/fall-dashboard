@@ -169,7 +169,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     }
   };
 
-  const riskOptions = ['Minor', 'Moderate', 'Medium'];
+  const riskOptions = ['Near Miss', 'Minor', 'Moderate', 'Major', 'Catastrophic'];
   
   const columns = [
     { key: 'name', label: 'Resident' },
