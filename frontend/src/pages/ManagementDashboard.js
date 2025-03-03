@@ -234,7 +234,7 @@ export default function ManagementDashboard() {
     };
 
     const fetchDataForHome = (home) => {
-      const year = currentMonth === '01' || currentMonth === '02' ? 2025 : 2024;
+      const year = currentMonth === '01' || currentMonth === '02' || currentMonth === '03' ? 2025 : 2024;
       const path = `/${home}/${year}/${currentMonth}`;
       const fallsRef = ref(db, path);
       
@@ -403,7 +403,7 @@ export default function ManagementDashboard() {
 
     // LOGIC FOR graph of non-compliance!
     const fetchDataForHome = (home) => {
-      const year = currentMonth === '01' || currentMonth === '02' ? 2025 : 2024;
+      const year = currentMonth === '01' || currentMonth === '02' || currentMonth === '03' ? 2025 : 2024;
       const path = `/${home}/${year}/${currentMonth}`;
       const fallsRef = ref(db, path);
       
