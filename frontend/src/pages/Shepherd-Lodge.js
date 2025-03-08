@@ -536,7 +536,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   };
 
   const handleUpdateCSV = async (index, newValue, name, changeType) => {
-    const rowRef = ref(db, `/shepherd/${desiredYear}/${months_backword[desiredMonth]}/row-${index}`);
+    const rowRef = ref(db, `/shepherd/${desiredYear}/${months_backword[desiredMonth]}/${index}`);
     let updates = {};
 
     if (changeType === 'hospital') {
@@ -640,7 +640,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
 
             console.log(`Writing row ${i}:`, updatedRow);
 
-            const rowRef = ref(db, `shepherd/${desiredYear}/${months_backword[desiredMonth]}/row-${i}`);
+            const rowRef = ref(db, `shepherd/${desiredYear}/${months_backword[desiredMonth]}/${i}`);
             await set(rowRef, updatedRow);
           }
 
