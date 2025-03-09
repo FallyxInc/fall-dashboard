@@ -186,7 +186,8 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
 
   const truncateToTwoSentences = (text) => {
     if (!text) return '';
-    return text.length > 90 ? text.slice(0, 90) + '...' : text;
+    const maxLength = 90;
+    return text.length > maxLength ? text.slice(0, maxLength) + '...' : text;
   };
 
   function expandedLog(item, maxDepth = 100, depth = 0) {
@@ -1324,7 +1325,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                           ) : (
                             <>
                               {truncateToTwoSentences(row[column.key])}
-                              {(row[column.key]?.match(/[^.!?]+[.!?]+/g) || []).length > 2 && (
+                              {row[column.key]?.length > 90 && (
                                 <button
                                   style={tableStyles.showMoreBtn}
                                   onClick={() => setExpandedRows(prev => ({
@@ -1392,7 +1393,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                           ) : (
                             <>
                               {truncateToTwoSentences(row[column.key])}
-                              {(row[column.key]?.match(/[^.!?]+[.!?]+/g) || []).length > 2 && (
+                              {row[column.key]?.length > 90 && (
                                 <button
                                   style={tableStyles.showMoreBtn}
                                   onClick={() => setExpandedRows(prev => ({
@@ -1426,7 +1427,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                           ) : (
                             <>
                               {truncateToTwoSentences(row[column.key])}
-                              {(row[column.key]?.match(/[^.!?]+[.!?]+/g) || []).length > 2 && (
+                              {row[column.key]?.length > 90 && (
                                 <button
                                   style={tableStyles.showMoreBtn}
                                   onClick={() => setExpandedRows(prev => ({
