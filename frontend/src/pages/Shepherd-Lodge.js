@@ -203,7 +203,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     updatedData[currentRowIndex].isInterventionsUpdated = 'yes';
 
     console.log(updatedData);
-    const rowRef = ref(db, `/${name}/${desiredYear}/${months_backword[desiredMonth]}/row-${data[currentRowIndex].id}`);
+    const rowRef = ref(db, `/${name}/${desiredYear}/${months_backword[desiredMonth]}/${currentRowIndex}`);
     update(rowRef, {
       interventions: currentIntervention,
       isInterventionsUpdated: 'yes',
@@ -236,7 +236,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
 
     const rowRef = ref(
       db,
-      `/${name}/${desiredYear}/${months_backword[desiredMonth]}/row-${data[currentCauseRowIndex].id}`
+      `/${name}/${desiredYear}/${months_backword[desiredMonth]}/${currentCauseRowIndex}`
     );
     update(rowRef, { cause: currentCauseOfFall, isCauseUpdated: 'yes' })
       .then(() => {
@@ -268,7 +268,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
 
     const rowRef = ref(
       db,
-      `/${name}/${desiredYear}/${months_backword[desiredMonth]}/row-${data[currentPostFallNotesRowIndex].id}`
+      `/${name}/${desiredYear}/${months_backword[desiredMonth]}/${currentPostFallNotesRowIndex}`
     );
     update(rowRef, { postFallNotes: currentPostFallNotes, isPostFallNotesUpdated: 'yes' })
       .then(() => {
@@ -298,7 +298,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
 
     const rowRef = ref(
       db,
-      `/${name}/${desiredYear}/${months_backword[desiredMonth]}/row-${data[currentRowIndex].id}`
+      `/${name}/${desiredYear}/${months_backword[desiredMonth]}/${currentRowIndex}`
     );
     update(rowRef, { longTermIntervention: currentLongTermIntervention })
       .then(() => {
