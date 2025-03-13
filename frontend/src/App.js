@@ -15,6 +15,7 @@ import GenerationsDashboard from './pages/Generations';
 import ShepherdLodge from './pages/Shepherd-Lodge';
 import GoderichPlace from './pages/Goderich-Place';
 import Palisade from './pages/Palisade';
+import Wellington from './pages/Wellington';
 
 
 
@@ -99,6 +100,19 @@ function App() {
             element={
               <PrivateRoute rolesRequired={['wellington', 'responsive']}>
                 <Dashboard
+                  name="wellington"
+                  title={'The Wellington LTC Falls Dashboard'}
+                  unitSelectionValues={['allUnits', 'Gage North', 'Gage West', 'Lawrence']}
+                  goal={10}
+                />
+              </PrivateRoute>
+            }
+          />
+           <Route
+            path="/tw2"
+            element={
+              <PrivateRoute rolesRequired={['wellington', 'responsive', 'tw2']}>
+                <Wellington
                   name="wellington"
                   title={'The Wellington LTC Falls Dashboard'}
                   unitSelectionValues={['allUnits', 'Gage North', 'Gage West', 'Lawrence']}

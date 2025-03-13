@@ -110,7 +110,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     {
       id: 'insight-1',
       emoji: "📌",
-      content: "Monthly fall prevention protocol review is due. Please ensure all staff are updated on current procedures.",
+      content: "4 falls have all happened in the Night shift.",
       type: "reminder",
       rating: 0,
       reviewed: false
@@ -118,7 +118,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     {
       id: 'insight-2',
       emoji: "💡",
-      content: "Corridor lighting inspection needed in all units. Focus on evening shift transition periods for maximum safety.",
+      content: "Heene, Wilfred fell for the same cause of fall as last month, exit-seeking behaviour.",
       type: "tip",
       rating: 0,
       reviewed: false
@@ -126,35 +126,36 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     {
       id: 'insight-3',
       emoji: "🎯",
-      content: "Barry, Peter fell due to getting up to use the washroom twice & both during the evening shift.",
+      content: "Pereira, Eugene intervention is not related to cause of fall.",
       type: "goal",
       rating: 0,
       reviewed: false
-    },
-    {
-      id: 'insight-4',
-      emoji: "⚠️",
-      content: "30% of falls happened due to residents getting up to use the washroom.",
-      type: "maintenance",
-      rating: 0,
-      reviewed: false
-    },
-    {
-      id: 'insight-5',
-      emoji: "📊",
-      content: "Multiple falls happened at 14 - 16hrs, this could indicate a trend.",
-      type: "training",
-      rating: 0,
-      reviewed: false
-    },
-    {
-      id: 'insight-6',
-      emoji: ".",
-      content: "Multiple falls happened at 14 - 16hrs, this could indicate a trend.",
-      type: "training",
-      rating: 0,
-      reviewed: false
     }
+    // 
+    // {
+    //   id: 'insight-4',
+    //   emoji: "⚠️",
+    //   content: "30% of falls happened due to residents getting up to use the washroom.",
+    //   type: "maintenance",
+    //   rating: 0,
+    //   reviewed: false
+    // },
+    // {
+    //   id: 'insight-5',
+    //   emoji: "📊",
+    //   content: "Multiple falls happened at 14 - 16hrs, this could indicate a trend.",
+    //   type: "training",
+    //   rating: 0,
+    //   reviewed: false
+    // },
+    // {
+    //   id: 'insight-6',
+    //   emoji: ".",
+    //   content: "Multiple falls happened at 14 - 16hrs, this could indicate a trend.",
+    //   type: "training",
+    //   rating: 0,
+    //   reviewed: false
+    // }
   ]);
 
   const [insightRatings, setInsightRatings] = useState({});
@@ -220,6 +221,21 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
       tooltip: { enabled: false },
       legend: { display: false },
     },
+  };
+
+  // Add helper function to check for falls within 72 hours
+  const hasNearbyFall = (currentFall, allFalls) => {
+    const currentDate = new Date(currentFall.date + ' ' + currentFall.time);
+    
+    return allFalls.some(fall => {
+      if (fall === currentFall) return false;
+      if (fall.name !== currentFall.name) return false;
+      
+      const fallDate = new Date(fall.date + ' ' + fall.time);
+      const hoursDiff = Math.abs(fallDate - currentDate) / (1000 * 60 * 60);
+      
+      return hoursDiff <= 72;
+    });
   };
 
   const handleEditIntervention = (index) => {
@@ -450,7 +466,6 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     if (selectedUnit !== 'allUnits') {
       filteredData = filteredData.filter(
         (fall) => {
-          // Get the unit from either homeUnit or room field
           const unitValue = fall.homeUnit || fall.room;
           return unitValue?.trim() === selectedUnit?.trim();
         }
@@ -494,32 +509,6 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
         var recurringFalls = countResidentsWithRecurringFalls(filteredData);
         newLabels = Object.keys(recurringFalls);
         newData = Object.values(recurringFalls);
-        break;
-
-      case 'unit':
-        setAnalysisHeaderText('Falls by Unit');
-        
-        // Count falls for each unit
-        const unitCounts = {};
-        filteredData.forEach(fall => {
-          // Check both homeUnit and room fields
-          const unit = fall.homeUnit || fall.room || 'Unknown';  
-          console.log('Fall unit data:', { unit, homeUnit: fall.homeUnit, room: fall.room, fall }); // Debug log
-          unitCounts[unit] = (unitCounts[unit] || 0) + 1;
-        });
-
-        // Set the chart data
-        setAnalysisChartData({
-          labels: Object.keys(unitCounts),
-          datasets: [
-            {
-              data: Object.values(unitCounts),
-              backgroundColor: 'rgba(76, 175, 80, 0.6)',
-              borderColor: 'rgb(76, 175, 80)',
-              borderWidth: 1,
-            },
-          ],
-        });
         break;
     }
 
@@ -1241,21 +1230,24 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
           <h2>
             Falls Tracking Table: {desiredMonth} {desiredYear}
           </h2>
-          <select onChange={handleYearChange} value={desiredYear}>
-            {Object.keys(availableYearMonth).map((year) => (
-              <option key={year} value={year}>
-                {year}
-              </option>
-            ))}
-          </select>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+            <select onChange={handleYearChange} value={desiredYear}>
+              {Object.keys(availableYearMonth).map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </select>
 
-          <select onChange={handleMonthChange} value={desiredMonth}>
-            {(availableYearMonth[desiredYear] || []).map((month) => (
-              <option key={month} value={month}>
-                {month}
-              </option>
-            ))}
-          </select>
+            <select onChange={handleMonthChange} value={desiredMonth}>
+              {(availableYearMonth[desiredYear] || []).map((month) => (
+                <option key={month} value={month}>
+                  {month}
+                </option>
+              ))}
+            </select>
+
+          </div>
         </div>
         <div>
           <button className={styles['download-button']} onClick={handleSaveCSV}>
@@ -1267,41 +1259,166 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
         </div>
       </div>
       <table style={{ width: '100%' }}>
+        {/* Set the table width to 100% to make it wider */}
         <thead>
           <tr>
-            {columns.map(col => (
-              <th key={col.key} style={{ fontSize: '18px' }}>{col.label}</th>
-            ))}
+            <th style={{ fontSize: '18px' }}>Date</th> {/* Increased font size */}
+            <th style={{ fontSize: '18px' }}>Name</th>
+            <th style={{ fontSize: '18px' }}>Time</th>
+            <th style={{ fontSize: '18px' }}>Location</th>
+            <th style={{ fontSize: '18px' }}>RHA</th>
+            <th style={{ fontSize: '18px' }}>Nature of Fall/Cause</th>
+            <th style={{ fontSize: '18px' }}>Interventions</th>
+            <th style={{ fontSize: '18px' }}>HIR intiated</th>
+            <th style={{ fontSize: '18px' }}>Injury</th>
+            <th style={{ fontSize: '18px' }}>Transfer to Hospital</th>
+            <th style={{ fontSize: '18px' }}>PT Ref</th>
+            <th style={{ fontSize: '18px' }}>Physician/NP Notification (If Applicable)</th>
+            <th style={{ fontSize: '18px' }}>POA Contacted</th>
+            <th style={{ fontSize: '18px' }}>Risk Management Incident Fall Written</th>
+            <th style={{ fontSize: '18px' }}>3 Post Fall Notes in 72hrs</th>
           </tr>
         </thead>
         <tbody id="fallsTableBody">
           {data.map((item, i) => (
-            <tr key={i}>
-              {columns.map(col => (
-                <td key={col.key} style={{ fontSize: '16px', whiteSpace: col.key === 'date' ? 'nowrap' : 'normal' }}>
-                  {col.key === 'transfer_to_hospital' ? (
-                    <select
-                      value={item[col.key] === 'yes' || item[col.key] === 'Yes' ? 'Yes' : 'No'}
-                      onChange={(e) => handleUpdateCSV(data[i].id, e.target.value, 'generations', 'hospital')}
-                    >
-                      <option value="Yes">Yes</option>
-                      <option value="No">No</option>
-                    </select>
-                  ) : col.key === 'longTermIntervention' ? (
-                    <div style={{ cursor: 'pointer' }} onClick={() => handleEditLongTermIntervention(i)}>
-                      {item[col.key] || 'Click to add'}
-                    </div>
-                  ) : (
-                    item[col.key]
-                  )}
-                </td>
-              ))}
+            <tr 
+              style={{ 
+                backgroundColor: 'inherit'
+              }}
+              key={i}
+            >
+              <td style={{ whiteSpace: 'nowrap', fontSize: '16px' }}>{item.date}</td>
+              <td style={{ fontSize: '16px' }}>{item.name}</td>
+              <td style={{ fontSize: '16px' }}>{item.time}</td>
+              <td style={{ fontSize: '16px' }}>{item.location || item.incident_location}</td>
+              <td style={{ fontSize: '16px' }}>{item.homeUnit || item.room}</td>
+              <td style={{ fontSize: '16px', backgroundColor: item.isCauseUpdated === 'yes' ? 'rgba(76, 175, 80, 0.3)' : 'inherit' }}>
+                {item.cause}
+                <br />
+                <button onClick={() => handleEditCauseOfFall(i)}>Edit</button>
+              </td>
+              <td style={{ fontSize: '16px', backgroundColor: item.isInterventionsUpdated === 'yes' ? 'rgba(76, 175, 80, 0.3)' : 'inherit' }}>
+                {item.interventions}
+                <br />
+                <button onClick={() => handleEditIntervention(i)}>Edit</button>
+              </td>
+              <td style={{ fontSize: '16px', backgroundColor: item.isHirUpdated === 'yes' ? 'rgba(76, 175, 80, 0.3)' : 'inherit' }}>
+                <select
+                  value={item.hir === 'yes' || item.hir === 'Yes' ? 'Yes' : item.hir === 'no' || item.hir === 'No' ? 'No' : item.hir === 'not applicable' || item.hir === 'Not Applicable' ? 'Not Applicable' : item.hir}
+                  onChange={(e) => handleUpdateCSV(data[i].id, e.target.value, name, 'hir')}
+                >
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                  <option value="Not Applicable">Not Applicable</option>
+                </select>
+              </td>
+              <td style={{ fontSize: '16px' }}>{item.injury || item.injuries}</td>
+              <td style={{ fontSize: '16px', backgroundColor: item.isHospitalUpdated === 'yes' ? 'rgba(76, 175, 80, 0.3)' : 'inherit' }}>
+                <select
+                  value={
+                    (item.transfer_to_hospital) === 'yes' || 
+                    (item.transfer_to_hospital) === 'Yes' 
+                      ? 'Yes' 
+                      : (item.transfer_to_hospital) === 'no' || 
+                        (item.transfer_to_hospital) === 'No'
+                        ? 'No' 
+                        : (item.transfer_to_hospital)
+                  }
+                  onChange={(e) => handleUpdateCSV(data[i].id, e.target.value, name, 'hospital')}
+                >
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </select>
+              </td>
+              <td style={{ fontSize: '16px', backgroundColor: item.isPtRefUpdated === 'yes' ? 'rgba(76, 175, 80, 0.3)' : 'inherit' }}>
+                <select
+                  value={item.ptRef === 'yes' || item.ptRef === 'Yes' ? 'Yes' : item.ptRef === 'no' || item.ptRef === 'No' ? 'No' : item.ptRef}
+                  onChange={(e) => handleUpdateCSV(data[i].id, e.target.value, name, 'ptRef')}
+                >
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </select>
+              </td>
+              <td style={{ fontSize: '16px', backgroundColor: item.isPhysicianRefUpdated === 'yes' ? 'rgba(76, 175, 80, 0.3)' : 'inherit' }}>
+                <select
+                  value={item.physicianRef === 'yes' || item.physicianRef === 'Yes'
+                    ? 'Yes'
+                    : item.physicianRef === 'no' || item.physicianRef === 'No'
+                    ? 'No'
+                    : item.physicianRef}
+                  onChange={(e) => handleUpdateCSV(data[i].id, e.target.value, name, 'physicianRef')}
+                >
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                  <option value="N/A">N/A</option>
+                </select>
+              </td>
+              <td style={{ fontSize: '16px' }}>
+                <select
+                  value={item.poaContacted === 'yes' || item.poaContacted === 'Yes'
+                    ? 'Yes'
+                    : item.poaContacted === 'no' || item.poaContacted === 'No'
+                    ? 'No'
+                    : item.poaContacted}
+                  onChange={(e) => handleUpdateCSV(data[i].id, e.target.value, name, 'poaContacted')}
+                >
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </select>
+              </td>
+              <td style={{ fontSize: '16px', backgroundColor: item.isIncidentReportUpdated === 'yes' ? 'rgba(76, 175, 80, 0.3)' : 'inherit' }}>
+                <select
+                  value={
+                    item.incidentReport === 'yes' || item.incidentReport === 'Yes'
+                      ? 'Yes'
+                      : item.incidentReport === 'no' || item.incidentReport === 'No'
+                      ? 'No'
+                      : item.incidentReport
+                  }
+                  onChange={(e) => handleUpdateCSV(data[i].id, e.target.value, name, 'incidentReport')}
+                >
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </select>
+              </td>
+              <td style={{
+                  fontSize: '16px',
+                  backgroundColor: (() => {
+                    // If it's just a number as a string (e.g. "3"), use that directly
+                    const notesCount = !isNaN(item.postFallNotes) ? 
+                      parseInt(item.postFallNotes) : 
+                      item.postFallNotes?.split(',').filter(note => note.trim()).length || 0;
+                    
+                    console.log(`${item.name} - Notes count:`, notesCount);
+                    console.log(`${item.name} - Raw notes:`, item.postFallNotes);
+                    console.log(`${item.name} - Is numeric:`, !isNaN(item.postFallNotes));
+                    
+                    if (item.isPostFallNotesUpdated === 'yes') {
+                      return 'rgba(76, 175, 80, 0.3)';
+                    }
+                    
+                    if (hasNearbyFall(item, data)) {
+                      return 'inherit';
+                    }
+                    
+                    if (item.transfer_to_hospital?.toLowerCase() === 'yes') {
+                      return 'inherit';
+                    }
+                    
+                    return notesCount < 3 ? '#ffebee' : 'inherit';
+                  })(),
+                  color: item.isPostFallNotesUpdated === 'yes' ? '#179c4e' : '#000000',
+                  fontWeight: 'bold',
+                }}
+              >
+                {item.postFallNotes}
+                <br />
+                <button onClick={() => handleEditPostFallNotes(i)}>Edit</button>
+              </td>
             </tr>
           ))}
         </tbody>
       </table>
-
-      
       {isModalOpen && (
         <div className={styles.modal}>
           <div className={styles.modalContent}>
@@ -1337,23 +1454,6 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
               <br />
               <button onClick={handleSubmitPostFallNotes}>Submit</button>
               <button onClick={() => setIsPostFallNotesModalOpen(false)}>Cancel</button>
-            </div>
-          </div>
-        </div>
-      )}
-      {isLongTermInterventionModalOpen && (
-        <div className={styles.modal}>
-          <div className={styles.modalContent}>
-            <div>
-              <h2>Edit Long Term Intervention</h2>
-              <textarea 
-                value={currentLongTermIntervention} 
-                onChange={(e) => setCurrentLongTermIntervention(e.target.value)}
-                style={{ width: '100%', minHeight: '100px' }}
-              />
-              <br />
-              <button onClick={handleSubmitLongTermIntervention}>Submit</button>
-              <button onClick={() => setIsLongTermInterventionModalOpen(false)}>Cancel</button>
             </div>
           </div>
         </div>

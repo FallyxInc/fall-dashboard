@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Falls Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+                Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7f9;
+            padding: 20px;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .dashboard {
+            max-width: 95%;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        
+        .chart-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .chart {
+            flex: 1;
+            min-width: 300px;
+            background-color: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+        
+        .chart h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+        
+        /* Removed gauge styling */
+        
+        select {
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .download-button {
+            padding: 8px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        
+        th {
+            background-color: #f2f2f2;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .cellRed {
+            background-color: #ffcdd2;
+        }
+        
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+        
+        .modalContent {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            min-width: 300px;
+        }
+        
+        .modalContent textarea {
+            width: 100%;
+            height: 100px;
+            padding: 8px;
+            margin: 10px 0;
+        }
+        
+        .modalContent button {
+            padding: 8px 15px;
+            margin-right: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .modalContent button:first-of-type {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        /* Insights section styles */
+        .insights-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            height: 350px;
+            overflow-y: auto;
+            padding-right: 15px;
+        }
+        
+        .insight-card {
+            background-color: #f5fbf6;
+            border-left: 5px solid #4CAF50;
+            border-radius: 4px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .insight-card h3 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .insight-card p {
+            font-size: 15px;
+            line-height: 1.4;
+            margin-bottom: 15px;
+            color: #555;
+        }
+        
+        .insight-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        .show-me-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 15px;
+            cursor: pointer;
+        }
+        
+        .mark-done-btn {
+            background-color: transparent;
+            color: #4CAF50;
+            border: 1px solid #4CAF50;
+            border-radius: 4px;
+            padding: 8px 15px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard" id="dashboard">
+        <h1>Falls Tracking Dashboard</h1>
+        
+        <div class="chart-container">
+            
+            <div class="chart">
+                <h2>Overall Insights:</h2>
+                <div class="insights-container">
+                    <div class="insight-card">
+                        <h3>Morning Falls Trend</h3>
+                        <p>4 falls occurred during morning hours (5AM-11AM) this month, primarily during transfer activities</p>
+                        <div class="insight-buttons">
+                            <button class="show-me-btn">Show Me</button>
+                            <button class="mark-done-btn">Mark as Done</button>
+                        </div>
+                    </div>
+                    
+                    <div class="insight-card">
+                        <h3>New Intervention Suggested!</h3>
+                        <p>Thompson Mary fell twice due to the same cause, and the listed intervention was previously ineffective.</p>
+                        <div class="insight-buttons">
+                            <button class="show-me-btn">Show Me</button>
+                            <button class="mark-done-btn">Mark as Done</button>
+                        </div>
+                    </div>
+                    
+                    <div class="insight-card">
+                        <h3>Equipment Usage Trend</h3>
+                        <p>There's been a 75% increase in falls due to improper equipment usage</p>
+                        <div class="insight-buttons">
+                            <button class="show-me-btn">Show Me</button>
+                            <button class="mark-done-btn">Mark as Done</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chart">
+                <h2 id="analysisHeaderText">Falls by Time of Day</h2>
+                <select id="fallsAnalysisType">
+                    <option value="timeOfDay">Time of Day</option>
+                    <option value="location">Location</option>
+                    <option value="injuries">Injuries</option>
+                    <option value="residents">Residents w/ Recurring Falls</option>
+                </select>
+                
+                <select id="analysisTimeRange">
+                    <option value="current">Current Month</option>
+                    <option value="3months">Past 3 Months</option>
+                </select>
+                
+                <select id="unitSelection">
+                    <option value="allUnits">All Units</option>
+                    <option value="Unit A">Unit A</option>
+                    <option value="Unit B">Unit B</option>
+                    <option value="Unit C">Unit C</option>
+                </select>
+                
+                <canvas id="analysisChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="table-header">
+            <div class="header">
+                <h2>Falls Tracking Table: March 2025</h2>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <select id="yearSelect">
+                        <option value="2025">2025</option>
+                        <option value="2024">2024</option>
+                    </select>
+                    
+                    <select id="monthSelect">
+                        <option value="March">March</option>
+                        <option value="February">February</option>
+                        <option value="January">January</option>
+                    </select>
+                </div>
+            </div>
+            <div>
+                <button class="download-button" id="downloadCSV">Download as CSV</button>
+                <button class="download-button" id="downloadPDF">Download as PDF</button>
+            </div>
+        </div>
+        
+        <div class="table-container">
+            <table>
+            <thead>
+                <tr>
+                    <th style="font-size: 18px;">Date</th>
+                    <th style="font-size: 18px;">Name</th>
+                    <th style="font-size: 18px;">Time</th>
+                    <th style="font-size: 18px;">Location</th>
+                    <th style="font-size: 18px;">RHA</th>
+                    <th style="font-size: 18px;">Nature of Fall/Cause</th>
+                    <th style="font-size: 18px;">Interventions</th>
+                    <th style="font-size: 18px;">HIR initiated</th>
+                    <th style="font-size: 18px;">Injury</th>
+                    <th style="font-size: 18px;">Transfer to Hospital</th>
+                </tr>
+            </thead>
+            <tbody id="fallsTableBody">
+                <tr>
+                    <td style="white-space: nowrap; font-size: 16px;">2025-03-10</td>
+                    <td style="font-size: 16px;">Thompson Mary</td>
+                    <td style="font-size: 16px;">08:30</td>
+                    <td style="font-size: 16px;">Bathroom</td>
+                    <td style="font-size: 16px;">Unit A</td>
+                    <td style="font-size: 16px;">Slip during transfer</td>
+                    <td style="font-size: 16px;">Assistance during transfers, anti-slip mat</td>
+                    <td style="font-size: 16px;">
+                        <select>
+                            <option value="Yes">Yes</option>
+                            <option value="No" selected>No</option>
+                            <option value="Not Applicable">Not Applicable</option>
+                        </select>
+                    </td>
+                    <td style="font-size: 16px;">Minor bruising</td>
+                    <td style="font-size: 16px;">
+                        <select>
+                            <option value="Yes">Yes</option>
+                            <option value="No" selected>No</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="white-space: nowrap; font-size: 16px;">2025-03-08</td>
+                    <td style="font-size: 16px;">Johnson Robert</td>
+                    <td style="font-size: 16px;">14:15</td>
+                    <td style="font-size: 16px;">Bedroom</td>
+                    <td style="font-size: 16px;">Unit B</td>
+                    <td style="font-size: 16px;">Lost balance while walking</td>
+                    <td style="font-size: 16px;">Walker provided, gait training</td>
+                    <td style="font-size: 16px;">
+                        <select>
+                            <option value="Yes" selected>Yes</option>
+                            <option value="No">No</option>
+                            <option value="Not Applicable">Not Applicable</option>
+                        </select>
+                    </td>
+                    <td style="font-size: 16px;">Hip pain</td>
+                    <td style="font-size: 16px;">
+                        <select>
+                            <option value="Yes" selected>Yes</option>
+                            <option value="No">No</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="white-space: nowrap; font-size: 16px;">2025-03-05</td>
+                    <td style="font-size: 16px;">Smith Clara</td>
+                    <td style="font-size: 16px;">22:45</td>
+                    <td style="font-size: 16px;">Hallway</td>
+                    <td style="font-size: 16px;">Unit C</td>
+                    <td style="font-size: 16px;">Tripped on rug</td>
+                    <td style="font-size: 16px;">Remove tripping hazards, assess vision</td>
+                    <td style="font-size: 16px;">
+                        <select>
+                            <option value="Yes">Yes</option>
+                            <option value="No" selected>No</option>
+                            <option value="Not Applicable">Not Applicable</option>
+                        </select>
+                    </td>
+                    <td style="font-size: 16px;">None</td>
+                    <td style="font-size: 16px;">
+                        <select>
+                            <option value="Yes">Yes</option>
+                            <option value="No" selected>No</option>
+                        </select>
+                    </td>
+                </tr>
+            </tbody>
+                    </table>
+        </div>
+    </div>
+
+    <script>
+        // Initialize charts when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // No need for gauge chart anymore
+
+            // Create analysis chart
+            const analysisCtx = document.getElementById('analysisChart').getContext('2d');
+            const analysisChart = new Chart(analysisCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Morning', 'Evening', 'Night'],
+                    datasets: [{
+                        data: [4, 3, 3],
+                        backgroundColor: 'rgba(76, 175, 80, 0.6)',
+                        borderColor: 'rgb(76, 175, 80)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: { enabled: false },
+                        legend: { display: false }
+                    }
+                }
+            });
+
+            // Set total falls counter
+            document.querySelector('.fall-counter .count').textContent = 7;
+            document.getElementById('fallsAnalysisType').addEventListener('change', function(e) {
+                const analysisType = e.target.value;
+                const headerText = document.getElementById('analysisHeaderText');
+                
+                let newLabels = [];
+                let newData = [];
+                
+                switch(analysisType) {
+                    case 'timeOfDay':
+                        headerText.textContent = 'Falls by Time of Day';
+                        newLabels = ['Morning', 'Evening', 'Night'];
+                        newData = [4, 3, 3];
+                        break;
+                    case 'location':
+                        headerText.textContent = 'Falls by Location';
+                        newLabels = ['Bathroom', 'Bedroom', 'Hallway', 'Dining'];
+                        newData = [5, 2, 2, 1];
+                        break;
+                    case 'injuries':
+                        headerText.textContent = 'Falls by Injury Description';
+                        newLabels = ['None', 'Minor', 'Moderate', 'Severe'];
+                        newData = [3, 5, 1, 1];
+                        break;
+                    case 'residents':
+                        headerText.textContent = 'Residents with Recurring Falls';
+                        newLabels = ['Thompson M.', 'Johnson R.', 'Williams A.'];
+                        newData = [2, 1, 1];
+                        break;
+                }
+                
+                analysisChart.data.labels = newLabels;
+                analysisChart.data.datasets[0].data = newData;
+                analysisChart.update();
+            });
+
+            // Handle "Show Me" buttons
+            document.querySelectorAll('.show-me-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const insightType = this.parentElement.parentElement.querySelector('h3').textContent;
+                    alert('Showing details for: ' + insightType);
+                });
+            });
+
+            // Handle "Mark as Done" buttons
+            document.querySelectorAll('.mark-done-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const card = this.parentElement.parentElement;
+                    card.style.opacity = '0.6';
+                    this.textContent = 'Marked Done';
+                    this.disabled = true;
+                });
+            });
+
+            // Handle download buttons (mock functionality)
+            document.getElementById('downloadCSV').addEventListener('click', function() {
+                alert('CSV download would start here');
+            });
+            
+            document.getElementById('downloadPDF').addEventListener('click', function() {
+                alert('PDF download would start here');
+            });
+        });
+    </script>
+</body>
+</html>
