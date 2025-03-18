@@ -594,7 +594,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
             case 'hir':
               updates = { hir: newValue, isHirUpdated: 'yes' };
               break;
-            case 'hospital':
+            case 'transfer_to_hospital':
               updates = { transfer_to_hospital: newValue, isHospitalUpdated: 'yes' };
               break;
             case 'ptRef':
@@ -1119,16 +1119,8 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
               <td style={{ fontSize: '16px' }}>{item.injury || item.injuries}</td>
               <td style={{ fontSize: '16px', backgroundColor: item.isHospitalUpdated === 'yes' ? 'rgba(76, 175, 80, 0.3)' : 'inherit' }}>
                 <select
-                  value={
-                    (item.transfer_to_hospital) === 'yes' || 
-                    (item.transfer_to_hospital) === 'Yes' 
-                      ? 'Yes' 
-                      : (item.transfer_to_hospital) === 'no' || 
-                        (item.transfer_to_hospital) === 'No'
-                        ? 'No' 
-                        : (item.transfer_to_hospital)
-                  }
-                  onChange={(e) => handleUpdateCSV(data[i].id, e.target.value, name, 'hospital')}
+                  value={item.transfer_to_hospital === 'yes' || item.transfer_to_hospital === 'Yes' ? 'Yes' : item.transfer_to_hospital === 'no' || item.transfer_to_hospital === 'No'? 'No' : item.transfer_to_hospital}
+                  onChange={(e) => handleUpdateCSV(data[i].id, e.target.value, name, 'transfer_to_hospital')}
                 >
                   <option value="Yes">Yes</option>
                   <option value="No">No</option>
