@@ -110,7 +110,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     {
       id: 'insight-1',
       emoji: "📌",
-      content: "4 falls have all happened in the Night shift.",
+      content: "70% of falls have all happened in the Night shift.",
       type: "reminder",
       rating: 0,
       reviewed: false
@@ -130,7 +130,23 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
       type: "goal",
       rating: 0,
       reviewed: false
-    }
+    }, 
+    {
+      id: 'insight-4',
+      emoji: "🎯",
+      content: "Lambie, John intervention is not related to cause of fall.",
+      type: "goal",
+      rating: 0,
+      reviewed: false
+    }, 
+    {
+      id: 'insight-5',
+      emoji: "💡",
+      content: "Fortun, Segundina fell for same cause of fall as last month, rolling out of bed.",
+      type: "goal",
+      rating: 0,
+      reviewed: false
+    },
     // 
     // {
     //   id: 'insight-4',
