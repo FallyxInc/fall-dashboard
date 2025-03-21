@@ -1358,39 +1358,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
           </div>
         </div>
       )}
-      {showModal && residentsNeedingReview.length > 0 && residentsNeedingReview[currentResidentIndex] && (
-        <Modal 
-          showModal={true}
-          handleClose={() => setShowModal(false)}
-          showCloseButton={false}
-          modalContent={
-            <div>
-              <h3 style={{ fontSize: '30px', fontWeight: 'bold', marginBottom: '15px' }}>Special Care Review Needed:</h3>
-              <p style={{ fontSize: '18px', marginBottom: '25px', }}>
-                <b style={{ fontSize: '18px', fontWeight: 'bold' }}> 
-                  {residentsNeedingReview[currentResidentIndex]?.name} 
-                </b> has had 3 or more falls 
-                in the past month. Have you completed a special care review?
-              </p>
-              <div style={{ display: 'flex', gap: '10px', justifyContent: 'left', marginBottom: '25px' }}>
-                <button 
-                  onClick={() => residentsNeedingReview[currentResidentIndex] && 
-                    markReviewDone(residentsNeedingReview[currentResidentIndex])}
-                  style={{ padding: '10px', backgroundColor: 'green', color: 'white', fontFamily: 'inherit', fontSize: '16px', borderRadius: '12px', border: 'transparent', cursor: 'pointer'}}
-                >
-                  Yes, Review Complete
-                </button>
-                <button 
-                  onClick={handleRemindLater}
-                  style={{ backgroundColor: '#D3D3D3', padding: '10px', fontFamily: 'inherit', fontSize: '16px', fontFamily: 'inherit', borderRadius: '12px', border: 'transparent', cursor: 'pointer'}}
-                >
-                  Remind me in 24 hours
-                </button>
-              </div>
-            </div>
-          }
-        />
-      )}
+      
     </div>
   );
 }
