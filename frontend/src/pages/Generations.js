@@ -110,7 +110,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     {
       id: 'insight-1',
       emoji: "📌",
-      content: "Monthly fall prevention protocol review is due. Please ensure all staff are updated on current procedures.",
+      content: "Shariff, Nizar Gulamali keeps falling because of unassistance, look into ways to know if he's gotten up.",
       type: "reminder",
       rating: 0,
       reviewed: false
@@ -118,7 +118,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     {
       id: 'insight-2',
       emoji: "💡",
-      content: "Corridor lighting inspection needed in all units. Focus on evening shift transition periods for maximum safety.",
+      content: "70% of falls on SL4 1 North are because of Shamsuddin, Shahida.",
       type: "tip",
       rating: 0,
       reviewed: false
@@ -126,11 +126,11 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     {
       id: 'insight-3',
       emoji: "🎯",
-      content: "Barry, Peter fell due to getting up to use the washroom twice & both during the evening shift.",
+      content: "Shariff, Nizar Gulamali had 3x more falls in Feb & March then in January.",
       type: "goal",
       rating: 0,
       reviewed: false
-    },
+    }
     // {
     //   id: 'insight-4',
     //   emoji: "⚠️",
@@ -444,82 +444,60 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   }
 
   const updateAnalysisChart = () => {
-    var selectedUnit = analysisUnit;
-    var filteredData = analysisTimeRange === '3months' ? Array.from(threeMonthData.values()).flat() : data;
-
-    if (selectedUnit !== 'allUnits') {
-      filteredData = filteredData.filter(
-        (fall) => {
-          // Get the unit from either homeUnit or room field
-          const unitValue = fall.homeUnit || fall.room;
-          return unitValue?.trim() === selectedUnit?.trim();
-        }
-      );
-    }
-
     let newLabels = [];
     let newData = [];
 
     switch (analysisType) {
+      case 'unit':
+        setAnalysisHeaderText('Falls by Unit');
+        // Count falls for each room
+        const unitCounts = {};
+        data.forEach(fall => {
+          const room = fall.room || 'Unknown';
+          if (!unitCounts[room]) {
+            unitCounts[room] = 0;
+          }
+          unitCounts[room]++;
+        });
+
+        console.log('Room counts:', unitCounts); // Debug log
+        newLabels = Object.keys(unitCounts);
+        newData = Object.values(unitCounts);
+        break;
+
       case 'timeOfDay':
         setAnalysisHeaderText('Falls by Time of Day');
         newLabels = ['Morning', 'Evening', 'Night'];
-        var timeOfDayCounts = countFallsByTimeOfDay(filteredData, name);
+        var timeOfDayCounts = countFallsByTimeOfDay(data, name);
         newData = [timeOfDayCounts.Morning, timeOfDayCounts.Evening, timeOfDayCounts.Night];
         break;
 
       case 'location':
         setAnalysisHeaderText('Falls by Location');
-        var locationCounts = countFallsByLocation(filteredData);
+        var locationCounts = countFallsByLocation(data);
         newLabels = Object.keys(locationCounts);
         newData = Object.values(locationCounts);
         break;
 
       case 'injuries':
         setAnalysisHeaderText('Falls by Injury Description');
-        var injuryCounts = countFallsByExactInjury(filteredData);
+        var injuryCounts = countFallsByExactInjury(data);
         newLabels = Object.keys(injuryCounts);
         newData = Object.values(injuryCounts);
         break;
 
       case 'hir':
         setAnalysisHeaderText('High Injury Risk (HIR) Falls');
-        var hirCount = countFallsByHIR(filteredData);
+        var hirCount = countFallsByHIR(data);
         newLabels = [getMonthFromTimeRange(analysisTimeRange)];
         newData = [hirCount];
         break;
 
       case 'residents':
         setAnalysisHeaderText('Residents with Recurring Falls');
-        var recurringFalls = countResidentsWithRecurringFalls(filteredData);
+        var recurringFalls = countResidentsWithRecurringFalls(data);
         newLabels = Object.keys(recurringFalls);
         newData = Object.values(recurringFalls);
-        break;
-
-      case 'unit':
-        setAnalysisHeaderText('Falls by Unit');
-        
-        // Count falls for each unit
-        const unitCounts = {};
-        filteredData.forEach(fall => {
-          // Check both homeUnit and room fields
-          const unit = fall.homeUnit || fall.room || 'Unknown';  
-          console.log('Fall unit data:', { unit, homeUnit: fall.homeUnit, room: fall.room, fall }); // Debug log
-          unitCounts[unit] = (unitCounts[unit] || 0) + 1;
-        });
-
-        // Set the chart data
-        setAnalysisChartData({
-          labels: Object.keys(unitCounts),
-          datasets: [
-            {
-              data: Object.values(unitCounts),
-              backgroundColor: 'rgba(76, 175, 80, 0.6)',
-              borderColor: 'rgb(76, 175, 80)',
-              borderWidth: 1,
-            },
-          ],
-        });
         break;
     }
 
@@ -745,7 +723,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   useEffect(() => {
     updateAnalysisChart();
     // console.log('Analysis Chart');
-  }, [analysisType, analysisTimeRange, analysisUnit, data, desiredYear]);
+  }, [analysisType, data]);
 
   const handleYearChange = (e) => {
     const selectedYear = e.target.value;
@@ -1017,6 +995,15 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     loadInsightData();
   }, [name]);
 
+  // Add new state for room filter
+  const [selectedRoom, setSelectedRoom] = useState('All Rooms');
+
+  // Add function to get unique rooms from data
+  const getUniqueRooms = () => {
+    const rooms = new Set(data.map(item => item.room || 'Unknown'));
+    return ['All Rooms', ...Array.from(rooms)];
+  };
+
   return (
     <div className={styles.dashboard} ref={tableRef}>
       <h1>{title}</h1>
@@ -1078,31 +1065,6 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
             <option value="injury">Injuries</option>
             <option value="residents">Residents w/ Recurring Falls</option>
             <option value="unit">Falls by Unit</option>
-          </select>
-
-          <select
-            id="analysisTimeRange"
-            value={analysisTimeRange}
-            onChange={(e) => {
-              setAnalysisTimeRange(e.target.value);
-            }}
-          >
-            <option value="current">Current Month</option>
-            <option value="3months">Past 3 Months</option>
-          </select>
-
-          <select
-            id="unitSelection"
-            value={analysisUnit}
-            onChange={(e) => {
-              setAnalysisUnit(e.target.value);
-            }}
-          >
-            {unitSelectionValues.map((unit) => (
-              <option key={unit} value={unit}>
-                {unit}
-              </option>
-            ))}
           </select>
 
           {analysisChartData.datasets.length > 0 && <Bar data={analysisChartData} options={analysisChartOptions} />}
@@ -1241,23 +1203,69 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
           <h2>
             Falls Tracking Table: {desiredMonth} {desiredYear}
           </h2>
-          <select onChange={handleYearChange} value={desiredYear}>
-            {Object.keys(availableYearMonth).map((year) => (
-              <option key={year} value={year}>
-                {year}
-              </option>
-            ))}
-          </select>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',  // Consistent spacing between elements
+            marginTop: '10px'  // Space between title and selectors
+          }}>
+            <select 
+              onChange={handleYearChange} 
+              value={desiredYear}
+              style={{
+                padding: '8px',
+                borderRadius: '4px',
+                border: '1px solid #ddd',
+                minWidth: '100px'  // Consistent width
+              }}
+            >
+              {Object.keys(availableYearMonth).map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </select>
 
-          <select onChange={handleMonthChange} value={desiredMonth}>
-            {(availableYearMonth[desiredYear] || []).map((month) => (
-              <option key={month} value={month}>
-                {month}
-              </option>
-            ))}
-          </select>
+            <select 
+              onChange={handleMonthChange} 
+              value={desiredMonth}
+              style={{
+                padding: '8px',
+                borderRadius: '4px',
+                border: '1px solid #ddd',
+                minWidth: '120px'  // Consistent width
+              }}
+            >
+              {(availableYearMonth[desiredYear] || []).map((month) => (
+                <option key={month} value={month}>
+                  {month}
+                </option>
+              ))}
+            </select>
+
+            <select 
+              value={selectedRoom} 
+              onChange={(e) => setSelectedRoom(e.target.value)}
+              style={{
+                padding: '8px',
+                borderRadius: '4px',
+                border: '1px solid #ddd',
+                minWidth: '150px'  // Consistent width
+              }}
+            >
+              {getUniqueRooms().map(room => (
+                <option key={room} value={room}>
+                  {room}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
-        <div>
+        <div style={{
+          display: 'flex',
+          gap: '10px',
+          alignItems: 'center'
+        }}>
           <button className={styles['download-button']} onClick={handleSaveCSV}>
             Download as CSV
           </button>
@@ -1275,29 +1283,31 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
           </tr>
         </thead>
         <tbody id="fallsTableBody">
-          {data.map((item, i) => (
-            <tr key={i}>
-              {columns.map(col => (
-                <td key={col.key} style={{ fontSize: '16px', whiteSpace: col.key === 'date' ? 'nowrap' : 'normal' }}>
-                  {col.key === 'transfer_to_hospital' ? (
-                    <select
-                      value={item[col.key] === 'yes' || item[col.key] === 'Yes' ? 'Yes' : 'No'}
-                      onChange={(e) => handleUpdateCSV(data[i].id, e.target.value, 'generations', 'hospital')}
-                    >
-                      <option value="Yes">Yes</option>
-                      <option value="No">No</option>
-                    </select>
-                  ) : col.key === 'longTermIntervention' ? (
-                    <div style={{ cursor: 'pointer' }} onClick={() => handleEditLongTermIntervention(i)}>
-                      {item[col.key] || 'Click to add'}
-                    </div>
-                  ) : (
-                    item[col.key]
-                  )}
-                </td>
-              ))}
-            </tr>
-          ))}
+          {data
+            .filter(item => selectedRoom === 'All Rooms' || item.room === selectedRoom)
+            .map((item, i) => (
+              <tr key={i}>
+                {columns.map(col => (
+                  <td key={col.key} style={{ fontSize: '16px', whiteSpace: col.key === 'date' ? 'nowrap' : 'normal' }}>
+                    {col.key === 'transfer_to_hospital' ? (
+                      <select
+                        value={item[col.key] === 'yes' || item[col.key] === 'Yes' ? 'Yes' : 'No'}
+                        onChange={(e) => handleUpdateCSV(data[i].id, e.target.value, 'generations', 'hospital')}
+                      >
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                      </select>
+                    ) : col.key === 'longTermIntervention' ? (
+                      <div style={{ cursor: 'pointer' }} onClick={() => handleEditLongTermIntervention(i)}>
+                        {item[col.key] || 'Click to add'}
+                      </div>
+                    ) : (
+                      item[col.key]
+                    )}
+                  </td>
+                ))}
+              </tr>
+            ))}
         </tbody>
       </table>
 
@@ -1358,7 +1368,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
           </div>
         </div>
       )}
-      
+   
     </div>
   );
 }
