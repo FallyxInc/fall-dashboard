@@ -449,20 +449,23 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
 
     switch (analysisType) {
       case 'unit':
-        setAnalysisHeaderText('Falls by Unit');
-        // Count falls for each room
-        const unitCounts = {};
+        setAnalysisHeaderText('Falls by Floor');
+        const floorCounts = {};
         data.forEach(fall => {
           const room = fall.room || 'Unknown';
-          if (!unitCounts[room]) {
-            unitCounts[room] = 0;
+          const floorMatch = room.match(/SL4\s+(\d+)/);
+          if (floorMatch) {
+            const floorNumber = floorMatch[1];
+            const floorKey = `${floorNumber}${getFloorSuffix(floorNumber)} Floor`;
+            if (!floorCounts[floorKey]) {
+              floorCounts[floorKey] = 0;
+            }
+            floorCounts[floorKey]++;
           }
-          unitCounts[room]++;
         });
 
-        console.log('Room counts:', unitCounts); // Debug log
-        newLabels = Object.keys(unitCounts);
-        newData = Object.values(unitCounts);
+        newLabels = Object.keys(floorCounts);
+        newData = Object.values(floorCounts);
         break;
 
       case 'timeOfDay':
@@ -996,7 +999,52 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   }, [name]);
 
   // Add new state for room filter
-  const [selectedRoom, setSelectedRoom] = useState('All Rooms');
+  const [selectedRoom, setSelectedRoom] = useState('All Floors');
+
+  // Add new function to parse and group rooms by floor
+  const getFloorGroups = () => {
+    const floors = new Map(); // Using Map to maintain order
+    
+    data.forEach(item => {
+      const room = item.room || 'Unknown';
+      if (room.startsWith('SL4')) {
+        // Extract floor number from the room string (e.g., "SL4 2 South" -> "2")
+        const floorMatch = room.match(/SL4\s+(\d+)/);
+        if (floorMatch) {
+          const floorNumber = floorMatch[1];
+          const floorKey = `${floorNumber}${getFloorSuffix(floorNumber)} Floor`;
+          
+          // Store just the floor number for filtering
+          if (!floors.has(floorKey)) {
+            floors.set(floorKey, floorNumber);
+          }
+        }
+      }
+    });
+
+    // Convert to the format needed for the select element
+    const result = [{ label: 'All Floors', value: 'All Floors' }];
+    
+    // Sort floors by number and add to result
+    Array.from(floors.entries())
+      .sort(([, a], [, b]) => parseInt(a) - parseInt(b))
+      .forEach(([label, floorNumber]) => {
+        result.push({
+          label: label,
+          value: floorNumber
+        });
+      });
+
+    return result;
+  };
+
+  // Helper function to add suffix to floor numbers
+  const getFloorSuffix = (num) => {
+    if (num === '1') return 'st';
+    if (num === '2') return 'nd';
+    if (num === '3') return 'rd';
+    return 'th';
+  };
 
   // Add function to get unique rooms from data
   const getUniqueRooms = () => {
@@ -1064,7 +1112,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
             <option value="location">Location</option>
             <option value="injury">Injuries</option>
             <option value="residents">Residents w/ Recurring Falls</option>
-            <option value="unit">Falls by Unit</option>
+            <option value="unit">Falls by Floor</option>
           </select>
 
           {analysisChartData.datasets.length > 0 && <Bar data={analysisChartData} options={analysisChartOptions} />}
@@ -1250,12 +1298,12 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                 padding: '8px',
                 borderRadius: '4px',
                 border: '1px solid #ddd',
-                minWidth: '150px'  // Consistent width
+                minWidth: '150px'
               }}
             >
-              {getUniqueRooms().map(room => (
-                <option key={room} value={room}>
-                  {room}
+              {getFloorGroups().map(group => (
+                <option key={group.label} value={group.value}>
+                  {group.label}
                 </option>
               ))}
             </select>
@@ -1284,7 +1332,11 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
         </thead>
         <tbody id="fallsTableBody">
           {data
-            .filter(item => selectedRoom === 'All Rooms' || item.room === selectedRoom)
+            .filter(item => {
+              if (selectedRoom === 'All Floors') return true;
+              const floorMatch = item.room?.match(/SL4\s+(\d+)/);
+              return floorMatch && floorMatch[1] === selectedRoom;
+            })
             .map((item, i) => (
               <tr key={i}>
                 {columns.map(col => (
