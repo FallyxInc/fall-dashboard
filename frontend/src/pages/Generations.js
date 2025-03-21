@@ -131,30 +131,30 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
       rating: 0,
       reviewed: false
     },
-    {
-      id: 'insight-4',
-      emoji: "⚠️",
-      content: "30% of falls happened due to residents getting up to use the washroom.",
-      type: "maintenance",
-      rating: 0,
-      reviewed: false
-    },
-    {
-      id: 'insight-5',
-      emoji: "📊",
-      content: "Multiple falls happened at 14 - 16hrs, this could indicate a trend.",
-      type: "training",
-      rating: 0,
-      reviewed: false
-    },
-    {
-      id: 'insight-6',
-      emoji: ".",
-      content: "Multiple falls happened at 14 - 16hrs, this could indicate a trend.",
-      type: "training",
-      rating: 0,
-      reviewed: false
-    }
+    // {
+    //   id: 'insight-4',
+    //   emoji: "⚠️",
+    //   content: "30% of falls happened due to residents getting up to use the washroom.",
+    //   type: "maintenance",
+    //   rating: 0,
+    //   reviewed: false
+    // },
+    // {
+    //   id: 'insight-5',
+    //   emoji: "📊",
+    //   content: "Multiple falls happened at 14 - 16hrs, this could indicate a trend.",
+    //   type: "training",
+    //   rating: 0,
+    //   reviewed: false
+    // },
+    // {
+    //   id: 'insight-6',
+    //   emoji: ".",
+    //   content: "Multiple falls happened at 14 - 16hrs, this could indicate a trend.",
+    //   type: "training",
+    //   rating: 0,
+    //   reviewed: false
+    // }
   ]);
 
   const [insightRatings, setInsightRatings] = useState({});
