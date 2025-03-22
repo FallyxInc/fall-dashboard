@@ -323,28 +323,77 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     setIsLongTermInterventionModalOpen(true);
   };
 
-  const handleSubmitLongTermIntervention = () => {
+  const formatLongTermIntervention = (text) => {
+    if (!text) return '';
+    // Split by newlines and filter out empty lines
+    const lines = text.split('\n').filter(line => line.trim());
+    // Add bullet points if not already present
+    return lines.map(line => {
+      line = line.trim();
+      if (!line.startsWith('•') && !line.startsWith('-')) {
+        return `• ${line}`;
+      }
+      return line;
+    }).join('\n');
+  };
+
+  const handleSubmitLongTermIntervention = async () => {
     if (currentLongTermIntervention === data[currentRowIndex].longTermIntervention) {
       setIsLongTermInterventionModalOpen(false);
       return;
     }
 
-    const updatedData = [...data];
-    updatedData[currentRowIndex].longTermIntervention = currentLongTermIntervention;
-
-    const rowRef = ref(
-      db,
-      `/${name}/${desiredYear}/${months_backword[desiredMonth]}/row-${data[currentRowIndex].id}`
-    );
-    update(rowRef, { longTermIntervention: currentLongTermIntervention })
-      .then(() => {
-        console.log('Long Term Intervention updated successfully');
+    try {
+      // Format the intervention text with bullet points
+      const formattedIntervention = formatLongTermIntervention(currentLongTermIntervention);
+      const residentName = data[currentRowIndex].name;
+      
+      // Get reference to all years in the database
+      const yearsRef = ref(db, `/${name}`);
+      const yearsSnapshot = await get(yearsRef);
+      
+      if (yearsSnapshot.exists()) {
+        const years = Object.keys(yearsSnapshot.val());
+        
+        // Update all entries for this resident across all years and months
+        for (const year of years) {
+          const monthsRef = ref(db, `/${name}/${year}`);
+          const monthsSnapshot = await get(monthsRef);
+          
+          if (monthsSnapshot.exists()) {
+            const months = Object.keys(monthsSnapshot.val());
+            
+            for (const month of months) {
+              const monthRef = ref(db, `/${name}/${year}/${month}`);
+              const monthSnapshot = await get(monthRef);
+              
+              if (monthSnapshot.exists()) {
+                Object.entries(monthSnapshot.val()).forEach(([key, entry]) => {
+                  if (entry.name === residentName) {
+                    update(ref(db, `/${name}/${year}/${month}/${key}`), {
+                      longTermIntervention: formattedIntervention
+                    });
+                  }
+                });
+              }
+            }
+          }
+        }
+        
+        // Update local state
+        const updatedData = [...data];
+        updatedData.forEach((item, index) => {
+          if (item.name === residentName) {
+            updatedData[index].longTermIntervention = formattedIntervention;
+          }
+        });
+        
         setData(updatedData);
         setIsLongTermInterventionModalOpen(false);
-      })
-      .catch((error) => {
-        console.error('Error updating long term intervention:', error);
-      });
+      }
+    } catch (error) {
+      console.error('Error updating long term intervention:', error);
+    }
   };
 
   const updateFallsChart = () => {
@@ -1052,6 +1101,29 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     return ['All Rooms', ...Array.from(rooms)];
   };
 
+  // Add this helper function to count falls in previous 3 months for a resident
+  const countFallsInThreeMonths = (residentName, currentData, threeMonthData) => {
+    let count = 0;
+    
+    // Count falls in current month's data
+    currentData.forEach(fall => {
+      if (fall.name === residentName) {
+        count++;
+      }
+    });
+
+    // Count falls in previous months' data
+    threeMonthData.forEach((monthData) => {
+      monthData.forEach(fall => {
+        if (fall.name === residentName) {
+          count++;
+        }
+      });
+    });
+
+    return count;
+  };
+
   return (
     <div className={styles.dashboard} ref={tableRef}>
       <h1>{title}</h1>
@@ -1350,9 +1422,19 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                         <option value="No">No</option>
                       </select>
                     ) : col.key === 'longTermIntervention' ? (
-                      <div style={{ cursor: 'pointer' }} onClick={() => handleEditLongTermIntervention(i)}>
+                      <div 
+                        style={{ 
+                          cursor: 'pointer',
+                          whiteSpace: 'pre-line',
+                          padding: '8px',
+                          minHeight: '24px'
+                        }} 
+                        onClick={() => handleEditLongTermIntervention(i)}
+                      >
                         {item[col.key] || 'Click to add'}
                       </div>
+                    ) : col.key === 'Falls in 3 Months' ? (
+                      countFallsInThreeMonths(item.name, data, Array.from(threeMonthData.values()))
                     ) : (
                       item[col.key]
                     )}
@@ -1408,14 +1490,50 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
           <div className={styles.modalContent}>
             <div>
               <h2>Edit Long Term Intervention</h2>
+              <p style={{ 
+                fontSize: '14px', 
+                color: '#666', 
+                marginBottom: '10px' 
+              }}>
+                Each line will automatically be formatted with a bullet point. Press Enter for new items.
+              </p>
               <textarea 
                 value={currentLongTermIntervention} 
                 onChange={(e) => setCurrentLongTermIntervention(e.target.value)}
-                style={{ width: '100%', minHeight: '100px' }}
+                style={{ 
+                  width: '100%', 
+                  minHeight: '150px',
+                  padding: '10px',
+                  lineHeight: '1.5',
+                  fontFamily: 'inherit'
+                }}
+                placeholder="Enter interventions here...
+Example:
+• Intervention 1
+• Intervention 2"
               />
               <br />
-              <button onClick={handleSubmitLongTermIntervention}>Submit</button>
-              <button onClick={() => setIsLongTermInterventionModalOpen(false)}>Cancel</button>
+              <div style={{ 
+                display: 'flex', 
+                gap: '10px', 
+                justifyContent: 'flex-end',
+                marginTop: '10px' 
+              }}>
+                <button onClick={() => setIsLongTermInterventionModalOpen(false)}>Cancel</button>
+                <button 
+                  onClick={handleSubmitLongTermIntervention}
+                  style={{
+                    backgroundColor: '#4CAF50',
+                    color: 'white',
+                    border: 'none',
+                    padding: '8px 16px',
+                    borderRadius: '4px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Save Changes
+                </button>
+              </div>
             </div>
           </div>
         </div>

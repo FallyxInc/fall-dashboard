@@ -277,7 +277,7 @@ function App() {
                 <ShepherdLodge 
                   name="shepherd"
                   title="Shepherd Lodge Falls Dashboard"
-                  goal={60}
+                  goal={65}
                 
                 />
               </PrivateRoute>
