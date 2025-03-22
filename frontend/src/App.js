@@ -12,6 +12,7 @@ import UpdateData from './pages/UpdateData';
 import UpdatePasswordPage from './pages/ResetPassword';
 import DemoManagementDashboard from './pages/DemoManagementDashboard';
 import GenerationsDashboard from './pages/Generations';
+import GenerationsLTCDashboard from './pages/GenerationsLTC';
 import ShepherdLodge from './pages/Shepherd-Lodge';
 import GoderichPlace from './pages/Goderich-Place';
 import Palisade from './pages/Palisade';
@@ -262,13 +263,27 @@ function App() {
               <PrivateRoute rolesRequired={['generations', 'responsive']}>
                 <GenerationsDashboard
                   name="generations"
-                  title="Generations Falls Dashboard"
+                  title="Generations SL Falls Dashboard"
                   unitSelectionValues={['allUnits', 'SL4 2 East', 'SL4 2 South', 'SL4 2 North', 'SL4 1 East', 'SL4 1 South', 'SL4 1 North']}
                   goal={20}
                 />
               </PrivateRoute>
             }
           />
+
+          <Route
+            path="/generationsltc"
+            element={
+              <PrivateRoute rolesRequired={['generationsltc', 'responsive']}>
+                <GenerationsLTCDashboard
+                  name="generationsltc"
+                  title="Generations LTC Falls Dashboard"
+                  unitSelectionValues={['allUnits', 'LTC 4 East', 'LTC 3 East', 'LTC 4 South', 'LTC 3 South']}
+                  goal={20}
+                />
+              </PrivateRoute>
+            }
+          />    
 
           <Route
             path="/shepherd"
