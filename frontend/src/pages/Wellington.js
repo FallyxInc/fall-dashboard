@@ -476,53 +476,46 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   }
 
   const updateAnalysisChart = () => {
-    var selectedUnit = analysisUnit;
-    var filteredData = analysisTimeRange === '3months' ? Array.from(threeMonthData.values()).flat() : data;
-
-    if (selectedUnit !== 'allUnits') {
-      filteredData = filteredData.filter(
-        (fall) => {
-          const unitValue = fall.homeUnit || fall.room;
-          return unitValue?.trim() === selectedUnit?.trim();
-        }
-      );
-    }
-
     let newLabels = [];
     let newData = [];
 
     switch (analysisType) {
+      case 'unit':
+        setAnalysisHeaderText('Falls by Unit');
+        // Count falls for each unit/room
+        const unitCounts = {};
+        data.forEach(fall => {
+          const unit = fall.room || 'Unknown';
+          unitCounts[unit] = (unitCounts[unit] || 0) + 1;
+        });
+        newLabels = Object.keys(unitCounts);
+        newData = Object.values(unitCounts);
+        break;
+
       case 'timeOfDay':
         setAnalysisHeaderText('Falls by Time of Day');
         newLabels = ['Morning', 'Evening', 'Night'];
-        var timeOfDayCounts = countFallsByTimeOfDay(filteredData, name);
+        var timeOfDayCounts = countFallsByTimeOfDay(data, name);
         newData = [timeOfDayCounts.Morning, timeOfDayCounts.Evening, timeOfDayCounts.Night];
         break;
 
       case 'location':
         setAnalysisHeaderText('Falls by Location');
-        var locationCounts = countFallsByLocation(filteredData);
+        var locationCounts = countFallsByLocation(data);
         newLabels = Object.keys(locationCounts);
         newData = Object.values(locationCounts);
         break;
 
       case 'injuries':
         setAnalysisHeaderText('Falls by Injury Description');
-        var injuryCounts = countFallsByExactInjury(filteredData);
+        var injuryCounts = countFallsByExactInjury(data);
         newLabels = Object.keys(injuryCounts);
         newData = Object.values(injuryCounts);
         break;
 
-      case 'hir':
-        setAnalysisHeaderText('High Injury Risk (HIR) Falls');
-        var hirCount = countFallsByHIR(filteredData);
-        newLabels = [getMonthFromTimeRange(analysisTimeRange)];
-        newData = [hirCount];
-        break;
-
       case 'residents':
         setAnalysisHeaderText('Residents with Recurring Falls');
-        var recurringFalls = countResidentsWithRecurringFalls(filteredData);
+        var recurringFalls = countResidentsWithRecurringFalls(data);
         newLabels = Object.keys(recurringFalls);
         newData = Object.values(recurringFalls);
         break;
@@ -750,7 +743,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   useEffect(() => {
     updateAnalysisChart();
     // console.log('Analysis Chart');
-  }, [analysisType, analysisTimeRange, analysisUnit, data, desiredYear]);
+  }, [analysisType, data, desiredYear]);
 
   const handleYearChange = (e) => {
     const selectedYear = e.target.value;
@@ -1083,31 +1076,6 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
             <option value="injury">Injuries</option>
             <option value="residents">Residents w/ Recurring Falls</option>
             <option value="unit">Falls by Unit</option>
-          </select>
-
-          <select
-            id="analysisTimeRange"
-            value={analysisTimeRange}
-            onChange={(e) => {
-              setAnalysisTimeRange(e.target.value);
-            }}
-          >
-            <option value="current">Current Month</option>
-            <option value="3months">Past 3 Months</option>
-          </select>
-
-          <select
-            id="unitSelection"
-            value={analysisUnit}
-            onChange={(e) => {
-              setAnalysisUnit(e.target.value);
-            }}
-          >
-            {unitSelectionValues.map((unit) => (
-              <option key={unit} value={unit}>
-                {unit}
-              </option>
-            ))}
           </select>
 
           {analysisChartData.datasets.length > 0 && <Bar data={analysisChartData} options={analysisChartOptions} />}
