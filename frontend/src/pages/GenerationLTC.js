@@ -110,7 +110,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     {
       id: 'insight-1',
       emoji: "📌",
-      content: "Shariff, Nizar Gulamali keeps falling because of unassistance, look into ways to know if he's gotten up.",
+      content: "80% of Juma, Shirinkhanu falls have been because of No Fall Note Within 12hrs of RIM Incident Time",
       type: "reminder",
       rating: 0,
       reviewed: false
@@ -118,7 +118,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     {
       id: 'insight-2',
       emoji: "💡",
-      content: "70% of falls on SL4 1 North are because of Shamsuddin, Shahida.",
+      content: "Eberhardt, Floyd's intervention is not related to cause of fall.",
       type: "tip",
       rating: 0,
       reviewed: false
@@ -126,7 +126,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     {
       id: 'insight-3',
       emoji: "🎯",
-      content: "Shariff, Nizar Gulamali had 3x more falls in Feb & March then in January.",
+      content: "Nelson, Joan fell twice because of the same cause in January - Resident fell due to slipping out of bed.",
       type: "goal",
       rating: 0,
       reviewed: false
@@ -1181,7 +1181,6 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
           >
             <option value="timeOfDay">Time of Day</option>
             <option value="location">Location</option>
-            <option value="injury">Injuries</option>
             <option value="residents">Residents w/ Recurring Falls</option>
             <option value="unit">Falls by Floor</option>
           </select>
