@@ -1101,29 +1101,6 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     return ['All Rooms', ...Array.from(rooms)];
   };
 
-  // Add this helper function to count falls in previous 3 months for a resident
-  const countFallsInThreeMonths = (residentName, currentData, threeMonthData) => {
-    let count = 0;
-    
-    // Count falls in current month's data
-    currentData.forEach(fall => {
-      if (fall.name === residentName) {
-        count++;
-      }
-    });
-
-    // Count falls in previous months' data
-    threeMonthData.forEach((monthData) => {
-      monthData.forEach(fall => {
-        if (fall.name === residentName) {
-          count++;
-        }
-      });
-    });
-
-    return count;
-  };
-
   return (
     <div className={styles.dashboard} ref={tableRef}>
       <h1>{title}</h1>
@@ -1425,7 +1402,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                       <div 
                         style={{ 
                           cursor: 'pointer',
-                          whiteSpace: 'pre-line',
+                          whiteSpace: 'pre-line', // Preserves line breaks
                           padding: '8px',
                           minHeight: '24px'
                         }} 
@@ -1433,8 +1410,6 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                       >
                         {item[col.key] || 'Click to add'}
                       </div>
-                    ) : col.key === 'Falls in 3 Months' ? (
-                      countFallsInThreeMonths(item.name, data, Array.from(threeMonthData.values()))
                     ) : (
                       item[col.key]
                     )}

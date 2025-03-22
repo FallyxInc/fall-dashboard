@@ -502,7 +502,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
         const floorCounts = {};
         data.forEach(fall => {
           const room = fall.room || 'Unknown';
-          const floorMatch = room.match(/SL4\s+(\d+)/);
+          const floorMatch = room.match(/LTC\s*(\d+)/);
           if (floorMatch) {
             const floorNumber = floorMatch[1];
             const floorKey = `${floorNumber}${getFloorSuffix(floorNumber)} Floor`;
@@ -1056,14 +1056,13 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     
     data.forEach(item => {
       const room = item.room || 'Unknown';
-      if (room.startsWith('SL4')) {
-        // Extract floor number from the room string (e.g., "SL4 2 South" -> "2")
-        const floorMatch = room.match(/SL4\s+(\d+)/);
-        if (floorMatch) {
-          const floorNumber = floorMatch[1];
+      // Match LTC floor numbers
+      const floorMatch = room.match(/LTC\s*(\d+)/);
+      if (floorMatch) {
+        const floorNumber = floorMatch[1];
+        // Only include 3rd and 4th floors
+        if (floorNumber === '3' || floorNumber === '4') {
           const floorKey = `${floorNumber}${getFloorSuffix(floorNumber)} Floor`;
-          
-          // Store just the floor number for filtering
           if (!floors.has(floorKey)) {
             floors.set(floorKey, floorNumber);
           }
@@ -1406,7 +1405,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
           {data
             .filter(item => {
               if (selectedRoom === 'All Floors') return true;
-              const floorMatch = item.room?.match(/SL4\s+(\d+)/);
+              const floorMatch = item.room?.match(/LTC\s*(\d+)/);
               return floorMatch && floorMatch[1] === selectedRoom;
             })
             .map((item, i) => (
