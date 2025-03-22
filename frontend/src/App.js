@@ -12,7 +12,7 @@ import UpdateData from './pages/UpdateData';
 import UpdatePasswordPage from './pages/ResetPassword';
 import DemoManagementDashboard from './pages/DemoManagementDashboard';
 import GenerationsDashboard from './pages/Generations';
-import GenerationsLTCDashboard from './pages/GenerationsLTC';
+import GenerationLTCDashboard from './pages/GenerationLTC';
 import ShepherdLodge from './pages/Shepherd-Lodge';
 import GoderichPlace from './pages/Goderich-Place';
 import Palisade from './pages/Palisade';
@@ -272,11 +272,11 @@ function App() {
           />
 
           <Route
-            path="/generationsltc"
+            path="/generationltc"
             element={
-              <PrivateRoute rolesRequired={['generationsltc', 'responsive']}>
-                <GenerationsLTCDashboard
-                  name="generationsltc"
+              <PrivateRoute rolesRequired={['generationltc', 'responsive']}>
+                <GenerationLTCDashboard
+                  name="generationltc"
                   title="Generations LTC Falls Dashboard"
                   unitSelectionValues={['allUnits', 'LTC 4 East', 'LTC 3 East', 'LTC 4 South', 'LTC 3 South']}
                   goal={20}
