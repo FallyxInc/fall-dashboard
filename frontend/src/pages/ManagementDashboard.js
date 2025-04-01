@@ -18,7 +18,7 @@ export default function ManagementDashboard() {
   const [modalTitle, setModalTitle] = useState('');
   const [fallsTimeRange, setFallsTimeRange] = useState('01');
   const [homesTimeRange, setHomesTimeRange] = useState('01');
-  const [currentMonth, setCurrentMonth] = useState('03');
+  const [currentMonth, setCurrentMonth] = useState('04');
   const [desiredYear, setDesiredYear] = useState(2025); // Set to 2025
   const [desiredMonth, setDesiredMonth] = useState(new Date().getMonth() + 1);
   const [availableYearMonth, setAvailableYearMonth] = useState({});
@@ -60,7 +60,7 @@ export default function ManagementDashboard() {
     await Promise.all(
       homes.map((home) => {
         return new Promise((resolve) => {
-          const homeRef = ref(db, `/${home}/${currentMonth === '01' || currentMonth === '02' || currentMonth === '03' ? 2025 : 2024}/${currentMonth}`);
+          const homeRef = ref(db, `/${home}/${currentMonth === '01' || currentMonth === '02' || currentMonth === '03' || currentMonth === '04' ? 2025 : 2024}/${currentMonth}`);
 
           onValue(homeRef, (snapshot) => {
             const data = snapshot.val();
@@ -234,7 +234,7 @@ export default function ManagementDashboard() {
     };
 
     const fetchDataForHome = (home) => {
-      const year = currentMonth === '01' || currentMonth === '02' || currentMonth === '03' ? 2025 : 2024;
+      const year = currentMonth === '01' || currentMonth === '02' || currentMonth === '03' || currentMonth === '04' ? 2025 : 2024;
       const path = `/${home}/${year}/${currentMonth}`;
       const fallsRef = ref(db, path);
       
@@ -403,7 +403,7 @@ export default function ManagementDashboard() {
 
     // LOGIC FOR graph of non-compliance!
     const fetchDataForHome = (home) => {
-      const year = currentMonth === '01' || currentMonth === '02' || currentMonth === '03' ? 2025 : 2024;
+      const year = currentMonth === '01' || currentMonth === '02' || currentMonth === '03' || currentMonth === '04' ? 2025 : 2024;
       const path = `/${home}/${year}/${currentMonth}`;
       const fallsRef = ref(db, path);
       
@@ -838,6 +838,7 @@ export default function ManagementDashboard() {
           height: '40px',
         }}
       >
+        <option value="04">April 2025</option>
         <option value="03">March 2025</option>
         <option value="02">February 2025</option>
         <option value="01">January 2025</option>
