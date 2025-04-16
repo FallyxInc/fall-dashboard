@@ -310,3 +310,52 @@ export function countFallsByUnit(data) {
   
   return unitCounts;
 }
+
+export function countFallsByDayOfWeek(data) {
+  const dayCounts = {
+    'Sunday': 0,
+    'Monday': 0,
+    'Tuesday': 0,
+    'Wednesday': 0,
+    'Thursday': 0,
+    'Friday': 0,
+    'Saturday': 0
+  };
+  
+  data.forEach((fall) => {
+    if (fall.date) {
+      // Parse the date string in YYYY-MM-DD format
+      const [year, month, day] = fall.date.split('-').map(Number);
+      // Create date object (month is 0-based in JavaScript)
+      const date = new Date(year, month - 1, day);
+      const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' });
+      dayCounts[dayOfWeek]++;
+    }
+  });
+  
+  return dayCounts;
+}
+
+export function countFallsByHour(data) {
+  const hourCounts = {};
+  
+  // Initialize all hours with 0
+  for (let i = 0; i < 24; i++) {
+    hourCounts[i] = 0;
+  }
+  
+  data.forEach((fall) => {
+    if (fall.time) {
+      // Parse the time string to get hours
+      const timeParts = fall.time.split(':');
+      if (timeParts.length >= 1) {
+        const hour = parseInt(timeParts[0], 10);
+        if (!isNaN(hour)) {
+          hourCounts[hour]++;
+        }
+      }
+    }
+  });
+  
+  return hourCounts;
+}

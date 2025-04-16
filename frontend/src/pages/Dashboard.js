@@ -20,6 +20,8 @@ import {
   getMonthFromTimeRange,
   countResidentsWithRecurringFalls,
   countFallsByTimeOfDay,
+  countFallsByDayOfWeek,
+  countFallsByHour,
 } from '../utils/DashboardUtils';
 import Modal from './Modal';
 
@@ -490,6 +492,27 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
         var recurringFalls = countResidentsWithRecurringFalls(filteredData);
         newLabels = Object.keys(recurringFalls);
         newData = Object.values(recurringFalls);
+        break;
+
+      case 'dayOfWeek':
+        setAnalysisHeaderText('Falls by Day of Week');
+        var dayOfWeekCounts = countFallsByDayOfWeek(filteredData);
+        // Order the days of week
+        const orderedDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        newLabels = orderedDays;
+        newData = orderedDays.map(day => dayOfWeekCounts[day]);
+        break;
+
+      case 'hour':
+        setAnalysisHeaderText('Falls by Hour of Day');
+        var hourCounts = countFallsByHour(filteredData);
+        // Create labels for each hour (0-23)
+        newLabels = Array.from({length: 24}, (_, i) => {
+          const hour = i % 12 || 12; // Convert 0-23 to 12-hour format
+          const period = i < 12 ? 'AM' : 'PM';
+          return `${hour}${period}`;
+        });
+        newData = Array.from({length: 24}, (_, i) => hourCounts[i] || 0);
         break;
     }
 
@@ -1014,8 +1037,10 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
             <option value="timeOfDay">Time of Day</option>
             <option value="location">Location</option>
             <option value="injuries">Injuries</option>
-            {/* <option value="hir">Falls by HIR</option> */}
+            <option value="hir">Falls by HIR</option>
             <option value="residents">Residents w/ Recurring Falls</option>
+            <option value="dayOfWeek">Falls by Day of Week</option>
+            <option value="hour">Falls by Hour</option>
           </select>
 
           <select
