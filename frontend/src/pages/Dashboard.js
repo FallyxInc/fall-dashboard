@@ -66,6 +66,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   };
   const [desiredMonth, setDesiredMonth] = useState(getCurrentMonth());
   const [desiredYear, setDesiredYear] = useState(new Date().getFullYear());
+  const [desiredUnit, setDesiredUnit] = useState('allUnits');
   // const [desiredMonth, setDesiredMonth] = useState('January');
   // const [desiredYear, setDesiredYear] = useState(2025);
   const [availableYearMonth, setAvailableYearMonth] = useState({});
@@ -721,12 +722,6 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
           const fallsData = snapshot.val();
           const monthData = Object.keys(fallsData).map((key) => fallsData[key]);
           allFallsData.set(month, monthData);
-          // console.log('month data');
-          // console.log(monthData);
-          // console.log('month');
-          // console.log(month);
-          // console.log('allFallsData');
-          // console.log(allFallsData);
         }
       });
       return () => off(monthRef, listener);
@@ -750,6 +745,14 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
           id: item.id || ''
         }));
 
+        // Filter by unit if a specific unit is selected
+        if (desiredUnit !== 'allUnits') {
+          withIdData = withIdData.filter(fall => {
+            const unitValue = fall.homeUnit || fall.room;
+            return unitValue?.trim() === desiredUnit?.trim();
+          });
+        }
+
         const sortedData = withIdData.sort(
           (a, b) => new Date(b.date + ' ' + b.time) - new Date(a.date + ' ' + a.time)
         );
@@ -760,7 +763,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     return () => {
       off(dataRef, listener); // Cleanup listener on unmount
     };
-  }, [desiredMonth, desiredYear]);
+  }, [desiredMonth, desiredYear, desiredUnit]);
 
   useEffect(() => {
     updateFallsChart();
@@ -808,6 +811,10 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   const handleMonthChange = (event) => {
     const selectedMonth = event.target.value;
     setDesiredMonth(selectedMonth);
+  };
+
+  const handleUnitChange = (event) => {
+    setDesiredUnit(event.target.value);
   };
 
   useEffect(() => {
@@ -1061,6 +1068,13 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
               ))}
             </select>
 
+            <select onChange={handleUnitChange} value={desiredUnit}>
+              {unitSelectionValues.map((unit) => (
+                <option key={unit} value={unit}>
+                  {unit}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
         <div>
