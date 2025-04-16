@@ -557,7 +557,23 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   };
 
   const handleSaveCSV = () => {
-    const csv = Papa.unparse(data);
+    const modifiedData = data.map(item => ({
+      ...item,
+      'Significant Injury Flag': 
+        item.injuries?.toLowerCase().includes('head injury') || 
+        item.injuries?.toLowerCase().includes('fracture') || 
+        item.injuries?.toLowerCase().includes('skin tear') 
+          ? 'Yes' 
+          : 'No',
+      'Non Compliance Flag':
+        item.poaContacted?.toLowerCase() === 'no' ||
+        item.cause === 'No Fall Note' ||
+        (item.postFallNotes < 3)
+          ? 'Yes'
+          : 'No'
+    }));
+    
+    const csv = Papa.unparse(modifiedData);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     saveAs(blob, 'updated_fall_data.csv');
   };

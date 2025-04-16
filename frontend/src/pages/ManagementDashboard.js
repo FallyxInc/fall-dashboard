@@ -12,7 +12,7 @@ Chart.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 export default function ManagementDashboard() {
   const navigate = useNavigate();
-  const months = ['10', '11', '12', '01', '02'];
+  const months = ['10', '11', '12', '01', '02', '03', '04'];
   const [showModal, setShowModal] = useState(false);
   const [modalContent, setModalContent] = useState([]);
   const [modalTitle, setModalTitle] = useState('');
@@ -93,40 +93,37 @@ export default function ManagementDashboard() {
       const users = snapshot.val();
       const newCounts = { ...loginCounts };
 
-      console.log('Initial newCounts:', newCounts);  // Debug log
-
       if (users) {
         Object.values(users).forEach(user => {
-          const count = user.loginCount || user.loginCounts || 0;
+          // Get the appropriate login count based on current month
+          let count;
+          if (currentMonth === '04') {
+            // For April (current month), use the regular loginCount
+            count = user.loginCount || user.loginCounts || 0;
+          } else {
+            // For other months, use the month-specific count (e.g., loginCount-03 for March)
+            const monthSpecificCount = `loginCount-${currentMonth}`;
+            count = user[monthSpecificCount] || 0;
+          }
+
           if (user.role && count) {
             let role = user.role;
             role = role.replace('-ltc', '');
             
-            console.log('Processing role:', role);  // Debug log
-            console.log('Available roles:', Object.keys(newCounts));  // Debug log
-            
             const matchingRole = Object.keys(newCounts).find(
-              key => {
-                const matches = key.toLowerCase() === role.toLowerCase();
-                console.log(`Comparing ${key} with ${role}: ${matches}`);  // Debug log
-                return matches;
-              }
+              key => key.toLowerCase() === role.toLowerCase()
             );
             
             if (matchingRole) {
               newCounts[matchingRole] = count;
-              console.log(`Updated ${matchingRole} to ${count}`);  // Debug log
-            } else {
-              console.log(`No match found for role: ${role}`);  // Debug log
             }
           }
         });
       }
 
-      console.log('Final newCounts:', newCounts);  // Debug log
       setLoginCounts(newCounts);
     });
-  }, [isLoading]);
+  }, [isLoading, currentMonth]);
 
   useEffect(() => {
     console.log('State updated - current loginCounts:', loginCounts);
@@ -647,7 +644,7 @@ export default function ManagementDashboard() {
       'December',
     ];
     const monthIndex = parseInt(month, 10) - 1;
-    return `${monthNames[monthIndex]} ${(month === '01' || month === '02') ? 2025 : 2024}`;
+    return `${monthNames[monthIndex]} ${(month === '01' || month === '02' || month === '03' || month === '04') ? 2025 : 2024}`;
   };
   
 
@@ -685,7 +682,8 @@ export default function ManagementDashboard() {
         return Promise.all(
           homes.map((home) => {
             return new Promise((resolve) => {
-              const fallsRef = ref(db, `/${home}/${month === '01' ? 2025 : 2024}/${month}`);
+              const year = (month === '01' || month === '02' || month === '03' || month === '04') ? 2025 : 2024;
+              const fallsRef = ref(db, `/${home}/${year}/${month}`);
               onValue(fallsRef, (snapshot) => {
                 const data = snapshot.val();
                 if (data) {
