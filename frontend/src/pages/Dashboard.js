@@ -599,7 +599,12 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     
     const csv = Papa.unparse(modifiedData);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    saveAs(blob, 'updated_fall_data.csv');
+    
+    // Format the filename: Community_YYYY_MM_falls_data
+    const monthNum = months_backword[desiredMonth];
+    const filename = `${name}_${desiredYear}_${monthNum}_falls_data.csv`;
+    
+    saveAs(blob, filename);
   };
 
   const handleUpdateCSV = async (index, newValue, name, changeType) => {
