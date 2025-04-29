@@ -141,7 +141,7 @@ function App() {
                     'Lawrence',
                     'Gage',
                   ]}
-                  goal={28}
+                  goal={25}
                 />
               </PrivateRoute>
             }
