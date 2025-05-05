@@ -60,7 +60,8 @@ export default function ManagementDashboard() {
     await Promise.all(
       homes.map((home) => {
         return new Promise((resolve) => {
-          const homeRef = ref(db, `/${home}/${currentMonth === '01' || currentMonth === '02' || currentMonth === '03' || currentMonth === '04' ? 2025 : 2024}/${currentMonth}`);
+          const year = ['01', '02', '03', '04', '05'].includes(currentMonth) ? 2025 : 2024;
+          const homeRef = ref(db, `/${home}/${year}/${currentMonth}`);
 
           onValue(homeRef, (snapshot) => {
             const data = snapshot.val();
@@ -91,15 +92,28 @@ export default function ManagementDashboard() {
     
     onValue(usersRef, (snapshot) => {
       const users = snapshot.val();
-      const newCounts = { ...loginCounts };
+      const newCounts = {
+        iggh: 0,
+        millCreek: 0,
+        niagara: 0,
+        wellington: 0,
+        bonairltc: 0,
+        champlain: 0,
+        lancaster: 0,
+        oneill: 0,
+        vmltc: 0
+      };
 
       if (users) {
         Object.values(users).forEach(user => {
           // Get the appropriate login count based on current month
           let count;
-          if (currentMonth === '04') {
-            // For April (current month), use the regular loginCount
-            count = user.loginCount || user.loginCounts || 0;
+          if (currentMonth === '05') {
+            // For May (current month), use the regular loginCount
+            count = user.loginCount || 0;
+          } else if (currentMonth === '04') {
+            // For April, use loginCount-04
+            count = user['loginCount-04'] || 0;
           } else {
             // For other months, use the month-specific count (e.g., loginCount-03 for March)
             const monthSpecificCount = `loginCount-${currentMonth}`;
@@ -115,7 +129,7 @@ export default function ManagementDashboard() {
             );
             
             if (matchingRole) {
-              newCounts[matchingRole] = count;
+              newCounts[matchingRole] += count;
             }
           }
         });
@@ -231,7 +245,7 @@ export default function ManagementDashboard() {
     };
 
     const fetchDataForHome = (home) => {
-      const year = currentMonth === '01' || currentMonth === '02' || currentMonth === '03' || currentMonth === '04' ? 2025 : 2024;
+      const year = ['01', '02', '03', '04', '05'].includes(currentMonth) ? 2025 : 2024;
       const path = `/${home}/${year}/${currentMonth}`;
       const fallsRef = ref(db, path);
       
@@ -400,7 +414,7 @@ export default function ManagementDashboard() {
 
     // LOGIC FOR graph of non-compliance!
     const fetchDataForHome = (home) => {
-      const year = currentMonth === '01' || currentMonth === '02' || currentMonth === '03' || currentMonth === '04' ? 2025 : 2024;
+      const year = ['01', '02', '03', '04', '05'].includes(currentMonth) ? 2025 : 2024;
       const path = `/${home}/${year}/${currentMonth}`;
       const fallsRef = ref(db, path);
       
@@ -682,7 +696,7 @@ export default function ManagementDashboard() {
         return Promise.all(
           homes.map((home) => {
             return new Promise((resolve) => {
-              const year = (month === '01' || month === '02' || month === '03' || month === '04') ? 2025 : 2024;
+              const year = ['01', '02', '03', '04', '05'].includes(month) ? 2025 : 2024;
               const fallsRef = ref(db, `/${home}/${year}/${month}`);
               onValue(fallsRef, (snapshot) => {
                 const data = snapshot.val();
@@ -765,9 +779,9 @@ export default function ManagementDashboard() {
     
     homes.forEach(home => {
       // Get falls data
-      const fallsRef = ref(db, `/${home}/${currentMonth === '01' ? 2025 : 2024}/${currentMonth}`); // MAIN ONE
+      const fallsRef = ref(db, `/${home}/${['01', '02', '03', '04', '05'].includes(currentMonth) ? 2025 : 2024}/${currentMonth}`); // MAIN ONE
       // Get reviews data
-      const reviewsRef = ref(db, `/${home}/${currentMonth === '01' ? 2025 : 2024}/${currentMonth}`);
+      const reviewsRef = ref(db, `/${home}/${['01', '02', '03', '04', '05'].includes(currentMonth) ? 2025 : 2024}/${currentMonth}`);
       
       
       onValue(fallsRef, async (snapshot) => {
@@ -836,6 +850,7 @@ export default function ManagementDashboard() {
           height: '40px',
         }}
       >
+        <option value="05">May 2025</option>
         <option value="04">April 2025</option>
         <option value="03">March 2025</option>
         <option value="02">February 2025</option>
