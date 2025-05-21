@@ -244,6 +244,20 @@ function App() {
           />
 
           <Route
+            path="/domlipa"
+            element={
+              
+                <Dashboard 
+                  name="domlipa"
+                  title="Dom Lipa Falls Dashboard"
+                  unitSelectionValues={['allUnits', '1 West', 'K wing']}
+                  goal={10}
+                />
+              
+            }
+          />
+
+          <Route
             path="/il"
             element={
               <PrivateRoute rolesRequired={['il', 'responsive']}>
@@ -326,6 +340,8 @@ function App() {
               
             }
           />
+
+          
         </Routes>
       </Router>
     </div>

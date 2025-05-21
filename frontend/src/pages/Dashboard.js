@@ -718,8 +718,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     // Start measuring fetch data time
     performance.mark('start-fetch-data');
 
-    const dataRef = ref(db, `/${name}/${desiredYear}/${months_backword[desiredMonth]}`); // Firebase ref for this specific dashboard
-    // const dataRef = ref(db, name);
+    const dataRef = ref(db, `/${name}/${desiredYear}/${months_backword[desiredMonth]}`);
     const currentYear = desiredYear;
     const currentMonth = parseInt(months_backword[desiredMonth]); // current month
     const pastThreeMonths = [];
@@ -757,6 +756,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     setThreeMonthData(allFallsData);
 
     const listener = onValue(dataRef, (snapshot) => {
+      console.log('Firebase data:', snapshot.val());
       if (snapshot.exists()) {
         const fetchedData = snapshot.val();
         
@@ -1066,7 +1066,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
               setAnalysisUnit(e.target.value);
             }}
           >
-            {unitSelectionValues.map((unit) => (
+            {unitSelectionValues && unitSelectionValues.map((unit) => (
               <option key={unit} value={unit}>
                 {unit}
               </option>
@@ -1099,7 +1099,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
             </select>
 
             <select onChange={handleUnitChange} value={desiredUnit}>
-              {unitSelectionValues.map((unit) => (
+              {unitSelectionValues && unitSelectionValues.map((unit) => (
                 <option key={unit} value={unit}>
                   {unit}
                 </option>
@@ -1138,7 +1138,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
           </tr>
         </thead>
         <tbody id="fallsTableBody">
-          {data.map((item, i) => (
+          {data && data.map((item, i) => (
             <tr 
               style={{ 
                 backgroundColor: item.cause === 'No Fall Note' ? '#f8b9c6' : 'inherit' 
