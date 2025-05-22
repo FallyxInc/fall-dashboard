@@ -250,7 +250,7 @@ function App() {
                 <Dashboard 
                   name="domlipa"
                   title="Dom Lipa Falls Dashboard"
-                  unitSelectionValues={['allUnits', '1 West', 'K wing']}
+                  unitSelectionValues={['allUnits', '1 West', 'K wing', '2 West']}
                   goal={10}
                 />
               
