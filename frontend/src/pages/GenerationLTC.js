@@ -1402,6 +1402,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
         </thead>
         <tbody id="fallsTableBody">
           {data
+       .sort((a, b) => a.name.localeCompare(b.name))  // Sort alphabetically by name     
             .filter(item => {
               if (selectedRoom === 'All Floors') return true;
               const floorMatch = item.room?.match(/LTC\s*(\d+)/);
