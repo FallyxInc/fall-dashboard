@@ -209,6 +209,18 @@ tr:nth-child(even) {
 
 .header {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+  flex-direction: column; /* Stack children vertically */
+  align-items: flex-start; /* Align items to the start for better visual */
+  gap: 5px; /* Adjust gap if needed */
+}
+
+/* Ensure the h2 takes its own line */
+.header h2 {
+  margin-bottom: 5px; /* Add some space below the title */
+}
+
+/* Style for the div containing the select elements to keep them inline */
+.header > div {
+  display: flex;
+  gap: 10px;
 }

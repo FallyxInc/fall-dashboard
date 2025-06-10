@@ -137,11 +137,6 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     scales: {
       y: {
         beginAtZero: true,
-        min: 20,
-        max: 80,
-        ticks: {
-          stepSize: 10,
-        },
       },
     },
     plugins: {
@@ -337,10 +332,14 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
         break;
       default:
         // Original logic for other homes
+        console.log('[SRR.js - updateFallsChart] Default case: Processing threeMonthData.');
         for (const [key, value] of threeMonthData) {
+          console.log(`[SRR.js - updateFallsChart] Processing month key: ${key}, value length: ${value.length}`);
           threeMonthX.push(months_forward[key]);
           threeMonthY.push(value.length);
         }
+        console.log('[SRR.js - updateFallsChart] Generated threeMonthX:', threeMonthX);
+        console.log('[SRR.js - updateFallsChart] Generated threeMonthY:', threeMonthY);
     }
 
     switch (timeRange) {
@@ -652,7 +651,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
 
     const fetchData = () => {
       const dataRef = ref(db, `/${name}/${desiredYear}/${months_backword[desiredMonth]}`); // Firebase ref for this specific dashboard
-      console.log(`[SRR.js] Attempting to fetch data from path: /${name}/${desiredYear}/${months_backword[desiredMonth]}`);
+      console.log(`[SRR.js - fetchData] Attempting to fetch main data from path: /${name}/${desiredYear}/${months_backword[desiredMonth]}`);
 
       const currentYear = desiredYear;
       const currentMonth = parseInt(months_backword[desiredMonth]); // current month
@@ -667,21 +666,25 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
           pastThreeMonths.push({ year: currentYear - 1, month: String(12 + month).padStart(2, '0') });
         }
       }
+      console.log('[SRR.js - fetchData] Past three months to fetch:', pastThreeMonths);
 
       const allFallsData = new Map();
       for (let i = 0; i < pastThreeMonths.length; i++) {
         allFallsData.set(pastThreeMonths[i].month, []);
       }
+      console.log('[SRR.js - fetchData] Initial allFallsData map:', allFallsData);
 
       pastThreeMonths.forEach(({ year, month }) => {
         const monthRef = ref(db, `/${name}/${year}/${month}`);
-        console.log(`[SRR.js] Fetching three-month data from path: /${name}/${year}/${month}`);
+        console.log(`[SRR.js - fetchData] Fetching three-month data from path: /${name}/${year}/${month}`);
 
         const listener = onValue(monthRef, (snapshot) => {
-          console.log(`[SRR.js] Three-month snapshot for /${name}/${year}/${month}: exists?`, snapshot.exists());
+          console.log(`[SRR.js - fetchData] Three-month snapshot for /${name}/${year}/${month}: exists?`, snapshot.exists());
           if (snapshot.exists()) {
             const fallsData = snapshot.val();
+            console.log(`[SRR.js - fetchData] Raw fallsData for ${month}:`, fallsData);
             allFallsData.set(month, Object.values(fallsData));
+            console.log('[SRR.js - fetchData] Updated allFallsData map after fetching a month:', allFallsData);
           }
         });
         // No explicit off() here because the main off(dataRef, listener) should cover it
@@ -690,18 +693,19 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
       setThreeMonthData(allFallsData);
 
       const listener = onValue(dataRef, (snapshot) => {
-        console.log(`[SRR.js] Main snapshot for /${name}/${desiredYear}/${months_backword[desiredMonth]}: exists?`, snapshot.exists());
+        console.log(`[SRR.js - fetchData] Main snapshot for /${name}/${desiredYear}/${months_backword[desiredMonth]}: exists?`, snapshot.exists());
         if (snapshot.exists()) {
           const fetchedData = snapshot.val();
-          console.log("[SRR.js] Raw fetched data for main table:", fetchedData);
+          console.log("[SRR.js - fetchData] Raw fetched data for main table:", fetchedData);
 
           if (!fetchedData) {
             setData([]);
+            console.log('[SRR.js - fetchData] Main fetchedData is null or empty, setting data to empty array.');
             return;
           }
 
           let withIdData = Object.values(fetchedData);
-          console.log("[SRR.js] Processed data with IDs for main table:", withIdData);
+          console.log("[SRR.js - fetchData] Processed data with IDs for main table:", withIdData);
           for (let i = 0; i < withIdData.length; i++) {
             withIdData[i].id = i;
           }
@@ -712,14 +716,24 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
               (a, b) => new Date(b.date + ' ' + b.time) - new Date(a.date + ' ' + a.time)
             );
             setData(sortedData);
+            console.log('[SRR.js - fetchData] Table data set:', sortedData);
+          } else {
+              console.log('[SRR.js - fetchData] withIdData is empty after processing, setting data to empty array.');
+              setData([]);
           }
         } else {
+          console.log(`[SRR.js - fetchData] No main data found at path: /${name}/${desiredYear}/${months_backword[desiredMonth]}`);
           setData([]);
         }
       });
 
       return () => {
-        off(dataRef, listener); // Cleanup listener on unmount
+        off(dataRef, listener); // Cleanup main listener
+        // Cleanup three-month listeners
+        pastThreeMonths.forEach(({ year, month }) => {
+          const monthRef = ref(db, `/${name}/${year}/${month}`);
+          off(monthRef);
+        });
       };
     };
 
@@ -731,9 +745,11 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   }, [desiredMonth, desiredYear]);
 
   useEffect(() => {
+    console.log('[SRR.js - updateFallsChart] Running updateFallsChart.');
+    console.log('[SRR.js - updateFallsChart] Current threeMonthData:', threeMonthData);
     updateFallsChart();
     // console.log('Falls Chart');
-  }, [fallsTimeRange, data, desiredMonth, desiredYear]);
+  }, [fallsTimeRange, data, desiredMonth, desiredYear, threeMonthData]);
 
   useEffect(() => {
     updateAnalysisChart();
@@ -761,34 +777,28 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
       if (snapshot.exists()) {
         const data = snapshot.val();
         
-        // Get current date info
-        const currentDate = new Date();
-        const currentYear = currentDate.getFullYear();
-        const currentMonth = currentDate.getMonth() + 1; // 1-12
+        // Get all years from Firebase data
+        const firebaseYears = Object.keys(data);
 
-        // Calculate the last 4 months
-        const months = [];
-        for (let i = 0; i < 4; i++) {
-          let month = currentMonth - i;
-          let year = currentYear;
-          
-          if (month <= 0) {
-            month += 12;
-            year -= 1;
-          }
-          
-          // Format month as two digits
-          const monthStr = month.toString().padStart(2, '0');
-          
+        firebaseYears.forEach(year => {
           if (!yearMonthMapping[year]) {
             yearMonthMapping[year] = [];
           }
-          
-          // Only add if the data exists in Firebase
-          if (data[year] && data[year][monthStr]) {
-            yearMonthMapping[year].push(months_forward[monthStr]);
+          // Iterate through all 12 months (numeric '01' to '12')
+          for (let i = 1; i <= 12; i++) {
+            const monthStr = String(i).padStart(2, '0');
+            // Only add if the data exists in Firebase for that specific month
+            if (data[year] && data[year][monthStr]) {
+              yearMonthMapping[year].push(months_forward[monthStr]);
+            }
           }
-        }
+          // Sort months for consistent display
+          yearMonthMapping[year].sort((a, b) => {
+            const monthNumA = parseInt(months_backword[a]);
+            const monthNumB = parseInt(months_backword[b]);
+            return monthNumA - monthNumB;
+          });
+        });
 
         console.log('Final year/month mapping:', yearMonthMapping);
       }
@@ -1034,21 +1044,23 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
           <h2>
             Falls Tracking Table: {desiredMonth} {desiredYear}
           </h2>
-          <select onChange={handleYearChange} value={desiredYear}>
-            {Object.keys(availableYearMonth).map((year) => (
-              <option key={year} value={year}>
-                {year}
-              </option>
-            ))}
-          </select>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <select onChange={handleYearChange} value={desiredYear}>
+              {Object.keys(availableYearMonth).map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </select>
 
-          <select onChange={handleMonthChange} value={desiredMonth}>
-            {(availableYearMonth[desiredYear] || []).map((month) => (
-              <option key={month} value={month}>
-                {month}
-              </option>
-            ))}
-          </select>
+            <select onChange={handleMonthChange} value={desiredMonth}>
+              {(availableYearMonth[desiredYear] || []).map((month) => (
+                <option key={month} value={month}>
+                  {month}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
         <div>
           <button className={styles['download-button']} onClick={handleSaveCSV}>
