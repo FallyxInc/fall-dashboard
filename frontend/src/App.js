@@ -17,6 +17,7 @@ import ShepherdLodge from './pages/Shepherd-Lodge';
 import GoderichPlace from './pages/Goderich-Place';
 import Palisade from './pages/Palisade';
 import Wellington from './pages/Wellington';
+import SRR from './pages/SRR';
 
 
 
@@ -336,6 +337,19 @@ function App() {
                   name="goderich"
                   title="Goderich Place Falls Dashboard"
                   goal={22}
+                />
+              
+            }
+          />
+
+<Route
+            path="/srr"
+            element={
+              
+                <SRR 
+                  name="srr"
+                  title="Scarborough Retirement Residence Falls Dashboard"
+                  goal={15}
                 />
               
             }
