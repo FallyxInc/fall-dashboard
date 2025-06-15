@@ -1263,22 +1263,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                     paddingTop: '8px',
                     marginTop: 'auto'
                   }}>
-                    <button
-                      onClick={() => handleReviewInsight(insight.id)}
-                      style={{
-                        background: insight.outcome ? '#8BD087' : '#e2e8f0',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        padding: '4px 12px',
-                        fontSize: '13px',
-                        cursor: insight.outcome ? 'pointer' : 'not-allowed',
-                        transition: 'all 0.2s ease',
-                        opacity: insight.outcome ? 1 : 0.7
-                      }}
-                    >
-                      {insight.outcome ? 'Reviewed' : 'Select Outcome'}
-                    </button>
+                    
                     <div style={{
                       display: 'flex',
                       alignItems: 'center',
