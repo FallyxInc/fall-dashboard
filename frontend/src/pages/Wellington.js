@@ -107,46 +107,32 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   const [isLongTermInterventionModalOpen, setIsLongTermInterventionModalOpen] = useState(false);
 
   const [hardcodedInsights] = useState([
-    {
-      id: 'insight-1',
-      emoji: "📌",
-      content: "70% of falls have all happened in the Night shift.",
-      type: "reminder",
-      rating: 0,
-      reviewed: false
-    },
+  
     {
       id: 'insight-2',
-      emoji: "💡",
-      content: "Heene, Wilfred fell for the same cause of fall as last month, exit-seeking behaviour.",
+      emoji: "📌",
+      content: "Heene, Wilfred should have an intervention for night shift routine checks to prevent wandering.",
       type: "tip",
       rating: 0,
       reviewed: false
     },
     {
       id: 'insight-3',
-      emoji: "🎯",
-      content: "Pereira, Eugene intervention is not related to cause of fall.",
+      emoji: "📌",
+      content: "Pereira, Eugene should have an intervention for putting choclates beside her bed after supper to prevent her from reaching & falling.",
       type: "goal",
       rating: 0,
       reviewed: false
     }, 
     {
       id: 'insight-4',
-      emoji: "🎯",
-      content: "Lambie, John intervention is not related to cause of fall.",
+      emoji: "📌",
+      content: "Lambie, John should have an intervention related to prevention of getting up to use the washroom in the night",
       type: "goal",
       rating: 0,
       reviewed: false
     }, 
-    {
-      id: 'insight-5',
-      emoji: "💡",
-      content: "Fortun, Segundina fell for same cause of fall as last month, rolling out of bed.",
-      type: "goal",
-      rating: 0,
-      reviewed: false
-    },
+   
     // 
     // {
     //   id: 'insight-4',
@@ -1175,28 +1161,29 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                       fontSize: '14px',
                       color: '#64748b'
                     }}>
-                      Value:
+                      Implementation:
                     </span>
-                    {[1, 2, 3].map((num) => (
+                    {['Yes', 'No', 'Add to Kardex'].map((num) => (
                       <button
                         key={num}
-                        onClick={() => handleRatingChange(insight.id, num)}
+                        onClick={() => handleRatingChange(insight.id, num === 'Yes' ? 1 : num === 'No' ? 2 : 3)}
                         style={{
-                          background: insight.rating === num ? '#8BD087' : '#f8fafc',
+                          background: insight.rating === (num === 'Yes' ? 1 : num === 'No' ? 2 : 3) ? '#8BD087' : '#f8fafc',
                           border: '1px solid',
-                          borderColor: insight.rating === num ? '#8BD087' : '#e2e8f0',
+                          borderColor: insight.rating === (num === 'Yes' ? 1 : num === 'No' ? 2 : 3) ? '#8BD087' : '#e2e8f0',
                           borderRadius: '4px',
-                          width: '28px',
+                          width: num === 'Add to Kardex' ? '120px' : '28px',
                           height: '28px',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                           cursor: 'pointer',
                           fontSize: '14px',
-                          color: insight.rating === num ? 'white' : '#64748b',
+                          color: insight.rating === (num === 'Yes' ? 1 : num === 'No' ? 2 : 3) ? 'white' : '#64748b',
                           transition: 'all 0.2s ease',
                           padding: '0',
-                          margin: '0'
+                          margin: '0',
+                          whiteSpace: 'nowrap'
                         }}
                       >
                         {num}
