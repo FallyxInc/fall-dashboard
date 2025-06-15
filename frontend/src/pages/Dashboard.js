@@ -108,6 +108,9 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   const [showModal, setShowModal] = useState(false);
 
   const [incidentType, setIncidentType] = useState('Falls');
+  const [insightOutcomes, setInsightOutcomes] = useState({});
+  const [reviewedInsights, setReviewedInsights] = useState({});
+  const [insights, setInsights] = useState([]);
 
   const MOCK_INCIDENT_DATA = {
     'Falls': {
@@ -982,6 +985,107 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     }
   };
 
+  const getAllInsights = () => {
+    // Map insights from Firebase
+    const allInsights = insights.map(insight => {
+      // Check if this insight exists in Firebase (has outcome or reviewed status)
+      const firebaseData = insightOutcomes[insight.id] || {};
+      const isReviewed = reviewedInsights[insight.id] || false;
+      
+      return {
+        ...insight,
+        outcome: firebaseData.outcome || null,
+        reviewed: isReviewed
+      };
+    });
+
+    // Filter out reviewed insights
+    return allInsights.filter(insight => !insight.reviewed);
+  };
+
+  const handleOutcomeChange = async (insightId, newOutcome) => {
+    try {
+      const insightRef = ref(db, `/${name}/insights/${desiredYear}/${months_backword[desiredMonth]}/${insightId}`);
+      await update(insightRef, {
+        outcome: newOutcome,
+        timestamp: serverTimestamp()
+      });
+      
+      setInsightOutcomes(prev => ({
+        ...prev,
+        [insightId]: { outcome: newOutcome }
+      }));
+    } catch (error) {
+      console.error('Error updating insight outcome:', error);
+    }
+  };
+
+  const handleReviewInsight = async (insightId) => {
+    try {
+      const insightRef = ref(db, `/${name}/insights/${desiredYear}/${months_backword[desiredMonth]}/${insightId}`);
+      await update(insightRef, {
+        reviewed: true,
+        reviewedAt: serverTimestamp()
+      });
+      
+      setReviewedInsights(prev => ({
+        ...prev,
+        [insightId]: true
+      }));
+    } catch (error) {
+      console.error('Error marking insight as reviewed:', error);
+    }
+  };
+
+  // Load insights, outcomes and reviewed status from Firebase
+  useEffect(() => {
+    const loadInsightData = async () => {
+      const insightsRef = ref(db, `/${name}/insights/${desiredYear}/${months_backword[desiredMonth]}`);
+      const snapshot = await get(insightsRef);
+      
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        const outcomes = {};
+        const reviewed = {};
+        const insightsList = [];
+        
+        Object.entries(data).forEach(([id, insight]) => {
+          // Add to insights list if it's not just an outcome/review
+          if (typeof insight === 'string') {
+            // If insight is just a string, use it as content
+            insightsList.push({
+              id,
+              emoji: '📊',  // Default emoji
+              content: insight
+            });
+          } else if (insight.content) {
+            // If insight is an object with content
+            insightsList.push({
+              id,
+              emoji: insight.emoji || '📊',
+              content: insight.content
+            });
+          }
+          
+          if (insight.outcome) outcomes[id] = insight;
+          if (insight.reviewed) reviewed[id] = true;
+        });
+        
+        console.log('Insights fetched from Firebase:', insightsList);
+        console.log('Reviewed insights status:', reviewed);
+        setInsights(insightsList);
+        setInsightOutcomes(outcomes);
+        setReviewedInsights(reviewed);
+      } else {
+        // If no insights exist for this month, set empty state
+        setInsights([]);
+        setInsightOutcomes({});
+        setReviewedInsights({});
+      }
+    };
+    loadInsightData();
+  }, [name, desiredYear, desiredMonth]);
+
   return (
     <div className={styles.dashboard} ref={tableRef}>
       <h1>{title}</h1>
@@ -1003,7 +1107,6 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
             >
               <option value="current">This Month</option>
               <option value="3months">Past 3 Months</option>
-              {/* <option value="6months">Past 6 Months</option> */}
             </select>
             {gaugeChart ? (
               <div id="gaugeContainer">
@@ -1074,6 +1177,143 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
           </select>
 
           {analysisChartData.datasets.length > 0 && <Bar data={analysisChartData} options={analysisChartOptions} />}
+        </div>
+
+        <div className={styles.chart}>
+          <h2>
+            <span style={{
+              fontSize: getAllInsights().length > 1 ? '25px' : '22.5px',
+              fontWeight: getAllInsights().length > 1 ? '700' : '700',
+              color: getAllInsights().length > 1 ? '#8BD087' : 'inherit'
+            }}>
+              {getAllInsights().length} care plan additions
+            </span>
+            {" left to review:"}
+          </h2>
+          <div style={{
+            padding: '10px',
+            height: '300px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '10px',
+            overflowY: 'auto',
+            scrollbarWidth: 'thin',
+            scrollbarColor: '#CBD5E1 #F1F5F9',
+            marginTop: '5px'
+          }}>
+            {getAllInsights().length === 0 ? (
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: '100%',
+                textAlign: 'center',
+                color: '#64748b',
+                fontSize: '18px',
+                lineHeight: '1.5'
+              }}>
+                <p>This section is for testing a new feature with select homes. If you're interested in connecting Fallyx to care plans, email ayaan@fallyx.com.</p>
+              </div>
+            ) : (
+              getAllInsights().map((insight) => (
+                <div 
+                  key={insight.id} 
+                  style={{
+                    background: 'white',
+                    borderRadius: '8px',
+                    padding: '12px',
+                    boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                    marginBottom: '8px',
+                    position: 'relative',
+                    border: '1px solid #f0f0f0',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    gap: '8px'
+                  }}
+                >
+                  <div style={{
+                    display: 'flex',
+                    gap: '10px',
+                    alignItems: 'flex-start'
+                  }}>
+                    <span style={{
+                      fontSize: '15px',
+                      lineHeight: '1.4',
+                      marginTop: '2px'
+                    }}>
+                      {insight.emoji}
+                    </span>
+                    <span style={{
+                      fontSize: '18.5px',
+                      color: '#334155',
+                      lineHeight: '1.4',
+                      fontWeight: '500'
+                    }}>
+                      {insight.content}
+                    </span>
+                  </div>
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    borderTop: '1px solid #f0f0f0',
+                    paddingTop: '8px',
+                    marginTop: 'auto'
+                  }}>
+                    <button
+                      onClick={() => handleReviewInsight(insight.id)}
+                      style={{
+                        background: insight.outcome ? '#8BD087' : '#e2e8f0',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        padding: '4px 12px',
+                        fontSize: '13px',
+                        cursor: insight.outcome ? 'pointer' : 'not-allowed',
+                        transition: 'all 0.2s ease',
+                        opacity: insight.outcome ? 1 : 0.7
+                      }}
+                    >
+                      {insight.outcome ? 'Reviewed' : 'Select Outcome'}
+                    </button>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}>
+                      <span style={{
+                        fontSize: '14px',
+                        color: '#64748b'
+                      }}>
+                        Outcome:
+                      </span>
+                      {['No', 'Careplan', 'Kardex & Careplan'].map((outcomeOption) => (
+                        <button
+                          key={outcomeOption}
+                          onClick={() => handleOutcomeChange(insight.id, outcomeOption)}
+                          style={{
+                            background: insight.outcome === outcomeOption ? '#8BD087' : '#e2e8f0',
+                            color: insight.outcome === outcomeOption ? 'white' : '#64748b',
+                            border: 'none',
+                            borderRadius: '4px',
+                            padding: '4px 8px',
+                            fontSize: '13px',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease'
+                          }}
+                        >
+                          {outcomeOption}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </div>
       </div>
       <div className={styles['table-header']}>
