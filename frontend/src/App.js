@@ -17,6 +17,7 @@ import ShepherdLodge from './pages/Shepherd-Lodge';
 import GoderichPlace from './pages/Goderich-Place';
 import Palisade from './pages/Palisade';
 import MCB from './pages/MCB';
+import ONCB from './pages/ONCB';
 import Wellington from './pages/Wellington';
 import SRR from './pages/SRR';
 
@@ -363,11 +364,24 @@ function App() {
                 <MCB
                   name="MCB"
                   title="Mill Creek Behaviours Dashboard"
+                  goal={30}
+                />
+              
+            }
+          />  
+
+          <Route
+            path="/ONCB"
+            element={
+              
+                <ONCB
+                  name="ONCB"
+                  title="The O'Neill Centre Behaviours Dashboard"
                   goal={15}
                 />
               
             }
-          />    
+          />      
 
           
         </Routes>
