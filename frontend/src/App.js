@@ -16,6 +16,7 @@ import GenerationLTCDashboard from './pages/GenerationLTC';
 import ShepherdLodge from './pages/Shepherd-Lodge';
 import GoderichPlace from './pages/Goderich-Place';
 import Palisade from './pages/Palisade';
+import MCB from './pages/MCB';
 import Wellington from './pages/Wellington';
 import SRR from './pages/SRR';
 
@@ -342,7 +343,7 @@ function App() {
             }
           />
 
-<Route
+          <Route
             path="/srr"
             element={
               
@@ -354,6 +355,19 @@ function App() {
               
             }
           />
+
+          <Route
+            path="/MCB"
+            element={
+              
+                <MCB
+                  name="MCB"
+                  title="Mill Creek Behaviours Dashboard"
+                  goal={15}
+                />
+              
+            }
+          />    
 
           
         </Routes>
