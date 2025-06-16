@@ -888,11 +888,18 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
         console.log('Available year/month mapping:', sortedMapping);
         setAvailableYearMonth(sortedMapping);
 
-        // Set to 2025 by default
-        setDesiredYear('2025');
-        // Set to the first available month of 2025, or January if none available
-        const months2025 = sortedMapping['2025'] || [];
-        setDesiredMonth(months2025.length > 0 ? months2025[0] : 'January');
+        // Set to current year and month by default
+        const currentYear = new Date().getFullYear().toString();
+        const currentMonth = getCurrentMonth();
+        
+        // If current year exists in data, use it, otherwise use the latest available year
+        const yearToUse = sortedMapping[currentYear] ? currentYear : sortedYears[0];
+        setDesiredYear(yearToUse);
+        
+        // If current month exists in data for the selected year, use it, otherwise use the first available month
+        const monthsForYear = sortedMapping[yearToUse] || [];
+        const monthToUse = monthsForYear.includes(currentMonth) ? currentMonth : monthsForYear[0];
+        setDesiredMonth(monthToUse);
       }
     });
   }, []); // Empty dependency array since we only need to run this once
