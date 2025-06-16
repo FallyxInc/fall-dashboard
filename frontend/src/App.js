@@ -18,6 +18,7 @@ import GoderichPlace from './pages/Goderich-Place';
 import Palisade from './pages/Palisade';
 import MCB from './pages/MCB';
 import ONCB from './pages/ONCB';
+import LM1 from './pages/LM1';
 import Wellington from './pages/Wellington';
 import SRR from './pages/SRR';
 
@@ -381,7 +382,19 @@ function App() {
                 />
               
             }
-          />      
+          />   
+          <Route
+            path="/LM1"
+            element={
+              
+                <LM1
+                  name="LM1"
+                  title="Lifemark Mill Creek Falls Dashboard"
+                  goal={50}
+                />
+              
+            }
+          />         
 
           
         </Routes>
