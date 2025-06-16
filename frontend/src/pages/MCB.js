@@ -432,7 +432,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   const countBehavioursByType = (data) => {
     const counts = {};
     data.forEach(item => {
-      const type = item.incidentType;
+      const type = item.incident_type;
       if (type) {
         counts[type] = (counts[type] || 0) + 1;
       }
@@ -443,7 +443,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   const countBehavioursByUnit = (data) => {
     const counts = {};
     data.forEach(item => {
-      const unit = item.unit;
+      const unit = item.room;
       if (unit) {
         counts[unit] = (counts[unit] || 0) + 1;
       }
@@ -1256,7 +1256,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
       <table style={{ width: '100%' }}>
         <thead>
           <tr>
-            <th style={{ fontSize: '18px' }}>Id</th>
+            <th style={{ fontSize: '18px' }}>#</th>
             <th style={{ fontSize: '18px' }}>Resident Name</th>
             <th style={{ fontSize: '18px' }}>Date</th>
             <th style={{ fontSize: '18px' }}>Incident Location</th>
@@ -1273,7 +1273,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
         <tbody id="fallsTableBody">
           {data && data.map((item, i) => (
             <tr key={i}>
-              <td style={{ fontSize: '16px' }}>{item.id}</td>
+              <td style={{ fontSize: '16px' }}>{item.incident_number}</td>
               <td style={{ fontSize: '16px' }}>{item.name}</td>
               <td style={{ fontSize: '16px' }}>{item.date}</td>
               <td style={{ fontSize: '16px' }}>{item.incident_location}</td>
