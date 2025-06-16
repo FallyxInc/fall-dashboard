@@ -1213,7 +1213,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                 fontSize: '18px',
                 lineHeight: '1.5'
               }}>
-                <p>This section is for testing a new feature with select homes. If you're interested in connecting Fallyx to care plans, email ayaan@fallyx.com.</p>
+                <p>This section is for testing a new feature with select homes. <b>If you're interested in connecting Fallyx to care plans, email ayaan@fallyx.com.</b></p>
               </div>
             ) : (
               getAllInsights().map((insight) => (
