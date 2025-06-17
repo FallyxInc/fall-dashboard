@@ -58,7 +58,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
 
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [threeMonthData, setThreeMonthData] = useState(new Map());
+  const [allHistoricalFalls, setAllHistoricalFalls] = useState([]);
   
   const getCurrentMonth = () => {
     const today = new Date();
@@ -71,13 +71,11 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   const [desiredUnit, setDesiredUnit] = useState('allUnits');
   const [availableYearMonth, setAvailableYearMonth] = useState({});
 
-  const [gaugeChart, setGaugeChart] = useState(true);
-  const [fallsTimeRange, setFallsTimeRange] = useState('current');
   const [analysisType, setAnalysisType] = useState('timeOfDay');
   const [analysisTimeRange, setAnalysisTimeRange] = useState('current');
   const [analysisUnit, setAnalysisUnit] = useState('allUnits');
   const [analysisHeaderText, setAnalysisHeaderText] = useState('Falls by Time of Day');
-  const [totalFalls, setTotalFalls] = useState(0); // New state for total falls
+  const [totalFalls, setTotalFalls] = useState(0);
 
   const [currentIntervention, setCurrentIntervention] = useState('');
   const [currentRowIndex, setCurrentRowIndex] = useState(null);
@@ -138,7 +136,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     datasets: [],
   });
 
-  const analysisChartOptions = {
+  const [analysisChartOptions, setAnalysisChartOptions] = useState({
     responsive: true,
     scales: {
       y: {
@@ -152,7 +150,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
       tooltip: { enabled: false },
       legend: { display: false },
     },
-  };
+  });
 
   // --- Functions for Modals ---
   const handleEditIntervention = (index) => {
@@ -230,7 +228,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     let updatedData = [...data];
     updatedData[currentPostFallNotesRowIndex].postFallNotes = currentPostFallNotes;
     updatedData[currentPostFallNotesRowIndex].isPostFallNotesUpdated = 'yes';
-    updatedData = markPostFallNotes(updatedData); // This function is from DashboardUtils
+    updatedData = markPostFallNotes(updatedData);
 
     const rowRef = ref(
       db,
@@ -247,105 +245,23 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   };
 
   // --- Chart Update Functions ---
-  const updateFallsChart = () => {
-    const timeRange = fallsTimeRange;
-    const currentFalls = data.length;
-    let newData;
-
-    if (currentFalls >= goal) {
-      newData = [goal, 0];
-    } else {
-      newData = [currentFalls, goal - currentFalls];
-    }
-
-    // Get falls from the last 3 days
-    const threeDaysAgo = new Date();
-    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
-    
-    const recentFalls = data.filter(fall => {
-      const fallDate = new Date(fall.date);
-      return fallDate >= threeDaysAgo;
-    }).sort((a, b) => new Date(b.date + ' ' + b.time) - new Date(a.date + ' ' + a.time));
-
-    // Create summary content
-    const summaryContent = recentFalls.length > 0 ? (
-      <div style={{ padding: '10px' }}>
-        <h3 style={{ marginBottom: '10px', color: '#2B59C3' }}>Recent Falls Summary (Last 3 Days)</h3>
-        {recentFalls.map((fall, index) => (
-          <div key={index} style={{ 
-            marginBottom: '15px', 
-            padding: '10px', 
-            backgroundColor: index % 2 === 0 ? '#E0F2F7' : '#FFEBEE',
-            borderRadius: '5px'
-          }}>
-            <div style={{ fontWeight: 'bold' }}>{fall.name}</div>
-            <div>Date: {fall.date} at {fall.time}</div>
-            <div>Location: {fall.location || fall.incident_location}</div>
-            <div>Injury: {fall.injury || fall.injuries || 'None reported'}</div>
-            {fall.cause && <div>Cause: {fall.cause}</div>}
-          </div>
-        ))}
-      </div>
-    ) : (
-      <div style={{ padding: '20px', textAlign: 'center' }}>
-        No falls reported in the last 3 days
-      </div>
-    );
-
-    let threeMonthX = [];
-    let threeMonthY = [];
-
-    // Populate threeMonthX and threeMonthY from threeMonthData map
-    for (const [key, value] of threeMonthData) {
-      threeMonthX.push(months_forward[key]);
-      threeMonthY.push(value.length);
-    }
-
-    switch (timeRange) {
-      case 'current':
-        setGaugeChart(true);
-        setGaugeChartData({
-          datasets: [
-            {
-              data: newData,
-              backgroundColor: ['rgba(43, 89, 195, 0.8)', 'rgba(200, 200, 200, 0.2)'],
-              circumference: 180,
-              rotation: 270,
-            },
-          ],
-        });
-        break;
-      case '3months':
-        setGaugeChart(false);
-        setLineChartData({
-          labels: threeMonthX,
-          datasets: [
-            {
-              label: 'Number of Falls',
-              data: threeMonthY,
-              borderColor: 'rgb(43, 89, 195)',
-              tension: 0.1,
-            },
-          ],
-        });
-        break;
-      default:
-        break;
-    }
-  };
-
   const updateAnalysisChart = () => {
     var selectedUnit = analysisUnit;
-    var filteredData = analysisTimeRange === '3months' ? Array.from(threeMonthData.values()).flat() : data;
+    var filteredData = analysisTimeRange === '3months' ? allHistoricalFalls : data;
 
-    if (selectedUnit !== 'allUnits') {
-      filteredData = filteredData.filter(
-        (fall) => {
-          const unitValue = fall.homeUnit || fall.room;
-          return unitValue?.trim() === selectedUnit?.trim();
-        }
-      );
+    // For '3months' analysis, filter allHistoricalFalls to the relevant past 3 months
+    if (analysisTimeRange === '3months') {
+      const currentAnalysisDate = new Date(desiredYear, months_backword[desiredMonth] - 1, 1); // Start of desired month
+      const threeMonthsAgo = new Date(currentAnalysisDate);
+      threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+
+      filteredData = filteredData.filter(fall => {
+        const fallDate = new Date(fall.date);
+        return fallDate >= threeMonthsAgo && fallDate < currentAnalysisDate; // Falls within the past 3 full months before current desired month
+      });
     }
+    
+    // Removed analysisUnit filtering as the dropdown was removed by the user
 
     let newLabels = [];
     let newData = [];
@@ -541,29 +457,6 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     const dataRef = ref(db, `/millCreek/${desiredYear}/${months_backword[desiredMonth]}`);
     const currentYear = desiredYear;
     const currentMonth = parseInt(months_backword[desiredMonth]);
-    const pastThreeMonths = [];
-
-    for (let i = 3; i >= 1; i--) {
-      const month = currentMonth - i;
-      if (month > 0) { pastThreeMonths.push({ year: currentYear, month: String(month).padStart(2, '0') }); }
-      else { pastThreeMonths.push({ year: currentYear - 1, month: String(12 + month).padStart(2, '0') }); }
-    }
-
-    const allFallsData = new Map();
-    for (let i = 0; i < pastThreeMonths.length; i++) { allFallsData.set(pastThreeMonths[i].month, []); }
-
-    pastThreeMonths.forEach(({ year, month }) => {
-      const monthRef = ref(db, `/millCreek/${year}/${month}`);
-      const listener = onValue(monthRef, (snapshot) => {
-        if (snapshot.exists()) {
-          const fallsData = snapshot.val();
-          const monthData = Object.keys(fallsData).map((key) => fallsData[key]);
-          allFallsData.set(month, monthData);
-        }
-      });
-      return () => off(monthRef, listener);
-    });
-    setThreeMonthData(allFallsData);
 
     const listener = onValue(dataRef, (snapshot) => {
       if (snapshot.exists()) {
@@ -588,12 +481,8 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   }, [desiredMonth, desiredYear, desiredUnit]);
 
   useEffect(() => {
-    updateFallsChart();
-  }, [fallsTimeRange, data, desiredMonth, desiredYear, goal, threeMonthData]);
-
-  useEffect(() => {
     updateAnalysisChart();
-  }, [analysisType, analysisTimeRange, analysisUnit, data, desiredYear, threeMonthData]);
+  }, [analysisType, analysisTimeRange, data, desiredYear, desiredMonth, allHistoricalFalls]);
 
   useEffect(() => {
     setTotalFalls(data.length);
@@ -666,6 +555,27 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
         setDesiredMonth(getCurrentMonth());
       }
     });
+
+    // Fetch all historical falls data once
+    const allFallsRef = ref(db, '/millCreek');
+    const allFallsListener = onValue(allFallsRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const allData = snapshot.val();
+        const compiledFalls = [];
+        Object.keys(allData).forEach(year => {
+          Object.keys(allData[year] || {}).forEach(month => {
+            Object.values(allData[year][month] || {}).forEach(fall => {
+              compiledFalls.push(fall);
+            });
+          });
+        });
+        setAllHistoricalFalls(compiledFalls);
+      } else {
+        setAllHistoricalFalls([]);
+      }
+    });
+
+    return () => { off(yearsRef, allFallsListener); };
   }, []);
 
   const checkForUnreviewedResidents = async () => {
@@ -719,6 +629,52 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     
     return () => clearInterval(interval);
   }, [desiredMonth, desiredYear]);
+
+  const isFirstFall = (residentName, currentFallDate, historicalFalls) => {
+    const residentFalls = historicalFalls.filter(fall => fall.name === residentName);
+    if (residentFalls.length === 0) return false; // Should not happen if currentFallDate is from historicalFalls
+
+    const sortedFalls = residentFalls.sort((a, b) => new Date(a.date) - new Date(b.date));
+    return new Date(currentFallDate).toDateString() === new Date(sortedFalls[0].date).toDateString();
+  };
+
+  const calculateFallIncreasePercentage = (residentName, currentFallDate, historicalFalls) => {
+    const currentFallDateTime = new Date(currentFallDate);
+    const currentMonthFalls = historicalFalls.filter(fall => 
+      fall.name === residentName && 
+      new Date(fall.date).getMonth() === currentFallDateTime.getMonth() && 
+      new Date(fall.date).getFullYear() === currentFallDateTime.getFullYear()
+    ).length;
+
+    let pastThreeMonthsFalls = 0;
+    for (let i = 1; i <= 3; i++) {
+      const pastMonthDate = new Date(currentFallDateTime);
+      pastMonthDate.setMonth(currentFallDateTime.getMonth() - i);
+
+      const fallsInPastMonth = historicalFalls.filter(fall =>
+        fall.name === residentName &&
+        new Date(fall.date).getMonth() === pastMonthDate.getMonth() &&
+        new Date(fall.date).getFullYear() === pastMonthDate.getFullYear()
+      ).length;
+      pastThreeMonthsFalls += fallsInPastMonth;
+    }
+
+    const averagePastThreeMonths = pastThreeMonthsFalls / 3;
+
+    if (averagePastThreeMonths === 0) {
+      return currentMonthFalls > 0 ? 'N/A (No falls in prior 3 months)' : '0%';
+    }
+
+    const percentageChange = ((currentMonthFalls - averagePastThreeMonths) / averagePastThreeMonths) * 100;
+    
+    if (percentageChange > 0) {
+      return `Increase by ${percentageChange.toFixed(0)}%`;
+    } else if (percentageChange < 0) {
+      return `Decrease by ${Math.abs(percentageChange).toFixed(0)}%`;
+    } else {
+      return `No change (0%)`;
+    }
+  };
 
   const markReviewDone = async (resident) => {
     const reviewRef = ref(db, `/reviews/millCreek/${desiredYear}/${months_backword[desiredMonth]}/${resident.name}`);
@@ -783,7 +739,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
 
                 if (recentFalls.length === 0) {
                   return (
-                    <div style={{ padding: '20px', textAlign: 'center', color: '#666' }}>
+                    <div style={{ padding: '10px', textAlign: 'left', color: '#666' }}>
                       No falls reported in the last 3 days
                     </div>
                   );
@@ -800,31 +756,43 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                         boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
                         textAlign: 'left'
                       }}>
-                        <div style={{ fontWeight: 'bold', fontSize: '18px', marginBottom: '8px', textTransform: 'uppercase' }}>{fall.name}</div>
-                        <div style={{ marginBottom: '4px', fontSize: '15px' }}>
-                          <span style={{ marginRight: '5px' }}>📅</span>
-                          {fall.date} at {fall.time}
+                        <div style={{ fontWeight: 'bold', fontSize: '18px', marginBottom: '10px', textTransform: 'uppercase' }}>{fall.name}</div>
+                        <div style={{ display: 'flex', marginBottom: '5px', fontSize: '15px' }}>
+                          <div style={{ marginRight: '8px', flexShrink: 0, minWidth: '100px' }}>Date:</div>
+                          <div style={{ fontWeight: 'bold' }}>{fall.date} at {fall.time}</div>
                         </div>
-                        <div style={{ marginBottom: '4px', fontSize: '15px' }}>
-                          <span style={{ marginRight: '5px' }}>📍</span>
-                          {fall.location || fall.incident_location || 'Location not specified'}
+                        <div style={{ display: 'flex', marginBottom: '5px', fontSize: '15px' }}>
+                          <div style={{ marginRight: '8px', flexShrink: 0, minWidth: '100px' }}>Location:</div>
+                          <div style={{ fontWeight: 'bold' }}>{fall.location || fall.incident_location || 'Not specified'}</div>
                         </div>
-                        <div style={{ marginBottom: '4px', fontSize: '15px', color: (fall.injury || fall.injuries) && (fall.injury?.toLowerCase() !== 'no injury' && fall.injuries?.toLowerCase() !== 'no injury') ? '#d32f2f' : '#333' }}>
-                          <span style={{ marginRight: '5px' }}>⚠️</span>
-                          Injury: {fall.injury || fall.injuries || 'No Injury'}
+                        <div style={{ display: 'flex', marginBottom: '5px', fontSize: '15px', color: (fall.injury || fall.injuries) && (fall.injury?.toLowerCase() !== 'no injury' && fall.injuries?.toLowerCase() !== 'no injury') ? '#d32f2f' : '#333' }}>
+                          <div style={{ marginRight: '8px', flexShrink: 0, minWidth: '100px' }}>Injury:</div>
+                          <div style={{ fontWeight: 'bold' }}>{fall.injury || fall.injuries || 'No Injury'}</div>
                         </div>
                         {fall.cause ? (
-                          <div style={{ marginBottom: '4px', fontSize: '15px' }}>
-                            <span style={{ marginRight: '5px' }}>💡</span>
-                            Cause: {fall.cause}
+                          <div style={{ display: 'flex', marginBottom: '5px', fontSize: '15px' }}>
+                            <div style={{ marginRight: '8px', flexShrink: 0, minWidth: '100px' }}>Cause:</div>
+                            <div style={{ fontWeight: 'bold' }}>{fall.cause}</div>
                           </div>
                         ) : null}
                         {fall.interventions ? (
-                          <div style={{ fontSize: '15px' }}>
-                            <span style={{ marginRight: '5px' }}>🛡️</span>
-                            Interventions: {fall.interventions}
+                          <div style={{ display: 'flex', fontSize: '15px' }}>
+                            <div style={{ marginRight: '8px', flexShrink: 0, minWidth: '100px' }}>Interventions:</div>
+                            <div style={{ fontWeight: 'bold' }}>{fall.interventions}</div>
                           </div>
                         ) : null}
+
+                        {/* New Sections */}
+                        <div style={{ marginTop: '15px', paddingTop: '15px', borderTop: '1px solid #eee' }}>
+                            <div style={{ display: 'flex', marginBottom: '5px', fontSize: '15px' }}>
+                                <div style={{ marginRight: '8px', flexShrink: 0, minWidth: '100px' }}>Fall Status:</div>
+                                <div style={{ fontWeight: 'bold' }}>{isFirstFall(fall.name, fall.date, allHistoricalFalls) ? 'First Fall Recorded' : 'Recurring Fall'}</div>
+                            </div>
+                            <div style={{ display: 'flex', fontSize: '15px' }}>
+                                <div style={{ marginRight: '8px', flexShrink: 0, minWidth: '100px' }}>Monthly Rate:</div>
+                                <div style={{ fontWeight: 'bold' }}>{calculateFallIncreasePercentage(fall.name, fall.date, allHistoricalFalls)}</div>
+                            </div>
+                        </div>
                       </div>
                     ))}
                   </>
@@ -860,7 +828,6 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
             <option value="3months">Past 3 Months</option>
           </select>
 
-
           {analysisChartData.datasets.length > 0 && <Bar data={analysisChartData} options={analysisChartOptions} />}
         </div>
       </div>
@@ -886,7 +853,19 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
               ))}
             </select>
 
-            
+            <select
+              id="unitSelection"
+              value={desiredUnit}
+              onChange={(e) => {
+                setDesiredUnit(e.target.value);
+              }}
+            >
+              {unitSelectionValues && unitSelectionValues.map((unit) => (
+                <option key={unit} value={unit}>
+                  {unit}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
         <div>
