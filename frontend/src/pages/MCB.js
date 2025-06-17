@@ -1209,7 +1209,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                   {gaugeChartData.datasets.length > 0 && <Doughnut data={gaugeChartData} options={gaugeChartOptions} />}
                   <div className={styles['gauge-value']}>{data.length}</div>
                   <br />
-                  <div className={styles['gauge-label']}>falls this month</div>
+                  <div className={styles['gauge-label']}>behaviours this month</div>
                   <div className={styles['gauge-goal']}>
                     Goal: <span id="fallGoal">{goal}</span>
                   </div>
@@ -1275,6 +1275,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
             <th style={{ fontSize: '18px' }}>Triggers</th>
             <th style={{ fontSize: '18px' }}>Interventions</th>
             <th style={{ fontSize: '18px' }}>Injuries</th>
+            <th style={{ fontSize: '18px' }}>Potential CI</th>
           </tr>
         </thead>
         <tbody id="fallsTableBody">
@@ -1292,6 +1293,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
               <td style={{ fontSize: '16px' }}>{cleanDuplicateText(item.triggers, 'triggers')}</td>
               <td style={{ fontSize: '16px' }}>{cleanDuplicateText(item.interventions, 'interventions')}</td>
               <td style={{ fontSize: '16px' }}>{item.injuries}</td>
+              <td style={{ fontSize: '16px' }}>{item.CI || "Still Gathering Data/Unknown"}</td>
             </tr>
           ))}
         </tbody>
