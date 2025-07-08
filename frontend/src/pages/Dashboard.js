@@ -828,9 +828,13 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     }
   }, [data]);
 
+  // Track if the user has made a manual selection
+  const hasUserSelected = useRef(false);
+
   const handleYearChange = (e) => {
     const selectedYear = parseInt(e.target.value);
     setDesiredYear(selectedYear);
+    hasUserSelected.current = true;
 
     // When year changes, set month to the latest available month for that year
     const availableMonths = availableYearMonth[selectedYear] || [];
@@ -842,6 +846,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   const handleMonthChange = (event) => {
     const selectedMonth = event.target.value;
     setDesiredMonth(selectedMonth);
+    hasUserSelected.current = true;
   };
 
   const handleUnitChange = (event) => {
@@ -886,11 +891,16 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
         console.log('Available year/month mapping:', sortedMapping);
         setAvailableYearMonth(sortedMapping);
 
-        // Always set to the latest available month/year
+        // Only set to the latest available month/year if the user hasn't selected
         const latestYear = sortedYears[0];
         const latestMonth = sortedMapping[latestYear][sortedMapping[latestYear].length - 1];
-        setDesiredYear(latestYear);
-        setDesiredMonth(latestMonth);
+        if (!hasUserSelected.current &&
+          (!desiredYear || !desiredMonth ||
+            !sortedMapping[desiredYear] ||
+            !sortedMapping[desiredYear].includes(desiredMonth))) {
+          setDesiredYear(latestYear);
+          setDesiredMonth(latestMonth);
+        }
       }
     });
   }, [name]);
@@ -1085,6 +1095,11 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     };
     loadInsightData();
   }, [name, desiredYear, desiredMonth]);
+
+  // Add this log to always show the current selection
+  useEffect(() => {
+    console.log('Currently selected month:', desiredMonth, 'year:', desiredYear);
+  }, [desiredMonth, desiredYear]);
 
   return (
     <div className={styles.dashboard} ref={tableRef}>
@@ -1302,6 +1317,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
         </div>
       </div>
       <div className={styles['table-header']}>
+     
         <div className={styles['header']}>
           <h2>
             Falls Tracking Table: {desiredMonth} {desiredYear}
