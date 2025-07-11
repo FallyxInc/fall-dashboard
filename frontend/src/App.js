@@ -261,6 +261,20 @@ function App() {
             }
           />
 
+        <Route
+            path="/wellbrook_east"
+            element={
+              
+                <Dashboard 
+                  name="wellbrook_east"
+                  title="Well Brook Place East Falls Dashboard"
+                  unitSelectionValues={['allUnits','B2', 'B3', 'B4', 'B5', 'A2', 'A3', 'A4', 'A5', 'A6']}
+                  goal={25}
+                />
+              
+            }
+          />
+
           <Route
             path="/il"
             element={

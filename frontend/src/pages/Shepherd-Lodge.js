@@ -770,44 +770,29 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   useEffect(() => {
     const yearsRef = ref(db, `/${name}`);
     console.log('Checking available years/months for:', name);
-    
+
     onValue(yearsRef, (snapshot) => {
       const yearMonthMapping = {};
       if (snapshot.exists()) {
         const data = snapshot.val();
-        
-        // Get current date info
-        const currentDate = new Date();
-        const currentYear = currentDate.getFullYear();
-        const currentMonth = currentDate.getMonth() + 1; // 1-12
 
-        // Calculate the last 4 months
-        const months = [];
-        for (let i = 0; i < 4; i++) {
-          let month = currentMonth - i;
-          let year = currentYear;
-          
-          if (month <= 0) {
-            month += 12;
-            year -= 1;
-          }
-          
-          // Format month as two digits
-          const monthStr = month.toString().padStart(2, '0');
-          
+        // Loop through all years and months in the data
+        Object.keys(data).forEach(year => {
           if (!yearMonthMapping[year]) {
             yearMonthMapping[year] = [];
           }
-          
-          // Only add if the data exists in Firebase
-          if (data[year] && data[year][monthStr]) {
-            yearMonthMapping[year].push(months_forward[monthStr]);
-          }
-        }
+          Object.keys(data[year] || {}).forEach(month => {
+            if (data[year][month]) {
+              yearMonthMapping[year].push(months_forward[month]);
+            }
+          });
+          // Sort months chronologically
+          yearMonthMapping[year].sort((a, b) => months_backword[a] - months_backword[b]);
+        });
 
         console.log('Final year/month mapping:', yearMonthMapping);
+        setAvailableYearMonth(yearMonthMapping);
       }
-      setAvailableYearMonth(yearMonthMapping);
     });
   }, [name]);
 
