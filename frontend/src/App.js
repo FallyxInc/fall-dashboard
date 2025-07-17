@@ -14,6 +14,7 @@ import DemoManagementDashboard from './pages/DemoManagementDashboard';
 import GenerationsDashboard from './pages/Generations';
 import GenerationLTCDashboard from './pages/GenerationLTC';
 import ShepherdLodge from './pages/Shepherd-Lodge';
+import Wellbrook from './pages/Wellbrook';
 import GoderichPlace from './pages/Goderich-Place';
 import Palisade from './pages/Palisade';
 import MCB from './pages/MCB';
@@ -262,18 +263,33 @@ function App() {
           />
 
         <Route
-            path="/wellbrook_east"
+            path="/wb_east"
             element={
               
-                <Dashboard 
-                  name="wellbrook_east"
+                <Wellbrook
+                  name="wb_east"
                   title="Well Brook Place East Falls Dashboard"
                   unitSelectionValues={['allUnits','B2', 'B3', 'B4', 'B5', 'A2', 'A3', 'A4', 'A5', 'A6']}
-                  goal={25}
+                  goal={65}
                 />
               
             }
           />
+
+          <Route
+            path="/wb_west"
+            element={
+              
+                <Wellbrook 
+                  name="wb_west"
+                  title="Well Brook Place West Falls Dashboard"
+                  unitSelectionValues={['allUnits','C2', 'C3', 'C4', 'C5', 'D2', 'D3', 'D4', 'D5', 'D6']}
+                  goal={65}
+                />
+              
+            }
+          />
+
 
           <Route
             path="/il"
