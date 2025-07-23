@@ -99,6 +99,10 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   const [currentPostFallNotesRowIndex, setCurrentPostFallNotesRowIndex] = useState(null);
   const [isPostFallNotesModalOpen, setIsPostFallNotesModalOpen] = useState(false);
 
+  const [currentInjuries, setCurrentInjuries] = useState('');
+  const [currentInjuriesRowIndex, setCurrentInjuriesRowIndex] = useState(null);
+  const [isInjuriesModalOpen, setIsInjuriesModalOpen] = useState(false);
+
   const [residentsNeedingReview, setResidentsNeedingReview] = useState([]);
   const [currentResidentIndex, setCurrentResidentIndex] = useState(0);
   const [showModal, setShowModal] = useState(false);
@@ -278,6 +282,38 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
       })
       .catch((error) => {
         console.error('Error updating post fall notes:', error);
+      });
+  };
+
+  const handleEditInjuries = (index) => {
+    setCurrentInjuries(data[index].injury || data[index].injuries || '');
+    setCurrentInjuriesRowIndex(index);
+    setIsInjuriesModalOpen(true);
+  };
+
+  const handleSubmitInjuries = () => {
+    if (currentInjuries === (data[currentInjuriesRowIndex].injury || data[currentInjuriesRowIndex].injuries)) {
+      setIsInjuriesModalOpen(false);
+      return;
+    }
+
+    const updatedData = [...data];
+    updatedData[currentInjuriesRowIndex].injury = currentInjuries;
+    updatedData[currentInjuriesRowIndex].injuries = currentInjuries;
+    updatedData[currentInjuriesRowIndex].isInjuriesUpdated = 'yes';
+
+    const rowRef = ref(
+      db,
+      `/${name}/${desiredYear}/${months_backword[desiredMonth]}/${currentInjuriesRowIndex}`
+    );
+    update(rowRef, { injury: currentInjuries, injuries: currentInjuries, isInjuriesUpdated: 'yes' })
+      .then(() => {
+        console.log('Injuries updated successfully');
+        setData(updatedData);
+        setIsInjuriesModalOpen(false);
+      })
+      .catch((error) => {
+        console.error('Error updating injuries:', error);
       });
   };
 
@@ -1110,7 +1146,16 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                     <option value="Not Applicable">Not Applicable</option>
                   </select>
                 </td>
-                <td style={{ fontSize: '16px' }}>{item.injury || item.injuries}</td>
+                <td 
+                  style={{ 
+                    fontSize: '16px', 
+                    backgroundColor: item.isInjuriesUpdated === 'yes' ? 'rgba(76, 175, 80, 0.3)' : 'inherit' 
+                  }}
+                >
+                  {item.injury || item.injuries}
+                  <br />
+                  <button onClick={() => handleEditInjuries(i)}>Edit</button>
+                </td>
                 <td style={{ fontSize: '16px', backgroundColor: item.isHospitalUpdated === 'yes' ? 'rgba(76, 175, 80, 0.3)' : 'inherit' }}>
                   <select
                     value={
@@ -1233,6 +1278,19 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
               <br />
               <button onClick={handleSubmitPostFallNotes}>Submit</button>
               <button onClick={() => setIsPostFallNotesModalOpen(false)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {isInjuriesModalOpen && (
+        <div className={styles.modal}>
+          <div className={styles.modalContent}>
+            <div>
+              <h2>Edit Injuries</h2>
+              <textarea value={currentInjuries} onChange={(e) => setCurrentInjuries(e.target.value)} />
+              <br />
+              <button onClick={handleSubmitInjuries}>Submit</button>
+              <button onClick={() => setIsInjuriesModalOpen(false)}>Cancel</button>
             </div>
           </div>
         </div>
