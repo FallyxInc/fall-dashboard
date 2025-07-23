@@ -283,7 +283,7 @@ function App() {
                 <Wellbrook 
                   name="wb_west"
                   title="Well Brook Place West Falls Dashboard"
-                  unitSelectionValues={['allUnits','C2', 'C3', 'C4', 'C5', 'D2', 'D3', 'D4', 'D5', 'D6']}
+                  unitSelectionValues={['allUnits','C2', 'C3', 'C4', 'C5', 'C6', 'D2', 'D3', 'D4', 'D5', 'D6']}
                   goal={65}
                 />
               
