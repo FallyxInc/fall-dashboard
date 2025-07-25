@@ -14,6 +14,7 @@ import DemoManagementDashboard from './pages/DemoManagementDashboard';
 import GenerationsDashboard from './pages/Generations';
 import GenerationLTCDashboard from './pages/GenerationLTC';
 import ShepherdLodge from './pages/Shepherd-Lodge';
+import Southview from './pages/Southview';
 import Wellbrook from './pages/Wellbrook';
 import GoderichPlace from './pages/Goderich-Place';
 import Palisade from './pages/Palisade';
@@ -289,6 +290,21 @@ function App() {
               
             }
           />
+
+      <Route
+            path="/southview_acres"
+            element={
+
+                <Southview
+                  name="southview_acres"
+                  title="South View Acres Falls Dashboard"
+                  unitSelectionValues={['allUnits','Eastwood Manor', 'Victory Lane', 'Horizon Heights', 'Autumn Hills']}
+                  goal={20}
+                />
+              
+            }
+        />
+
 
 
           <Route

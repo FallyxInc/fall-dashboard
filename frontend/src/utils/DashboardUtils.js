@@ -261,6 +261,12 @@ export function getTimeShift(fallTime, home) {
         evening: [900, 1379],  // 3:00 PM to 10:59 PM
         night: [1380, 419],    // 11:00 PM to 6:59 AM
       },
+
+      southview_acres: {
+        morning: [420, 899],   // 7:00 AM to 2:59 PM
+        evening: [900, 1379],  // 3:00 PM to 10:59 PM
+        night: [1380, 419],    // 11:00 PM to 6:59 AM
+      },
       
       
       
