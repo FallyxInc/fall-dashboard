@@ -27,7 +27,7 @@ import Modal from './Modal';
 
 Chart.register(ArcElement, PointElement, LineElement);
 
-export default function Dashboard({ name, title, unitSelectionValues, goal }) {
+export default function Dashboard({ name, title, unitSelectionValues, goal, unitGoals }) {
   const months_forward = {
     '01': 'January',
     '02': 'February',
@@ -111,6 +111,14 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   const [insightOutcomes, setInsightOutcomes] = useState({});
   const [reviewedInsights, setReviewedInsights] = useState({});
   const [insights, setInsights] = useState([]);
+
+  // Determine current goal based on selected unit
+  const getCurrentGoal = () => {
+    if (unitGoals && unitGoals[desiredUnit]) {
+      return unitGoals[desiredUnit];
+    }
+    return goal || 34; // fallback to original goal or default
+  };
 
   const MOCK_INCIDENT_DATA = {
     'Falls': {
@@ -235,6 +243,8 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     datasets: [],
   });
 
+
+
   // expandedLog(analysisChartData);
 
   const analysisChartOptions = {
@@ -253,6 +263,8 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     },
   };
 
+
+
   const handleEditIntervention = (index) => {
     setCurrentIntervention(data[index].interventions);
     setCurrentRowIndex(index);
@@ -268,12 +280,14 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     const updatedData = [...data];
     updatedData[currentRowIndex].interventions = currentIntervention;
     updatedData[currentRowIndex].isInterventionsUpdated = 'yes';
+    updatedData[currentRowIndex]['edited-once'] = 'yes';
 
     console.log(updatedData);
-    const rowRef = ref(db, `/${name}/${desiredYear}/${months_backword[desiredMonth]}/row-${data[currentRowIndex].id}`);
+    const rowRef = ref(db, `/${name}/${desiredYear}/${months_backword[desiredMonth]}/${data[currentRowIndex].id}`);
     update(rowRef, {
       interventions: currentIntervention,
       isInterventionsUpdated: 'yes',
+      'edited-once': 'yes',
     })
       .then(() => {
         console.log('Intervention updated successfully');
@@ -300,12 +314,13 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     const updatedData = [...data];
     updatedData[currentCauseRowIndex].cause = currentCauseOfFall;
     updatedData[currentCauseRowIndex].isCauseUpdated = 'yes';
+    updatedData[currentCauseRowIndex]['edited-once'] = 'yes';
 
     const rowRef = ref(
       db,
-      `/${name}/${desiredYear}/${months_backword[desiredMonth]}/row-${data[currentCauseRowIndex].id}`
+      `/${name}/${desiredYear}/${months_backword[desiredMonth]}/${data[currentCauseRowIndex].id}`
     );
-    update(rowRef, { cause: currentCauseOfFall, isCauseUpdated: 'yes' })
+    update(rowRef, { cause: currentCauseOfFall, isCauseUpdated: 'yes', 'edited-once': 'yes' })
       .then(() => {
         console.log('Cause of fall updated successfully');
         setData(updatedData);
@@ -331,13 +346,14 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     let updatedData = [...data];
     updatedData[currentPostFallNotesRowIndex].postFallNotes = currentPostFallNotes;
     updatedData[currentPostFallNotesRowIndex].isPostFallNotesUpdated = 'yes';
+    updatedData[currentPostFallNotesRowIndex]['edited-once'] = 'yes';
     updatedData = markPostFallNotes(updatedData);
 
     const rowRef = ref(
       db,
-      `/${name}/${desiredYear}/${months_backword[desiredMonth]}/row-${data[currentPostFallNotesRowIndex].id}`
+      `/${name}/${desiredYear}/${months_backword[desiredMonth]}/${data[currentPostFallNotesRowIndex].id}`
     );
-    update(rowRef, { postFallNotes: currentPostFallNotes, isPostFallNotesUpdated: 'yes' })
+    update(rowRef, { postFallNotes: currentPostFallNotes, isPostFallNotesUpdated: 'yes', 'edited-once': 'yes' })
       .then(() => {
         console.log('Post Fall Notes updated successfully');
         setData(updatedData);
@@ -353,10 +369,10 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     const currentFalls = countTotalFalls();
     let newData;
 
-    if (currentFalls >= goal) {
-      newData = [goal, 0];
+    if (currentFalls >= getCurrentGoal()) {
+      newData = [getCurrentGoal(), 0];
     } else {
-      newData = [currentFalls, goal - currentFalls];
+      newData = [currentFalls, getCurrentGoal() - currentFalls];
     }
 
     let threeMonthX = [];
@@ -517,6 +533,58 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
         });
         newData = Array.from({length: 24}, (_, i) => hourCounts[i] || 0);
         break;
+
+      case 'unitComparison':
+        setAnalysisHeaderText('Unit Performance vs Goals');
+        if (!unitGoals) {
+          newLabels = [];
+          newData = [];
+          break;
+        }
+        
+        const unitData = [];
+        
+        // Calculate falls count and goal difference for each unit
+        Object.keys(unitGoals).forEach(unit => {
+          if (unit === 'allUnits') return; // Skip allUnits as it's the total
+          
+          const unitGoal = unitGoals[unit];
+          const unitFalls = data.filter(item => {
+            const unitValue = item.homeUnit || item.room;
+            return unitValue?.trim() === unit?.trim();
+          }).length;
+          
+          // Calculate how far from goal (positive = over goal, negative = under goal)
+          const distanceFromGoal = unitFalls - unitGoal;
+          
+          unitData.push({
+            unit: unit,
+            falls: unitFalls,
+            goal: unitGoal,
+            distanceFromGoal: distanceFromGoal
+          });
+        });
+
+        // Sort by distance from goal (worst performing first)
+        unitData.sort((a, b) => b.distanceFromGoal - a.distanceFromGoal);
+
+        newLabels = unitData.map(item => item.unit);
+        newData = unitData.map(item => item.distanceFromGoal);
+        break;
+    }
+
+    // Set colors based on analysis type
+    let backgroundColor = 'rgba(76, 175, 80, 0.6)';
+    let borderColor = 'rgb(76, 175, 80)';
+    
+    if (analysisType === 'unitComparison') {
+      // Use different colors for unit comparison (red for over goal, green for under goal)
+      backgroundColor = newData.map(value => 
+        value > 0 ? 'rgba(255, 99, 132, 0.8)' : 'rgba(76, 175, 80, 0.8)'
+      );
+      borderColor = newData.map(value => 
+        value > 0 ? 'rgba(255, 99, 132, 1)' : 'rgba(76, 175, 80, 1)'
+      );
     }
 
     setAnalysisChartData({
@@ -524,8 +592,8 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
       datasets: [
         {
           data: newData,
-          backgroundColor: 'rgba(76, 175, 80, 0.6)',
-          borderColor: 'rgb(76, 175, 80)',
+          backgroundColor: backgroundColor,
+          borderColor: borderColor,
           borderWidth: 1,
         },
       ],
@@ -1101,6 +1169,13 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     console.log('Currently selected month:', desiredMonth, 'year:', desiredYear);
   }, [desiredMonth, desiredYear]);
 
+  // Update chart when unit changes
+  useEffect(() => {
+    updateFallsChart();
+  }, [desiredUnit]);
+
+
+
   return (
     <div className={styles.dashboard} ref={tableRef}>
       <h1>{title}</h1>
@@ -1131,12 +1206,12 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                   <br />
                   <div className={styles['gauge-label']}>falls this month</div>
                   <div className={styles['gauge-goal']}>
-                    Goal: <span id="fallGoal">{goal}</span>
+                    Goal: <span id="fallGoal">{getCurrentGoal()}</span>
                   </div>
                   <br />
                   <div className={styles['gauge-scale']}>
                     <span>0</span>
-                    <span>{goal}</span>
+                    <span>{getCurrentGoal()}</span>
                   </div>
                 </div>
               </div>
@@ -1163,6 +1238,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
             <option value="residents">Residents w/ Recurring Falls</option>
             <option value="dayOfWeek">Falls by Day of Week</option>
             <option value="hour">Falls by Hour</option>
+            <option value="unitComparison">Unit Performance vs Goals</option>
           </select>
 
           <select
@@ -1192,6 +1268,8 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
 
           {analysisChartData.datasets.length > 0 && <Bar data={analysisChartData} options={analysisChartOptions} />}
         </div>
+
+
       </div>
       <div className={styles['table-header']}>
      
@@ -1253,8 +1331,10 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
             <tr 
               key={i}
               style={{ 
-                backgroundColor: item.cause && item.cause.toLowerCase().includes('no note available') ? '#f8b9c6' : 'inherit' 
+                backgroundColor: item.cause && item.cause.toLowerCase().includes('no note available') ? '#f8b9c6' : 
+                         item['edited-once'] === 'yes' ? '#ffffcc' : 'inherit' 
               }}
+              title={item['edited-once'] === 'yes' ? 'This row has been edited' : 'This row has not been edited'}
             >
               <td style={{ whiteSpace: 'nowrap', fontSize: '16px' }}>{item.date}</td> {/* Increased font size */}
               <td style={{ fontSize: '16px' }}>{item.name}</td>

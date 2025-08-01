@@ -298,8 +298,18 @@ function App() {
                 <Southview
                   name="southview_acres"
                   title="South View Acres Falls Dashboard"
-                  unitSelectionValues={['allUnits','Eastwood Manor', 'Victory Lane', 'Horizon Heights', 'Autumn Hills']}
-                  goal={20}
+                  unitSelectionValues={['allUnits','Eastwood Manor', 'Victory Lane', 'Horizon Heights', 'Autumn Hills', 'Oakdale Avenue', 'Parkview Place', 'Sunset Ridge']}
+                  goal={34}
+                  unitGoals={{
+                    'allUnits': 34,
+                    'Eastwood Manor': 3,
+                    'Victory Lane': 3,
+                    'Horizon Heights': 10,
+                    'Autumn Hills': 5,
+                    'Oakdale Avenue': 6,
+                    'Parkview Place': 5,
+                    'Sunset Ridge': 2
+                  }}
                 />
               
             }
