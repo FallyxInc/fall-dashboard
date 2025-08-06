@@ -66,8 +66,8 @@ export default function Dashboard({ name, title, unitSelectionValues, goal, unit
     const month = (today.getMonth() + 1).toString().padStart(2, '0');  // Convert 1-12 to "01"-"12"
     return months_forward[month];  // Convert "01" to "January" etc.
   };
-  const [desiredMonth, setDesiredMonth] = useState(getCurrentMonth());
-  const [desiredYear, setDesiredYear] = useState(new Date().getFullYear());
+  const [desiredMonth, setDesiredMonth] = useState('August');
+  const [desiredYear, setDesiredYear] = useState(2024);
   const [desiredUnit, setDesiredUnit] = useState('allUnits');
   // const [desiredMonth, setDesiredMonth] = useState('January');
   // const [desiredYear, setDesiredYear] = useState(2025);
@@ -399,6 +399,10 @@ export default function Dashboard({ name, title, unitSelectionValues, goal, unit
       case 'champlain':
         threeMonthX = ['October', 'November', 'December'];
         threeMonthY = [19, 14, 11];
+        break;
+      case 'southview_acres':
+        threeMonthX = ['August', 'September', 'October'];
+        threeMonthY = [12, 15, 18];
         break;
       default:
         // Original logic for other homes
