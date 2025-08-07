@@ -18,8 +18,8 @@ export default function ManagementDashboard() {
   const [modalTitle, setModalTitle] = useState('');
   const [fallsTimeRange, setFallsTimeRange] = useState('01');
   const [homesTimeRange, setHomesTimeRange] = useState('01');
-  // Default to July 2025
-  const [currentMonth, setCurrentMonth] = useState('07');
+  // Default to August 2025
+  const [currentMonth, setCurrentMonth] = useState('08');
   const [desiredYear, setDesiredYear] = useState(2025); // Set to 2025
   const [desiredMonth, setDesiredMonth] = useState(new Date().getMonth() + 1);
   const [availableYearMonth, setAvailableYearMonth] = useState({});
@@ -61,7 +61,7 @@ export default function ManagementDashboard() {
     await Promise.all(
       homes.map((home) => {
         return new Promise((resolve) => {
-          const year = ['01', '02', '03', '04', '05', '06', '07'].includes(currentMonth) ? 2025 : 2024;
+          const year = ['01', '02', '03', '04', '05', '06', '07', '08'].includes(currentMonth) ? 2025 : 2024;
           const homeRef = ref(db, `/${home}/${year}/${currentMonth}`);
 
           onValue(homeRef, (snapshot) => {
@@ -105,21 +105,17 @@ export default function ManagementDashboard() {
         vmltc: 0
       };
 
+      // Determine the real current month (today)
+      const today = new Date();
+      const realCurrentMonth = (today.getMonth() + 1).toString().padStart(2, '0');
+
       if (users) {
         Object.values(users).forEach(user => {
-          // Get the appropriate login count based on current month
+          // Use loginCount for the real current month, otherwise use loginCount-XX
           let count;
-          if (currentMonth === '06') {
-            // For June (current month), use the regular loginCount
+          if (currentMonth === realCurrentMonth) {
             count = user.loginCount || 0;
-          } else if (currentMonth === '05') {
-            // For May, use loginCount-05
-            count = user['loginCount-05'] || 0;
-          } else if (currentMonth === '04') {
-            // For April, use loginCount-04
-            count = user['loginCount-04'] || 0;
           } else {
-            // For other months, use the month-specific count (e.g., loginCount-03 for March)
             const monthSpecificCount = `loginCount-${currentMonth}`;
             count = user[monthSpecificCount] || 0;
           }
@@ -249,7 +245,7 @@ export default function ManagementDashboard() {
     };
 
     const fetchDataForHome = (home) => {
-      const year = ['01', '02', '03', '04', '05', '06', '07'].includes(currentMonth) ? 2025 : 2024;
+      const year = ['01', '02', '03', '04', '05', '06', '07', '08'].includes(currentMonth) ? 2025 : 2024;
       const path = `/${home}/${year}/${currentMonth}`;
       const fallsRef = ref(db, path);
       
@@ -418,7 +414,7 @@ export default function ManagementDashboard() {
 
     // LOGIC FOR graph of non-compliance!
     const fetchDataForHome = (home) => {
-      const year = ['01', '02', '03', '04', '05', '06', '07'].includes(currentMonth) ? 2025 : 2024;
+      const year = ['01', '02', '03', '04', '05', '06', '07', '08'].includes(currentMonth) ? 2025 : 2024;
       const path = `/${home}/${year}/${currentMonth}`;
       const fallsRef = ref(db, path);
       
@@ -700,7 +696,7 @@ export default function ManagementDashboard() {
         return Promise.all(
           homes.map((home) => {
             return new Promise((resolve) => {
-              const year = ['01', '02', '03', '04', '05', '06', '07'].includes(month) ? 2025 : 2024;
+              const year = ['01', '02', '03', '04', '05', '06', '07', '08'].includes(month) ? 2025 : 2024;
               const fallsRef = ref(db, `/${home}/${year}/${month}`);
               onValue(fallsRef, (snapshot) => {
                 const data = snapshot.val();
@@ -783,9 +779,9 @@ export default function ManagementDashboard() {
     
     homes.forEach(home => {
       // Get falls data
-      const fallsRef = ref(db, `/${home}/${['01', '02', '03', '04', '05', '06', '07'].includes(currentMonth) ? 2025 : 2024}/${currentMonth}`); // MAIN ONE
+      const fallsRef = ref(db, `/${home}/${['01', '02', '03', '04', '05', '06', '07', '08'].includes(currentMonth) ? 2025 : 2024}/${currentMonth}`); // MAIN ONE
       // Get reviews data
-      const reviewsRef = ref(db, `/${home}/${['01', '02', '03', '04', '05', '06', '07'].includes(currentMonth) ? 2025 : 2024}/${currentMonth}`);
+      const reviewsRef = ref(db, `/${home}/${['01', '02', '03', '04', '05', '06', '07', '08'].includes(currentMonth) ? 2025 : 2024}/${currentMonth}`);
       
       
       onValue(fallsRef, async (snapshot) => {
@@ -820,7 +816,7 @@ export default function ManagementDashboard() {
 
   const markReviewDone = async (resident) => {
     // Simply mark the review as done in the reviews node
-    const reviewRef = ref(db, `/reviews/${resident.home}/${['01', '02', '03', '04', '05', '06', '07'].includes(currentMonth) ? 2025 : 2024}/${currentMonth}/${resident.name}`);
+    const reviewRef = ref(db, `/reviews/${resident.home}/${['01', '02', '03', '04', '05', '06', '07', '08'].includes(currentMonth) ? 2025 : 2024}/${currentMonth}/${resident.name}`);
     await set(reviewRef, 'reviewed');
     
     // Remove this resident from the state
@@ -854,6 +850,7 @@ export default function ManagementDashboard() {
           height: '40px',
         }}
       >
+        <option value="08">August 2025</option>
         <option value="07">July 2025</option>
         <option value="06">June 2025</option>
         <option value="05">May 2025</option>
