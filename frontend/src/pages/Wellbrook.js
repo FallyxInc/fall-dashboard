@@ -61,13 +61,89 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [threeMonthData, setThreeMonthData] = useState(new Map());
+  
+  // Helper function to get the first day of the current month
+  const getFirstDayOfCurrentMonth = () => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1);
+  };
+
+  // Helper function to get current date
+  const getCurrentDate = () => {
+    return new Date();
+  };
+
+  // Helper function to format date for display
+  const formatDateForDisplay = (date) => {
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+  };
+
+  // Helper function to get month name from date
+  const getMonthName = (date) => {
+    return date.toLocaleDateString('en-US', { month: 'long' });
+  };
+
+  // Helper function to get year from date
+  const getYearFromDate = (date) => {
+    return date.getFullYear();
+  };
+
+  // Helper function to get month number from date (padded with 0)
+  const getMonthNumber = (date) => {
+    return String(date.getMonth() + 1).padStart(2, '0');
+  };
+
+  // Helper function to format date for HTML input (YYYY-MM-DD)
+  const formatDateForInput = (date) => {
+    return date.toISOString().split('T')[0];
+  };
+
+  // Helper function to get the month/year for a specific date (for database operations)
+  const getMonthYearForDate = (date) => {
+    const year = date.getFullYear();
+    const month = getMonthNumber(date);
+    return { year, month };
+  };
+
+  // Helper function to get the month/year for the start date (for backward compatibility)
+  const getCurrentMonthYear = () => {
+    return getMonthYearForDate(startDate);
+  };
+
+  // Handle start date change
+  const handleStartDateChange = (event) => {
+    const newDate = new Date(event.target.value);
+    if (newDate && newDate <= endDate) {
+      setStartDate(newDate);
+    }
+  };
+
+  // Handle end date change
+  const handleEndDateChange = (event) => {
+    const newDate = new Date(event.target.value);
+    if (newDate && newDate >= startDate) {
+      setEndDate(newDate);
+    }
+  };
+
   const getCurrentMonth = () => {
     const today = new Date();
     const month = (today.getMonth() + 1).toString().padStart(2, '0');  // Convert 1-12 to "01"-"12"
     return months_forward[month];  // Convert "01" to "January" etc.
   };
-  const [desiredMonth, setDesiredMonth] = useState(getCurrentMonth());
-  const [desiredYear, setDesiredYear] = useState(new Date().getFullYear());
+  
+  // Replace month/year with date range
+  const [startDate, setStartDate] = useState(getFirstDayOfCurrentMonth());
+  const [endDate, setEndDate] = useState(getCurrentDate());
+  
+  // Keep these for backward compatibility with existing logic
+  const [desiredMonth, setDesiredMonth] = useState(getMonthName(getFirstDayOfCurrentMonth()));
+  const [desiredYear, setDesiredYear] = useState(getYearFromDate(getFirstDayOfCurrentMonth()));
+  
   const [desiredUnit, setDesiredUnit] = useState('allUnits');
   // const [desiredMonth, setDesiredMonth] = useState('January');
   // const [desiredYear, setDesiredYear] = useState(2025);
@@ -106,6 +182,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   const [residentsNeedingReview, setResidentsNeedingReview] = useState([]);
   const [currentResidentIndex, setCurrentResidentIndex] = useState(0);
   const [showModal, setShowModal] = useState(false);
+  const [currentResident, setCurrentResident] = useState(null);
 
   const [incidentType, setIncidentType] = useState('Falls');
   const [insightOutcomes, setInsightOutcomes] = useState({});
@@ -204,6 +281,9 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
       tooltip: { enabled: false },
       legend: { display: false },
     },
+    animations: {
+      duration: 500, // Animation duration in milliseconds (1 second)
+    },
   };
 
   const [lineChartData, setLineChartData] = useState({
@@ -228,6 +308,9 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     plugins: {
       legend: { display: false },
     },
+    animations: {
+      duration: 500, // 1.5 seconds
+    },
   };
 
   const [analysisChartData, setAnalysisChartData] = useState({
@@ -251,6 +334,9 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
       tooltip: { enabled: false },
       legend: { display: false },
     },
+    animations: {
+      duration: 500, // 2 seconds
+    },
   };
 
   const handleEditIntervention = (index) => {
@@ -259,30 +345,38 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     setIsModalOpen(true);
   };
 
-  const handleSubmitIntervention = () => {
-    if (currentIntervention === data[currentRowIndex].interventions) {
-      setIsModalOpen(false);
+  const handleSubmitIntervention = async () => {
+    if (!currentIntervention.trim()) {
+      alert('Please enter an intervention');
       return;
     }
 
-    const updatedData = [...data];
-    updatedData[currentRowIndex].interventions = currentIntervention;
-    updatedData[currentRowIndex].isInterventionsUpdated = 'yes';
-
-    console.log(updatedData);
-    const rowRef = ref(db, `/${name}/${desiredYear}/${months_backword[desiredMonth]}/row-${data[currentRowIndex].id}`);
-    update(rowRef, {
-      interventions: currentIntervention,
-      isInterventionsUpdated: 'yes',
-    })
-      .then(() => {
-        console.log('Intervention updated successfully');
-        setData(updatedData);
-        setIsModalOpen(false);
-      })
-      .catch((error) => {
-        console.error('Error updating intervention:', error);
+    try {
+      // Get the month/year for the current item's date
+      const itemDate = new Date(data[currentRowIndex].date);
+      const { year, month } = getMonthYearForDate(itemDate);
+      
+      const rowRef = ref(db, `/${name}/${year}/${month}/${data[currentRowIndex].id}`);
+      
+      await update(rowRef, {
+        interventions: currentIntervention,
+        isInterventionsUpdated: 'yes',
+        lastUpdated: serverTimestamp(),
       });
+
+      // Update local state
+      const updatedData = [...data];
+      updatedData[currentRowIndex].interventions = currentIntervention;
+      updatedData[currentRowIndex].isInterventionsUpdated = 'yes';
+      setData(updatedData);
+
+      setCurrentIntervention('');
+      setCurrentRowIndex(null);
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error('Error updating intervention:', error);
+      alert('Error updating intervention. Please try again.');
+    }
   };
 
   const handleEditCauseOfFall = (index) => {
@@ -291,29 +385,38 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     setIsCauseModalOpen(true);
   };
 
-  const handleSubmitCauseOfFall = () => {
-    if (currentCauseOfFall === data[currentCauseRowIndex].cause) {
-      setIsCauseModalOpen(false);
+  const handleSubmitCauseOfFall = async () => {
+    if (!currentCauseOfFall.trim()) {
+      alert('Please enter a cause of fall');
       return;
     }
 
-    const updatedData = [...data];
-    updatedData[currentCauseRowIndex].cause = currentCauseOfFall;
-    updatedData[currentCauseRowIndex].isCauseUpdated = 'yes';
-
-    const rowRef = ref(
-      db,
-      `/${name}/${desiredYear}/${months_backword[desiredMonth]}/row-${data[currentCauseRowIndex].id}`
-    );
-    update(rowRef, { cause: currentCauseOfFall, isCauseUpdated: 'yes' })
-      .then(() => {
-        console.log('Cause of fall updated successfully');
-        setData(updatedData);
-        setIsCauseModalOpen(false);
-      })
-      .catch((error) => {
-        console.error('Error updating cause of fall:', error);
+    try {
+      // Get the month/year for the current item's date
+      const itemDate = new Date(data[currentCauseRowIndex].date);
+      const { year, month } = getMonthYearForDate(itemDate);
+      
+      const rowRef = ref(db, `/${name}/${year}/${month}/${data[currentCauseRowIndex].id}`);
+      
+      await update(rowRef, {
+        cause: currentCauseOfFall,
+        isCauseUpdated: 'yes',
+        lastUpdated: serverTimestamp(),
       });
+
+      // Update local state
+      const updatedData = [...data];
+      updatedData[currentCauseRowIndex].cause = currentCauseOfFall;
+      updatedData[currentCauseRowIndex].isCauseUpdated = 'yes';
+      setData(updatedData);
+
+      setCurrentCauseOfFall('');
+      setCurrentCauseRowIndex(null);
+      setIsCauseModalOpen(false);
+    } catch (error) {
+      console.error('Error updating cause of fall:', error);
+      alert('Error updating cause of fall. Please try again.');
+    }
   };
 
   const handleEditPostFallNotes = (index) => {
@@ -322,30 +425,38 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     setIsPostFallNotesModalOpen(true);
   };
 
-  const handleSubmitPostFallNotes = () => {
-    if (currentPostFallNotes === data[currentPostFallNotesRowIndex].postFallNotes) {
-      setIsPostFallNotesModalOpen(false);
+  const handleSubmitPostFallNotes = async () => {
+    if (!currentPostFallNotes || currentPostFallNotes < 0) {
+      alert('Please enter a valid number of post fall notes');
       return;
     }
 
-    let updatedData = [...data];
-    updatedData[currentPostFallNotesRowIndex].postFallNotes = currentPostFallNotes;
-    updatedData[currentPostFallNotesRowIndex].isPostFallNotesUpdated = 'yes';
-    updatedData = markPostFallNotes(updatedData);
-
-    const rowRef = ref(
-      db,
-      `/${name}/${desiredYear}/${months_backword[desiredMonth]}/row-${data[currentPostFallNotesRowIndex].id}`
-    );
-    update(rowRef, { postFallNotes: currentPostFallNotes, isPostFallNotesUpdated: 'yes' })
-      .then(() => {
-        console.log('Post Fall Notes updated successfully');
-        setData(updatedData);
-        setIsPostFallNotesModalOpen(false);
-      })
-      .catch((error) => {
-        console.error('Error updating post fall notes:', error);
+    try {
+      // Get the month/year for the current item's date
+      const itemDate = new Date(data[currentPostFallNotesRowIndex].date);
+      const { year, month } = getMonthYearForDate(itemDate);
+      
+      const rowRef = ref(db, `/${name}/${year}/${month}/${data[currentPostFallNotesRowIndex].id}`);
+      
+      await update(rowRef, {
+        postFallNotes: currentPostFallNotes,
+        isPostFallNotesUpdated: 'yes',
+        lastUpdated: serverTimestamp(),
       });
+
+      // Update local state
+      const updatedData = [...data];
+      updatedData[currentPostFallNotesRowIndex].postFallNotes = currentPostFallNotes;
+      updatedData[currentPostFallNotesRowIndex].isPostFallNotesUpdated = 'yes';
+      setData(updatedData);
+
+      setCurrentPostFallNotes('');
+      setCurrentPostFallNotesRowIndex(null);
+      setIsPostFallNotesModalOpen(false);
+    } catch (error) {
+      console.error('Error updating post fall notes:', error);
+      alert('Error updating post fall notes. Please try again.');
+    }
   };
 
   const updateFallsChart = () => {
@@ -584,112 +695,69 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   };
 
   const handleSaveCSV = () => {
-    const modifiedData = data.map(item => ({
-      ...item,
-      'Significant Injury Flag': 
-        item.injuries?.toLowerCase().includes('head injury') || 
-        item.injuries?.toLowerCase().includes('fracture') || 
-        item.injuries?.toLowerCase().includes('skin tear') 
-          ? 'Yes' 
-          : 'No',
-      'Non Compliance Flag':
-        item.poaContacted?.toLowerCase() === 'no' ||
-        item.cause === 'No Fall Note' ||
-        (item.postFallNotes < 3)
-          ? 'Yes'
-          : 'No'
+    if (!data || data.length === 0) {
+      alert('No data to export');
+      return;
+    }
+
+    // Create filename based on date range
+    const startDateStr = startDate.toISOString().split('T')[0];
+    const endDateStr = endDate.toISOString().split('T')[0];
+    const filename = `${name}_${startDateStr}_to_${endDateStr}_falls_data.csv`;
+
+    // Prepare CSV data
+    const csvData = data.map((item) => ({
+      Date: item.date || '',
+      Name: item.name || '',
+      Time: item.time || '',
+      Location: item.location || item.incident_location || '',
+      RHA: item.homeUnit || item.room || '',
+      'Nature of Fall/Cause': item.cause || '',
+      Interventions: item.interventions || '',
+      'HIR initiated': item.hir || '',
+      Injury: item.injury || '',
+      'Transfer to Hospital': item.transferToHospital || '',
+      'PT Ref': item.ptRef || '',
+      'Physician/NP Notification': item.physicianNotification || '',
+      'POA Contacted': item.poaContacted || '',
+      'Risk Management Incident Fall Written': item.riskManagementIncidentFallWritten || '',
+      '3 Post Fall Notes in 72hrs': item.postFallNotes || '',
     }));
-    
-    const csv = Papa.unparse(modifiedData);
+
+    const csv = Papa.unparse(csvData);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    
-    // Format the filename: Community_YYYY_MM_falls_data
-    const monthNum = months_backword[desiredMonth];
-    const filename = `${name}_${desiredYear}_${monthNum}_falls_data.csv`;
-    
     saveAs(blob, filename);
   };
 
-  const handleUpdateCSV = async (index, newValue, name, changeType) => {
-    const collectionRef = ref(db, `/${name}/${desiredYear}/${months_backword[desiredMonth]}`);
-
+  const handleUpdateCSV = async (itemId, newValue, name, changeType) => {
     try {
-      const snapshot = await get(collectionRef);
-
-      if (snapshot.exists()) {
-        const rows = snapshot.val(); // Get all rows as an object
-        let targetRowKey = null;
-
-        // Let's add some console.logs to understand what's happening
-        console.log("Index passed:", index);
-        console.log("Rows from Firebase:", rows);
-
-        for (const [key, row] of Object.entries(rows)) {
-          if (row.id === String(index)) {  
-            targetRowKey = key;
-            break;
-          }
-        }
-
-        if (targetRowKey) {
-          const rowRef = child(collectionRef, targetRowKey);
-          const currentRowData = rows[targetRowKey];
-
-          // Proceed with update only if not previously updated or value is different
-          let updates = {};
-
-          switch (changeType) {
-            case 'hir':
-              updates = { hir: newValue, isHirUpdated: 'yes' };
-              break;
-            case 'transfer_to_hospital':
-              updates = { transfer_to_hospital: newValue, isHospitalUpdated: 'yes' };
-              break;
-            case 'ptRef':
-              updates = { ptRef: newValue, isPtRefUpdated: 'yes' };
-              break;
-            case 'poaContacted':
-              updates = { poaContacted: newValue, isPoaContactedUpdated: 'yes' };
-              break;
-            case 'physicianRef':
-              updates = { physicianRef: newValue, isPhysicianRefUpdated: 'yes' };
-              break;
-            case 'incidentReport':
-              updates = { incidentReport: newValue, isIncidentReportUpdated: 'yes' };
-              break;
-            default:
-              console.error('Invalid changeType');
-              return;
-          }
-          // Check if the current column has been updated before
-          const updateKey = Object.keys(updates)[1]; // This will be the isUpdated key;
-          const hasBeenUpdated = currentRowData[updateKey] === 'yes';
-
-          // If the column has been updated, only allow changes if the new value is different
-          if (hasBeenUpdated && currentRowData[changeType] === newValue) {
-            return; // No change needed
-          }
-
-          await update(rowRef, updates);
-          console.log(`Row with id ${index} updated successfully.`);
-
-          // Refresh local state to reflect changes
-          const updatedData = data.map(item => 
-            item.id === String(index) 
-              ? { ...item, [changeType]: newValue, [updateKey]: 'yes' } 
-              : item
-          );
-          setData(updatedData);
-
-          console.log(`Row with id ${index} updated successfully.`);
-        } else {
-          console.error(`Row with id ${index} not found.`);
-        }
-      } else {
-        console.error('No data found in the specified path.');
+      // Find the item in data array by ID
+      const itemIndex = data.findIndex(item => item.id === itemId);
+      if (itemIndex === -1) {
+        console.error('Item not found with ID:', itemId);
+        return;
       }
+
+      // Get the month/year for the current item's date
+      const itemDate = new Date(data[itemIndex].date);
+      const { year, month } = getMonthYearForDate(itemDate);
+      
+      const rowRef = ref(db, `/${name}/${year}/${month}/${itemId}`);
+      
+      await update(rowRef, {
+        [changeType]: newValue,
+        lastUpdated: serverTimestamp(),
+      });
+
+      // Update local state
+      const updatedData = [...data];
+      updatedData[itemIndex][changeType] = newValue;
+      setData(updatedData);
+
+      console.log(`${changeType} updated successfully for item ${itemId}`);
     } catch (error) {
-      console.error('Error updating row:', error);
+      console.error(`Error updating ${changeType}:`, error);
+      alert(`Error updating ${changeType}. Please try again.`);
     }
   };
 
@@ -721,138 +789,326 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     // Start measuring fetch data time
     performance.mark('start-fetch-data');
 
-    const dataRef = ref(db, `/${name}/${desiredYear}/${months_backword[desiredMonth]}`);
-    const currentYear = desiredYear;
-    const currentMonth = parseInt(months_backword[desiredMonth]); // current month
-    const pastThreeMonths = [];
-    console.log('Name prop:', name); // Check what name is being passed
-    console.log('Desired year:', desiredYear);
-    console.log('Desired month:', months_backword[desiredMonth]);
+    // Calculate the date range
+    const startYear = startDate.getFullYear();
+    const startMonth = getMonthNumber(startDate);
+    const endYear = endDate.getFullYear();
+    const endMonth = getMonthNumber(endDate);
 
-    for (let i = 3; i >= 1; i--) {
-      const month = currentMonth - i;
-      if (month > 0) {
-        pastThreeMonths.push({ year: currentYear, month: String(month).padStart(2, '0') });
-      } else {
-        // if month less than one, return last year
-        pastThreeMonths.push({ year: currentYear - 1, month: String(12 + month).padStart(2, '0') });
-      }
+    // Get all months between start and end date
+    const monthsToFetch = [];
+    let currentDate = new Date(startDate);
+    
+    while (currentDate <= endDate) {
+      const year = currentDate.getFullYear();
+      const month = getMonthNumber(currentDate);
+      monthsToFetch.push({ year, month });
+      
+      // Move to next month
+      currentDate.setMonth(currentDate.getMonth() + 1);
+      currentDate.setDate(1);
     }
 
-    const allFallsData = new Map();
-    for (let i = 0; i < pastThreeMonths.length; i++) {
-      allFallsData.set(pastThreeMonths[i].month, []);
-    }
+    // Fetch data for all months in the range
+    const allFallsData = [];
+    const listeners = [];
 
-    pastThreeMonths.forEach(({ year, month }) => {
+    monthsToFetch.forEach(({ year, month }) => {
       const monthRef = ref(db, `/${name}/${year}/${month}`);
-
+      
       const listener = onValue(monthRef, (snapshot) => {
         if (snapshot.exists()) {
           const fallsData = snapshot.val();
-          const monthData = Object.keys(fallsData).map((key) => fallsData[key]);
-          allFallsData.set(month, monthData);
+          const monthData = Object.values(fallsData).map(item => ({
+            ...item,
+            id: item.id || ''
+          }));
+          
+          // Filter by date range within the month
+          const filteredData = monthData.filter(item => {
+            if (!item.date) return false;
+            const itemDate = new Date(item.date);
+            return itemDate >= startDate && itemDate <= endDate;
+          });
+          
+          allFallsData.push(...filteredData);
+          
+          // Update data state
+          const sortedData = allFallsData.sort(
+            (a, b) => new Date(b.date + ' ' + b.time) - new Date(a.date + ' ' + a.time)
+          );
+          
+          // Filter by unit if a specific unit is selected
+          let finalData = sortedData;
+          if (desiredUnit !== 'allUnits') {
+            finalData = sortedData.filter(fall => {
+              const unitValue = fall.homeUnit || fall.room;
+              return unitValue?.trim() === desiredUnit?.trim();
+            });
+          }
+          
+          // Apply color processing when setting data
+          const processedData = processDataColors(finalData);
+          setData(processedData);
         }
       });
-      return () => off(monthRef, listener);
-    });
-    setThreeMonthData(allFallsData);
-
-    const listener = onValue(dataRef, (snapshot) => {
-      console.log('Firebase data:', snapshot.val());
-      if (snapshot.exists()) {
-        const fetchedData = snapshot.val();
-        
-        if (!fetchedData) {
-          console.log('No data available');
-          setData([]);
-          return;
-        }
-
-        // Convert to array while preserving the stored IDs
-        let withIdData = Object.values(fetchedData).map(item => ({
-          ...item,
-          // Use the ID that's already in the data, don't assign new ones
-          id: item.id || ''
-        }));
-
-        // Filter by unit if a specific unit is selected
-        if (desiredUnit !== 'allUnits') {
-          withIdData = withIdData.filter(fall => {
-            const unitValue = fall.homeUnit || fall.room;
-            return unitValue?.trim() === desiredUnit?.trim();
-          });
-        }
-
-        const sortedData = withIdData.sort(
-          (a, b) => new Date(b.date + ' ' + b.time) - new Date(a.date + ' ' + a.time)
-        );
-        setData(sortedData);
-      }
+      
+      listeners.push({ ref: monthRef, listener });
     });
 
+    // Cleanup listeners on unmount
     return () => {
-      off(dataRef, listener); // Cleanup listener on unmount
+      listeners.forEach(({ ref, listener }) => {
+        off(ref, listener);
+      });
     };
-  }, [desiredMonth, desiredYear, desiredUnit]);
+  }, [startDate, endDate, desiredUnit, name]);
+
+  // Keep the old useEffect for backward compatibility but update it to use the new date range
+  useEffect(() => {
+    // Update desiredMonth and desiredYear based on startDate
+    setDesiredMonth(getMonthName(startDate));
+    setDesiredYear(getYearFromDate(startDate));
+  }, [startDate]);
 
   useEffect(() => {
     updateFallsChart();
     // console.log('Falls Chart');
-  }, [fallsTimeRange, data, desiredMonth, desiredYear]);
+  }, [fallsTimeRange, data, startDate, endDate]);
 
   useEffect(() => {
     updateAnalysisChart();
     // console.log('Analysis Chart');
-  }, [analysisType, analysisTimeRange, analysisUnit, data, desiredYear]);
+  }, [analysisType, analysisTimeRange, analysisUnit, data, startDate, endDate]);
 
-  useEffect(() => {
-    if (data.length > 0) {
-      const processedData = data.map((item, index) => {
-        
-        // Determine color based on post-fall notes count and existing update status
-        const postFallNotesColor = 
-          item.isPostFallNotesUpdated !== 'yes' && item.postFallNotes < 3 ? 'red' : 'inherit';
-        
-        return {
-          ...item,
-          postFallNotesColor,
-        };
-      });
-  
-      // Only update if there's a change to prevent unnecessary re-renders
-      const dataChanged = JSON.stringify(processedData) !== JSON.stringify(data);
-      if (dataChanged) {
-        setData(processedData);
+  // Process data colors when raw data is first loaded
+  const processDataColors = (rawData) => {
+    return rawData.map((item, index) => {
+      // Don't reprocess if color is already set properly
+      if (item.colorProcessed) {
+        return item;
       }
-    }
-  }, [data]);
-
-  // Track if the user has made a manual selection
-  const hasUserSelected = useRef(false);
-
-  const handleYearChange = (e) => {
-    const selectedYear = parseInt(e.target.value);
-    setDesiredYear(selectedYear);
-    hasUserSelected.current = true;
-
-    // When year changes, set month to the latest available month for that year
-    const availableMonths = availableYearMonth[selectedYear] || [];
-    if (availableMonths.length > 0) {
-      setDesiredMonth(availableMonths[availableMonths.length - 1]);
-    }
+      
+      // Convert postFallNotes to number if it's a string
+      const postFallNotesCount = parseInt(item.postFallNotes) || 0;
+      
+      // Determine color based on post-fall notes count
+      let postFallNotesColor = '';
+      let backgroundColor = '';
+      
+      if (postFallNotesCount >= 3) {
+        postFallNotesColor = 'green';
+        backgroundColor = '#4CAF50'; // Green for 3+ notes
+      } else if (postFallNotesCount === 2) {
+        postFallNotesColor = 'orange';
+        backgroundColor = '#FF9800'; // Orange for 2 notes
+      } else if (postFallNotesCount === 1) {
+        postFallNotesColor = 'yellow';
+        backgroundColor = '#FFC107'; // Yellow for 1 note
+      } else {
+        postFallNotesColor = 'red';
+        backgroundColor = '#F44336'; // Red for 0 notes
+      }
+      
+      return {
+        ...item,
+        color: backgroundColor,
+        postFallNotesColor: postFallNotesColor,
+        colorProcessed: true // Flag to avoid reprocessing
+      };
+    });
   };
 
-  const handleMonthChange = (event) => {
-    const selectedMonth = event.target.value;
-    setDesiredMonth(selectedMonth);
-    hasUserSelected.current = true;
-  };
+  // Load insights when date range changes
+  useEffect(() => {
+    const loadInsightData = async () => {
+      try {
+        // Use the current month/year from start date for insights
+        const { year, month } = getCurrentMonthYear();
+        
+        const insightsRef = ref(db, `/${name}/insights/${year}/${month}`);
+        
+        const snapshot = await get(insightsRef);
+        if (snapshot.exists()) {
+          const insightsData = snapshot.val();
+          const insightsArray = Object.values(insightsData).map(insight => ({
+            ...insight,
+            id: insight.id || Object.keys(insightsData).find(key => insightsData[key] === insight)
+          }));
+          setInsights(insightsArray);
+        } else {
+          setInsights([]);
+        }
+      } catch (error) {
+        console.error('Error loading insights:', error);
+        setInsights([]);
+      }
+    };
+    loadInsightData();
+  }, [startDate, endDate, name]);
 
+  // Add this log to always show the current selection
+  useEffect(() => {
+    console.log('Current selection:', { desiredMonth, desiredYear, desiredUnit });
+  }, [desiredMonth, desiredYear, desiredUnit]);
+
+  // Handle unit change
   const handleUnitChange = (event) => {
     setDesiredUnit(event.target.value);
   };
 
+  // Check for unreviewed residents
+  const checkForUnreviewedResidents = async () => {
+    try {
+      // Use the current month/year from start date for reviews
+      const { year, month } = getCurrentMonthYear();
+      
+      const fallsRef = ref(db, `/${name}/${year}/${month}`);
+      const reviewsRef = ref(db, `/reviews/${name}/${year}/${month}`);
+
+      const [fallsSnapshot, reviewsSnapshot] = await Promise.all([
+        get(fallsRef),
+        get(reviewsRef)
+      ]);
+
+      if (fallsSnapshot.exists()) {
+        const fallsData = fallsSnapshot.val();
+        const fallsArray = Object.values(fallsData);
+
+        if (reviewsSnapshot.exists()) {
+          const reviewsData = reviewsSnapshot.val();
+          const reviewedResidents = Object.keys(reviewsData);
+
+          const unreviewedResidents = fallsArray.filter(fall => 
+            !reviewedResidents.includes(fall.name)
+          );
+
+          if (unreviewedResidents.length > 0) {
+            // Get unique resident names to avoid duplicates
+            const uniqueResidentNames = [...new Set(unreviewedResidents.map(r => r.name))];
+            const residentNames = uniqueResidentNames.join(', ');
+            // alert(`The following residents have not been reviewed: ${residentNames}`);
+          } else {
+            alert('All residents have been reviewed for this month.');
+          }
+        } else {
+          // No reviews exist, so all residents need review
+          // Get unique resident names to avoid duplicates
+          const uniqueResidentNames = [...new Set(fallsArray.map(r => r.name))];
+          const residentNames = uniqueResidentNames.join(', ');
+                 }
+      } else {
+        alert('No falls data found for this month.');
+      }
+    } catch (error) {
+      console.error('Error checking for unreviewed residents:', error);
+      alert('Error checking for unreviewed residents. Please try again.');
+    }
+  };
+
+  // Mark review as done
+  const markReviewDone = async (resident) => {
+    try {
+      // Use the current month/year from start date for reviews
+      const { year, month } = getCurrentMonthYear();
+      
+      const reviewRef = ref(db, `/reviews/${name}/${year}/${month}/${resident.name}`);
+      
+      await set(reviewRef, {
+        name: resident.name,
+        reviewDate: serverTimestamp(),
+        reviewedBy: 'Current User', // You might want to get this from auth
+        status: 'reviewed'
+      });
+
+      alert(`Review marked as done for ${resident.name}`);
+    } catch (error) {
+      console.error('Error marking review as done:', error);
+      alert('Error marking review as done. Please try again.');
+    }
+  };
+
+  // Handle remind later
+  const handleRemindLater = async (resident) => {
+    try {
+      // Use the current month/year from start date for reviews
+      const { year, month } = getCurrentMonthYear();
+      
+      const reviewRef = ref(db, `/reviews/${name}/${year}/${month}/${resident.name}`);
+      
+      await set(reviewRef, {
+        name: resident.name,
+        reminderDate: serverTimestamp(),
+        status: 'reminded',
+        reminderCount: (resident.reminderCount || 0) + 1
+      });
+
+      alert(`Reminder set for ${resident.name}`);
+      setCurrentResidentIndex(0); // Reset index after reminding
+    } catch (error) {
+      console.error('Error setting reminder:', error);
+      alert('Error setting reminder. Please try again.');
+    }
+  };
+
+  // Handle outcome change
+  const handleOutcomeChange = async (insightId, newOutcome) => {
+    try {
+      // Use the current month/year from start date for insights
+      const { year, month } = getCurrentMonthYear();
+      
+      const insightRef = ref(db, `/${name}/insights/${year}/${month}/${insightId}`);
+      
+      await update(insightRef, {
+        outcome: newOutcome,
+        lastUpdated: serverTimestamp()
+      });
+
+      // Update local state
+      const updatedInsights = insights.map(insight => 
+        insight.id === insightId 
+          ? { ...insight, outcome: newOutcome }
+          : insight
+      );
+      setInsights(updatedInsights);
+
+      console.log('Insight outcome updated successfully');
+    } catch (error) {
+      console.error('Error updating insight outcome:', error);
+      alert('Error updating insight outcome. Please try again.');
+    }
+  };
+
+  // Handle review insight
+  const handleReviewInsight = async (insightId) => {
+    try {
+      // Use the current month/year from start date for insights
+      const { year, month } = getCurrentMonthYear();
+      
+      const insightRef = ref(db, `/${name}/insights/${year}/${month}/${insightId}`);
+      
+      await update(insightRef, {
+        reviewed: true,
+        reviewDate: serverTimestamp(),
+        lastUpdated: serverTimestamp()
+      });
+
+      // Update local state
+      const updatedInsights = insights.map(insight => 
+        insight.id === insightId 
+          ? { ...insight, reviewed: true, reviewDate: new Date() }
+          : insight
+      );
+      setInsights(updatedInsights);
+
+      console.log('Insight marked as reviewed');
+    } catch (error) {
+      console.error('Error marking insight as reviewed:', error);
+      alert('Error marking insight as reviewed. Please try again.');
+    }
+  };
+
+  // Load available year/month data
   useEffect(() => {
     const yearsRef = ref(db, `/${name}`);
     console.log('Checking available years/months for:', name);
@@ -890,216 +1146,21 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
 
         console.log('Available year/month mapping:', sortedMapping);
         setAvailableYearMonth(sortedMapping);
-
-        // Only set to the latest available month/year if the user hasn't selected
-        const latestYear = sortedYears[0];
-        const latestMonth = sortedMapping[latestYear][sortedMapping[latestYear].length - 1];
-        if (!hasUserSelected.current &&
-          (!desiredYear || !desiredMonth ||
-            !sortedMapping[desiredYear] ||
-            !sortedMapping[desiredYear].includes(desiredMonth))) {
-          setDesiredYear(latestYear);
-          setDesiredMonth(latestMonth);
-        }
       }
     });
+
+    return () => {
+      off(yearsRef);
+    };
   }, [name]);
 
-  const checkForUnreviewedResidents = async () => {
-    const fallsRef = ref(db, `/${name}/${desiredYear}/${months_backword[desiredMonth]}`);
-    const reviewsRef = ref(db, `/reviews/${name}/${desiredYear}/${months_backword[desiredMonth]}`);
-    
-    // Get both falls and reviews data
-    const [fallsSnapshot, reviewsSnapshot] = await Promise.all([
-      get(fallsRef),
-      get(reviewsRef)
-    ]);
-
-    const fallsData = fallsSnapshot.val();
-    const reviewsData = reviewsSnapshot.val() || {};
-
-    if (fallsData) {
-      // Count falls per resident
-      const fallCounts = {};
-      Object.values(fallsData).forEach(fall => {
-        if (fall.name) {
-          fallCounts[fall.name] = (fallCounts[fall.name] || 0) + 1;
-        }
-      });
-
-      // Filter for residents with 3+ falls who haven't been reviewed or need reminder
-      const needReview = Object.entries(fallCounts)
-        .filter(([residentName, count]) => {
-          const review = reviewsData[residentName];
-          if (!review) return count >= 3;  // No review exists
-          
-          // Check if reminder is due (more than 24 hours old)
-          if (review.needsReminder && review.lastReminderTime) {
-            const reminderTime = new Date(review.lastReminderTime);
-            const now = new Date();
-            return count >= 3 && (now - reminderTime) >= 86400000;  // 86400000ms = 24 hours
-          }
-          
-          return false;  // Already reviewed
-        })
-        .map(([residentName]) => ({
-          name: residentName
-        }));
-
-      setResidentsNeedingReview(needReview);
-      if (needReview.length > 0) {
-        setCurrentResidentIndex(0);
-        setShowModal(true);
-      }
-    }
-  };
-
-  // Initial check and set up interval
+  // Initial check for unreviewed residents
   useEffect(() => {
     checkForUnreviewedResidents();
     const interval = setInterval(checkForUnreviewedResidents, 10000); // Check every 10 seconds
     
     return () => clearInterval(interval);
-  }, [name, desiredMonth]);
-
-  const markReviewDone = async (resident) => {
-    const reviewRef = ref(db, `/reviews/${name}/${desiredYear}/${months_backword[desiredMonth]}/${resident.name}`);
-    await set(reviewRef, {
-      reviewed: true,
-      reviewedAt: serverTimestamp(),
-      needsReminder: false,
-      lastReminderTime: null
-    });
-    
-    // Re-check for remaining unreviewed residents
-    await checkForUnreviewedResidents();
-  };
-
-  const handleRemindLater = async () => {
-    const currentResident = residentsNeedingReview[currentResidentIndex];
-    const reviewRef = ref(db, `/reviews/${name}/${desiredYear}/${months_backword[desiredMonth]}/${currentResident.name}`);
-    
-    await set(reviewRef, {
-      reviewed: false,
-      needsReminder: true,
-      lastReminderTime: serverTimestamp()
-    });
-
-    // Move to next resident if available
-    if (currentResidentIndex < residentsNeedingReview.length - 1) {
-      setCurrentResidentIndex(prev => prev + 1);
-    } else {
-      setShowModal(false);
-      setCurrentResidentIndex(0);
-      // Will be checked again by the interval
-    }
-  };
-
-  const getAllInsights = () => {
-    // Map insights from Firebase
-    const allInsights = insights.map(insight => {
-      // Check if this insight exists in Firebase (has outcome or reviewed status)
-      const firebaseData = insightOutcomes[insight.id] || {};
-      const isReviewed = reviewedInsights[insight.id] || false;
-      
-      return {
-        ...insight,
-        outcome: firebaseData.outcome || null,
-        reviewed: isReviewed
-      };
-    });
-
-    // Filter out reviewed insights
-    return allInsights.filter(insight => !insight.reviewed);
-  };
-
-  const handleOutcomeChange = async (insightId, newOutcome) => {
-    try {
-      const insightRef = ref(db, `/${name}/insights/${desiredYear}/${months_backword[desiredMonth]}/${insightId}`);
-      await update(insightRef, {
-        outcome: newOutcome,
-        timestamp: serverTimestamp()
-      });
-      
-      setInsightOutcomes(prev => ({
-        ...prev,
-        [insightId]: { outcome: newOutcome }
-      }));
-    } catch (error) {
-      console.error('Error updating insight outcome:', error);
-    }
-  };
-
-  const handleReviewInsight = async (insightId) => {
-    try {
-      const insightRef = ref(db, `/${name}/insights/${desiredYear}/${months_backword[desiredMonth]}/${insightId}`);
-      await update(insightRef, {
-        reviewed: true,
-        reviewedAt: serverTimestamp()
-      });
-      
-      setReviewedInsights(prev => ({
-        ...prev,
-        [insightId]: true
-      }));
-    } catch (error) {
-      console.error('Error marking insight as reviewed:', error);
-    }
-  };
-
-  // Load insights, outcomes and reviewed status from Firebase
-  useEffect(() => {
-    const loadInsightData = async () => {
-      const insightsRef = ref(db, `/${name}/insights/${desiredYear}/${months_backword[desiredMonth]}`);
-      const snapshot = await get(insightsRef);
-      
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        const outcomes = {};
-        const reviewed = {};
-        const insightsList = [];
-        
-        Object.entries(data).forEach(([id, insight]) => {
-          // Add to insights list if it's not just an outcome/review
-          if (typeof insight === 'string') {
-            // If insight is just a string, use it as content
-            insightsList.push({
-              id,
-              emoji: '📊',  // Default emoji
-              content: insight
-            });
-          } else if (insight.content) {
-            // If insight is an object with content
-            insightsList.push({
-              id,
-              emoji: insight.emoji || '📊',
-              content: insight.content
-            });
-          }
-          
-          if (insight.outcome) outcomes[id] = insight;
-          if (insight.reviewed) reviewed[id] = true;
-        });
-        
-        console.log('Insights fetched from Firebase:', insightsList);
-        console.log('Reviewed insights status:', reviewed);
-        setInsights(insightsList);
-        setInsightOutcomes(outcomes);
-        setReviewedInsights(reviewed);
-      } else {
-        // If no insights exist for this month, set empty state
-        setInsights([]);
-        setInsightOutcomes({});
-        setReviewedInsights({});
-      }
-    };
-    loadInsightData();
-  }, [name, desiredYear, desiredMonth]);
-
-  // Add this log to always show the current selection
-  useEffect(() => {
-    console.log('Currently selected month:', desiredMonth, 'year:', desiredYear);
-  }, [desiredMonth, desiredYear]);
+  }, [name, startDate, endDate]);
 
   return (
     <div className={styles.dashboard} ref={tableRef}>
@@ -1197,32 +1258,61 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
      
         <div className={styles['header']}>
           <h2>
-            Falls Tracking Table: {desiredMonth} {desiredYear}
+            Falls Tracking Table: {formatDateForDisplay(startDate)} - {formatDateForDisplay(endDate)}
           </h2>
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-            <select onChange={handleYearChange} value={desiredYear}>
-              {Object.keys(availableYearMonth).map((year) => (
-                <option key={year} value={year}>
-                  {year}
-                </option>
-              ))}
-            </select>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+              <label style={{ fontSize: '12px', fontWeight: 'bold' }}>Start Date:</label>
+              <input
+                type="date"
+                value={formatDateForInput(startDate)}
+                onChange={handleStartDateChange}
+                max={formatDateForInput(endDate)}
+                style={{
+                  padding: '8px',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                  fontSize: '14px'
+                }}
+              />
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+              <label style={{ fontSize: '12px', fontWeight: 'bold' }}>End Date:</label>
+              <input
+                type="date"
+                value={formatDateForInput(endDate)}
+                onChange={handleEndDateChange}
+                min={formatDateForInput(startDate)}
+                max={formatDateForInput(getCurrentDate())}
+                style={{
+                  padding: '8px',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                  fontSize: '14px'
+                }}
+              />
+            </div>
 
-            <select onChange={handleMonthChange} value={desiredMonth}>
-              {(availableYearMonth[desiredYear] || []).map((month) => (
-                <option key={month} value={month}>
-                  {month}
-                </option>
-              ))}
-            </select>
-
-            <select onChange={handleUnitChange} value={desiredUnit}>
-              {unitSelectionValues && unitSelectionValues.map((unit) => (
-                <option key={unit} value={unit}>
-                  {unit}
-                </option>
-              ))}
-            </select>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+              <label style={{ fontSize: '12px', fontWeight: 'bold' }}>Unit:</label>
+              <select 
+                onChange={handleUnitChange} 
+                value={desiredUnit}
+                style={{
+                  padding: '8px',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                  fontSize: '14px'
+                }}
+              >
+                {unitSelectionValues && unitSelectionValues.map((unit) => (
+                  <option key={unit} value={unit}>
+                    {unit}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
         <div>
@@ -1287,7 +1377,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
               <td style={{ fontSize: '16px', backgroundColor: item.isHirUpdated === 'yes' ? 'rgba(76, 175, 80, 0.3)' : 'inherit' }}>
                 <select
                   value={item.hir === 'yes' || item.hir === 'Yes' ? 'Yes' : item.hir === 'no' || item.hir === 'No' ? 'No' : item.hir === 'not applicable' || item.hir === 'Not Applicable' ? 'Not Applicable' : item.hir}
-                  onChange={(e) => handleUpdateCSV(data[i].id, e.target.value, name, 'hir')}
+                  onChange={(e) => handleUpdateCSV(item.id, e.target.value, name, 'hir')}
                 >
                   <option value="Yes">Yes</option>
                   <option value="No">No</option>
@@ -1297,9 +1387,12 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
               <td style={{ fontSize: '16px' }}>{item.injury || item.injuries}</td>
               <td style={{ fontSize: '16px', backgroundColor: item.isHospitalUpdated === 'yes' ? 'rgba(76, 175, 80, 0.3)' : 'inherit' }}>
                 <select
-                  value={item.transfer_to_hospital === 'yes' || item.transfer_to_hospital === 'Yes' ? 'Yes' : item.transfer_to_hospital === 'no' || item.transfer_to_hospital === 'No'? 'No' : item.transfer_to_hospital}
-                  onChange={(e) => handleUpdateCSV(data[i].id, e.target.value, name, 'transfer_to_hospital')}
+                  value={item.transfer_to_hospital === 'yes' || item.transfer_to_hospital === 'Yes' ? 'Yes' : 
+                         item.transfer_to_hospital === 'no' || item.transfer_to_hospital === 'No' ? 'No' : 
+                         item.transfer_to_hospital || ''}
+                  onChange={(e) => handleUpdateCSV(item.id, e.target.value, name, 'transfer_to_hospital')}
                 >
+                  <option value="">Select...</option>
                   <option value="Yes">Yes</option>
                   <option value="No">No</option>
                 </select>
@@ -1307,7 +1400,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
               <td style={{ fontSize: '16px', backgroundColor: item.isPtRefUpdated === 'yes' ? 'rgba(76, 175, 80, 0.3)' : 'inherit' }}>
                 <select
                   value={item.ptRef === 'yes' || item.ptRef === 'Yes' ? 'Yes' : item.ptRef === 'no' || item.ptRef === 'No' ? 'No' : item.ptRef}
-                  onChange={(e) => handleUpdateCSV(data[i].id, e.target.value, name, 'ptRef')}
+                  onChange={(e) => handleUpdateCSV(item.id, e.target.value, name, 'ptRef')}
                 >
                   <option value="Yes">Yes</option>
                   <option value="No">No</option>
@@ -1320,7 +1413,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                     : item.physicianRef === 'no' || item.physicianRef === 'No'
                     ? 'No'
                     : item.physicianRef}
-                  onChange={(e) => handleUpdateCSV(data[i].id, e.target.value, name, 'physicianRef')}
+                  onChange={(e) => handleUpdateCSV(item.id, e.target.value, name, 'physicianRef')}
                 >
                   <option value="Yes">Yes</option>
                   <option value="No">No</option>
@@ -1338,7 +1431,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                     : item.poaContacted === 'no' || item.poaContacted === 'No'
                     ? 'No'
                     : item.poaContacted}
-                  onChange={(e) => handleUpdateCSV(data[i].id, e.target.value, name, 'poaContacted')}
+                  onChange={(e) => handleUpdateCSV(item.id, e.target.value, name, 'poaContacted')}
                 >
                   <option value="Yes">Yes</option>
                   <option value="No">No</option>
@@ -1353,7 +1446,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                       ? 'No'
                       : item.incidentReport
                   }
-                  onChange={(e) => handleUpdateCSV(data[i].id, e.target.value, name, 'incidentReport')}
+                  onChange={(e) => handleUpdateCSV(item.id, e.target.value, name, 'incidentReport')}
                 >
                   <option value="Yes">Yes</option>
                   <option value="No">No</option>
@@ -1440,7 +1533,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
                   Yes, Review Complete
                 </button>
                 <button 
-                  onClick={handleRemindLater}
+                  onClick={() => handleRemindLater(residentsNeedingReview[currentResidentIndex])}
                   style={{ backgroundColor: '#D3D3D3', padding: '10px', fontFamily: 'inherit', fontSize: '16px', fontFamily: 'inherit', borderRadius: '12px', border: 'transparent', cursor: 'pointer'}}
                 >
                   Remind me in 24 hours
