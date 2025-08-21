@@ -803,9 +803,9 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
         const currentYear = currentDate.getFullYear();
         const currentMonth = currentDate.getMonth() + 1; // 1-12
 
-        // Calculate the last 4 months
-        const months = [];
-        for (let i = 0; i < 4; i++) {
+        // Search for all available months with data (expand search to include more historical data)
+        // Start from current month and go back further to find all available data
+        for (let i = 0; i < 24; i++) { // Search up to 2 years back
           let month = currentMonth - i;
           let year = currentYear;
           
@@ -821,13 +821,22 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
             yearMonthMapping[year] = [];
           }
           
-                  // Only add if the data exists in Firebase
-        if (data[year] && data[year][monthStr]) {
-          yearMonthMapping[year].push(months_forward[monthStr]);
+          // Only add if the data exists in Firebase
+          if (data[year] && data[year][monthStr]) {
+            yearMonthMapping[year].push(months_forward[monthStr]);
+          }
         }
-      }
 
       console.log('Final year/month mapping:', yearMonthMapping);
+      
+      // Sort months within each year (most recent first)
+      Object.keys(yearMonthMapping).forEach(year => {
+        yearMonthMapping[year].sort((a, b) => {
+          const monthA = months_backword[a];
+          const monthB = months_backword[b];
+          return parseInt(monthB) - parseInt(monthA); // Most recent month first
+        });
+      });
       
       // Automatically select the most recent month with data
       if (Object.keys(yearMonthMapping).length > 0) {
@@ -1191,133 +1200,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
           {analysisChartData.datasets.length > 0 && <Bar data={analysisChartData} options={analysisChartOptions} />}
         </div>
 
-        <div className={styles.chart}>
-          <h2>
-            <span style={{
-              fontSize: getAllInsights().length > 1 ? '45px' : '22.5px',
-              fontWeight: getAllInsights().length > 1 ? '700' : '700',
-              color: getAllInsights().length > 1 ? '#8BD087' : 'inherit'
-            }}>
-              {getAllInsights().length} insight(s)
-            </span>
-            {" left to review:"}
-          </h2>
-          <div style={{
-            padding: '10px',
-            height: '300px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '10px',
-            overflowY: 'auto',
-            scrollbarWidth: 'thin',
-            scrollbarColor: '#CBD5E1 #F1F5F9',
-            marginTop: '5px'
-          }}>
-            {getAllInsights().map((insight) => (
-              <div 
-                key={insight.id} 
-                style={{
-                  background: 'white',
-                  borderRadius: '8px',
-                  padding: '12px',
-                  boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
-                  transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-                  marginBottom: '8px',
-                  position: 'relative',
-                  border: '1px solid #f0f0f0',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
-                  gap: '8px'
-                }}
-              >
-                <div style={{
-                  display: 'flex',
-                  gap: '10px',
-                  alignItems: 'flex-start'
-                }}>
-                  <span style={{
-                    fontSize: '15px',
-                    lineHeight: '1.4',
-                    marginTop: '2px'
-                  }}>
-                    {insight.emoji}
-                  </span>
-                  <span style={{
-                    fontSize: '18.5px',
-                    color: '#334155',
-                    lineHeight: '1.4',
-                    fontWeight: '500'
-                  }}>
-                    {insight.content}
-                  </span>
-                </div>
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  borderTop: '1px solid #f0f0f0',
-                  paddingTop: '8px',
-                  marginTop: 'auto'
-                }}>
-                  <button
-                    onClick={() => handleReviewInsight(insight.id)}
-                    style={{
-                      background: insight.rating ? '#8BD087' : '#e2e8f0',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      padding: '4px 12px',
-                      fontSize: '13px',
-                      cursor: insight.rating ? 'pointer' : 'not-allowed',
-                      transition: 'all 0.2s ease',
-                      opacity: insight.rating ? 1 : 0.7
-                    }}
-                  >
-                    {insight.rating ? 'Reviewed' : 'Rate First'}
-                  </button>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px'
-                  }}>
-                    <span style={{
-                      fontSize: '14px',
-                      color: '#64748b'
-                    }}>
-                      Value:
-                    </span>
-                    {[1, 2, 3].map((num) => (
-                      <button
-                        key={num}
-                        onClick={() => handleRatingChange(insight.id, num)}
-                        style={{
-                          background: insight.rating === num ? '#8BD087' : '#f8fafc',
-                          border: '1px solid',
-                          borderColor: insight.rating === num ? '#8BD087' : '#e2e8f0',
-                          borderRadius: '4px',
-                          width: '28px',
-                          height: '28px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          cursor: 'pointer',
-                          fontSize: '14px',
-                          color: insight.rating === num ? 'white' : '#64748b',
-                          transition: 'all 0.2s ease',
-                          padding: '0',
-                          margin: '0'
-                        }}
-                      >
-                        {num}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+
       </div>
       <div className={styles['table-header']}>
         <div className={styles['header']}>
