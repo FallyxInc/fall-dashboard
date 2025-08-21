@@ -63,8 +63,8 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     const month = (today.getMonth() + 1).toString().padStart(2, '0');  // Convert 1-12 to "01"-"12"
     return months_forward[month];  // Convert "01" to "January" etc.
   };
-  const [desiredMonth, setDesiredMonth] = useState(getCurrentMonth());
-  const [desiredYear, setDesiredYear] = useState(new Date().getFullYear());
+  const [desiredMonth, setDesiredMonth] = useState('');
+  const [desiredYear, setDesiredYear] = useState('');
   // const [desiredMonth, setDesiredMonth] = useState('January');
   // const [desiredYear, setDesiredYear] = useState(2025);
   const [availableYearMonth, setAvailableYearMonth] = useState({});
@@ -821,15 +821,26 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
             yearMonthMapping[year] = [];
           }
           
-          // Only add if the data exists in Firebase
-          if (data[year] && data[year][monthStr]) {
-            yearMonthMapping[year].push(months_forward[monthStr]);
-          }
+                  // Only add if the data exists in Firebase
+        if (data[year] && data[year][monthStr]) {
+          yearMonthMapping[year].push(months_forward[monthStr]);
         }
-
-        console.log('Final year/month mapping:', yearMonthMapping);
       }
-      setAvailableYearMonth(yearMonthMapping);
+
+      console.log('Final year/month mapping:', yearMonthMapping);
+      
+      // Automatically select the most recent month with data
+      if (Object.keys(yearMonthMapping).length > 0) {
+        const latestYear = Math.max(...Object.keys(yearMonthMapping).map(Number));
+        if (yearMonthMapping[latestYear] && yearMonthMapping[latestYear].length > 0) {
+          const latestMonth = yearMonthMapping[latestYear][0]; // First month in the array is the most recent
+          setDesiredYear(latestYear.toString());
+          setDesiredMonth(latestMonth);
+          console.log(`Auto-selected most recent month: ${latestMonth} ${latestYear}`);
+        }
+      }
+    }
+    setAvailableYearMonth(yearMonthMapping);
     });
   }, [name]);
 
@@ -1100,6 +1111,19 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     const rooms = new Set(data.map(item => item.room || 'Unknown'));
     return ['All Rooms', ...Array.from(rooms)];
   };
+
+  // Show loading state while waiting for month/year to be auto-selected
+  if (!desiredMonth || !desiredYear) {
+    return (
+      <div className={styles.dashboard}>
+        <h1>{title}</h1>
+        <div style={{ textAlign: 'center', padding: '50px' }}>
+          <h2>Loading dashboard...</h2>
+          <p>Finding the most recent month with data...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.dashboard} ref={tableRef}>

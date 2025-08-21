@@ -928,7 +928,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
     { key: 'type', label: 'Type' },
     { key: 'date', label: 'Date' },
     { key: 'name', label: 'Name' },
-    { key: 'Day of the Week', label: 'Day of the Week' },
+    { key: 'Day of the Week', label: 'Day of the Wek' },
     { key: 'time', label: 'Time' },
         { key: 'room', label: 'Location' },
     { key: 'cause', label: 'Cause of Fall' },
