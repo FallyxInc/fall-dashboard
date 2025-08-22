@@ -61,6 +61,9 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [threeMonthData, setThreeMonthData] = useState(new Map());
+  const [followUpData, setFollowUpData] = useState([]);
+  const [showFollowUpTable, setShowFollowUpTable] = useState(false);
+  const [followUpLoading, setFollowUpLoading] = useState(true);
   const getCurrentMonth = () => {
     const today = new Date();
     const month = (today.getMonth() + 1).toString().padStart(2, '0');  // Convert 1-12 to "01"-"12"
@@ -94,6 +97,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
   const [currentIntervention, setCurrentIntervention] = useState('');
   const [currentRowIndex, setCurrentRowIndex] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showResidentNames, setShowResidentNames] = useState(false);
 
   const [currentCauseOfFall, setCurrentCauseOfFall] = useState('');
   const [currentCauseRowIndex, setCurrentCauseRowIndex] = useState(null);
@@ -567,9 +571,9 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
         height: 1.25 * totalHeight,
       });
       // console.log('canvas width');
-      // console.log(canvas.width);
+      // console.log('canvas width');
       // console.log('canvas height');
-      // console.log(canvas.height);
+      // console.log('canvas height');
       const imgData = canvas.toDataURL('image/png');
       const imgWidth = pageWidth;
       // const newWindow = window.open();
@@ -592,33 +596,87 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
         }
       }
       tableRef.current.style.overflowX = 'auto';
-      pdf.save('Falls_Tracking_Table.pdf');
+      
+      // Set filename based on current table
+      const monthNum = months_backword[desiredMonth];
+      const filename = showFollowUpTable 
+        ? `${name}_${desiredYear}_${monthNum}_follow_ups.pdf`
+        : `${name}_${desiredYear}_${monthNum}_behaviours_data.pdf`;
+      
+      pdf.save(filename);
     }
   };
 
   const handleSaveCSV = () => {
-    const modifiedData = data.map(item => ({
-      ...item,
-      'Significant Injury Flag': 
-        item.injuries?.toLowerCase().includes('head injury') || 
-        item.injuries?.toLowerCase().includes('fracture') || 
-        item.injuries?.toLowerCase().includes('skin tear') 
-          ? 'Yes' 
-          : 'No',
-      'Non Compliance Flag':
-        item.poaContacted?.toLowerCase() === 'no' ||
-        item.cause === 'No Fall Note' ||
-        (item.postFallNotes < 3)
-          ? 'Yes'
-          : 'No'
-    }));
+    let modifiedData;
+    let filename;
+    
+    if (showFollowUpTable) {
+      // Export follow-up data (dummy data)
+      modifiedData = [
+        {
+          'Follow-up Number': '1',
+          'Resident Name': 'John Smith',
+          'Date': '2025-01-15',
+          'Summary of Behaviour': 'Increased agitation during evening hours, refusing medication',
+          'Other Notes Included': 'Family notified, care plan updated'
+        },
+        {
+          'Follow-up Number': '2',
+          'Resident Name': 'Mary Johnson',
+          'Date': '2025-01-14',
+          'Summary of Behaviour': 'Wandering behavior, attempting to leave facility',
+          'Other Notes Included': 'Safety measures implemented, door alarms activated'
+        },
+        {
+          'Follow-up Number': '3',
+          'Resident Name': 'Robert Wilson',
+          'Date': '2025-01-13',
+          'Summary of Behaviour': 'Verbal aggression towards staff and other residents',
+          'Other Notes Included': 'Behavioral therapy session scheduled'
+        },
+        {
+          'Follow-up Number': '4',
+          'Resident Name': 'Sarah Davis',
+          'Date': '2025-01-12',
+          'Summary of Behaviour': 'Depression symptoms, social withdrawal',
+          'Other Notes Included': 'Social activities increased, counselor consultation'
+        },
+        {
+          'Follow-up Number': '5',
+          'Resident Name': 'Michael Brown',
+          'Date': '2025-01-11',
+          'Summary of Behaviour': 'Sleep disturbances, nighttime confusion',
+          'Other Notes Included': 'Sleep hygiene protocol initiated'
+        }
+      ];
+      
+      const monthNum = months_backword[desiredMonth];
+      filename = `${name}_${desiredYear}_${monthNum}_follow_ups.csv`;
+    } else {
+      // Export behaviors data
+      modifiedData = data.map(item => ({
+        ...item,
+        'Significant Injury Flag': 
+          item.injuries?.toLowerCase().includes('head injury') || 
+          item.injuries?.toLowerCase().includes('fracture') || 
+          item.injuries?.toLowerCase().includes('skin tear') 
+            ? 'Yes' 
+            : 'No',
+        'Non Compliance Flag':
+          item.poaContacted?.toLowerCase() === 'no' ||
+          item.cause === 'No Fall Note' ||
+          (item.postFallNotes < 3)
+            ? 'Yes'
+            : 'No'
+      }));
+      
+      const monthNum = months_backword[desiredMonth];
+      filename = `${name}_${desiredYear}_${monthNum}_behaviours_data.csv`;
+    }
     
     const csv = Papa.unparse(modifiedData);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    
-    // Format the filename: Community_YYYY_MM_falls_data
-    const monthNum = months_backword[desiredMonth];
-    const filename = `${name}_${desiredYear}_${monthNum}_falls_data.csv`;
     
     saveAs(blob, filename);
   };
@@ -793,8 +851,41 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
       }
     });
 
+    // Load follow-up data
+    const followUpRef = ref(db, `/oneill/follow/${currentYear}/${months_backword[desiredMonth]}`);
+    const followUpListener = onValue(followUpRef, (snapshot) => {
+      console.log('Follow-up data:', snapshot.val());
+      if (snapshot.exists()) {
+        const fetchedFollowUpData = snapshot.val();
+        
+        if (!fetchedFollowUpData) {
+          console.log('No follow-up data available');
+          setFollowUpData([]);
+          setFollowUpLoading(false);
+          return;
+        }
+
+        // Convert to array while preserving the stored IDs
+        let withIdFollowUpData = Object.values(fetchedFollowUpData).map(item => ({
+          ...item,
+          id: item.id || ''
+        }));
+
+        const sortedFollowUpData = withIdFollowUpData.sort(
+          (a, b) => new Date(b.date) - new Date(a.date)
+        );
+        setFollowUpData(sortedFollowUpData);
+        setFollowUpLoading(false);
+      } else {
+        // No data exists, set loading to false and show dummy data
+        setFollowUpData([]);
+        setFollowUpLoading(false);
+      }
+    });
+
     return () => {
       off(dataRef, listener); // Cleanup listener on unmount
+      off(followUpRef, followUpListener); // Cleanup follow-up listener on unmount
     };
   }, [desiredMonth]); // Remove desiredYear from dependencies since it's hardcoded
 
@@ -848,6 +939,39 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
 
   const handleUnitChange = (event) => {
     setDesiredUnit(event.target.value);
+  };
+
+  // Calculate behavior metrics for overview
+  const calculateBehaviorMetrics = () => {
+    if (!data || data.length === 0) return { antipsychotics: 0, worsened: 0, improved: 0 };
+    
+    let antipsychoticsCount = 0;
+    let worsenedCount = 0;
+    let improvedCount = 0;
+    let totalCount = data.length;
+    
+    data.forEach(item => {
+      // Check for antipsychotics without prescription
+      if (item.antipsychotic === 'yes' && (!item.prescription || item.prescription === 'no')) {
+        antipsychoticsCount++;
+      }
+      
+      // Check for behaviors worsened
+      if (item.behavior_change === 'worsened' || item.behavior_change === 'worse') {
+        worsenedCount++;
+      }
+      
+      // Check for behaviors improved
+      if (item.behavior_change === 'improved' || item.behavior_change === 'better') {
+        improvedCount++;
+      }
+    });
+    
+    return {
+      antipsychotics: totalCount > 0 ? Math.round((antipsychoticsCount / totalCount) * 100) : 0,
+      worsened: totalCount > 0 ? Math.round((worsenedCount / totalCount) * 100) : 0,
+      improved: totalCount > 0 ? Math.round((improvedCount / totalCount) * 100) : 0
+    };
   };
 
   useEffect(() => {
@@ -1211,47 +1335,181 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
         <div className={styles.chart}>
           <div className={styles['gauge-container']}>
             <h2 style={{ paddingTop: '7.5px' }}>Behaviours Overview</h2>
-            <select
-              id="fallsTimeRange"
-              value={fallsTimeRange}
-              onChange={(e) => {
-                setFallsTimeRange(e.target.value);
-              }}
-            >
-              <option value="current">This Month</option>
-              <option value="3months">Past 3 Months</option>
-            </select>
-            {gaugeChart ? (
-              <div id="gaugeContainer">
-                <div className={styles.gauge}>
-                  {gaugeChartData.datasets.length > 0 && <Doughnut data={gaugeChartData} options={gaugeChartOptions} />}
-                  <div className={styles['gauge-value']}>{data.length}</div>
-                  <br />
-                  <div className={styles['gauge-label']}>behaviours this month</div>
-                  <div className={styles['gauge-goal']}>
-                    Goal: <span id="fallGoal">{goal}</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '20px' }}>
+              {/* Toggle for showing resident names */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+                <label style={{ fontSize: '14px', fontWeight: 'bold', color: '#0D0E10' }}>
+                  Show Resident Names:
+                </label>
+                <input
+                  type="checkbox"
+                  checked={showResidentNames}
+                  onChange={(e) => setShowResidentNames(e.target.checked)}
+                  style={{ width: '18px', height: '18px' }}
+                />
+              </div>
+
+              {/* Antipsychotics without Prescription Card */}
+              <div style={{ 
+                backgroundColor: '#F8F9FA', 
+                border: '2px solid #28a745', 
+                borderRadius: '12px', 
+                padding: '20px',
+                boxShadow: '0 4px 8px rgba(40, 167, 69, 0.15)',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                  <div style={{ 
+                    backgroundColor: '#28a745', 
+                    borderRadius: '50%', 
+                    width: '60px', 
+                    height: '60px', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    color: 'white',
+                    fontSize: '24px',
+                    fontWeight: 'bold'
+                  }}>
+                    15%
                   </div>
-                  <br />
-                  <div className={styles['gauge-scale']}>
-                    <span>0</span>
-                    <span>{goal}</span>
+                  <div style={{ textAlign: 'left' }}>
+                    <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#0D0E10', marginBottom: '5px' }}>
+                      % of Residents on Suspected Antipsychotics Usage without Prescription
+                    </h3>
+                    <p style={{ fontSize: '14px', color: '#676879', margin: 0 }}>
+                      Residents receiving antipsychotics without proper documentation
+                    </p>
+                    {showResidentNames && (
+                      <div style={{ marginTop: '10px', fontSize: '18px', color: '#676879' }}>
+                        <strong>Residents:</strong> John Smith, Mary Johnson, Robert Davis
+                      </div>
+                    )}
                   </div>
                 </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#28a745' }}>-3%</div>
+                  <div style={{ fontSize: '12px', color: '#676879' }}>vs last month</div>
+                </div>
               </div>
-            ) : (
-              <div id="lineChartContainer">
-                {lineChartData.datasets.length > 0 && <Line data={lineChartData} options={lineChartOptions} />}
+
+              {/* Behaviours Worsened Card */}
+              <div style={{ 
+                backgroundColor: '#F8F9FA', 
+                border: '2px solid #28a745', 
+                borderRadius: '12px', 
+                padding: '20px',
+                boxShadow: '0 4px 8px rgba(40, 167, 69, 0.15)',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                  <div style={{ 
+                    backgroundColor: '#28a745', 
+                    borderRadius: '50%', 
+                    width: '60px', 
+                    height: '60px', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    color: 'white',
+                    fontSize: '24px',
+                    fontWeight: 'bold'
+                  }}>
+                    28%
+                  </div>
+                  <div style={{ textAlign: 'left' }}>
+                    <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#0D0E10', marginBottom: '5px' }}>
+                      % of Behaviours Worsened
+                    </h3>
+                    <p style={{ fontSize: '14px', color: '#676879', margin: 0 }}>
+                      Residents showing increased behavioral challenges
+                    </p>
+                    {showResidentNames && (
+                      <div style={{ marginTop: '10px', fontSize: '18px', color: '#676879' }}>
+                        <strong>Residents:</strong> Sarah Wilson, Michael Brown, Lisa Anderson
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#28a745' }}>+5%</div>
+                  <div style={{ fontSize: '12px', color: '#676879' }}>vs last month</div>
+                </div>
               </div>
-            )}
+
+              {/* Behaviours Improved Card */}
+              <div style={{ 
+                backgroundColor: '#F8F9FA', 
+                border: '2px solid #28a745', 
+                borderRadius: '12px', 
+                padding: '20px',
+                boxShadow: '0 4px 8px rgba(40, 167, 69, 0.15)',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                  <div style={{ 
+                    backgroundColor: '#28a745', 
+                    borderRadius: '50%', 
+                    width: '60px', 
+                    height: '60px', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    color: 'white',
+                    fontSize: '24px',
+                    fontWeight: 'bold'
+                  }}>
+                    57%
+                  </div>
+                  <div style={{ textAlign: 'left' }}>
+                    <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#0D0E10', marginBottom: '5px' }}>
+                      % of Behaviours Improved
+                    </h3>
+                    <p style={{ fontSize: '14px', color: '#676879', margin: 0 }}>
+                      Residents showing positive behavioral changes
+                    </p>
+                    {showResidentNames && (
+                      <div style={{ marginTop: '10px', fontSize: '18px', color: '#676879' }}>
+                        <strong>Residents:</strong> David Miller, Jennifer Taylor, Thomas White
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#28a745' }}>+8%</div>
+                  <div style={{ fontSize: '12px', color: '#676879' }}>vs last month</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
       <div className={styles['table-header']}>
         <div className={styles['header']}>
           <h2>
-            Behaviours Tracking Table: {desiredMonth} {desiredYear}
+            {showFollowUpTable ? 'Behavior Follow-ups' : 'Behaviours Tracking Table'}: {desiredMonth} {desiredYear}
           </h2>
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+            <button 
+              onClick={() => setShowFollowUpTable(!showFollowUpTable)}
+              style={{
+                padding: '8px 13px',
+                backgroundColor: showFollowUpTable ? '#007bff' : '#6c757d',
+                color: 'white',
+                border: 'none',
+                borderRadius: '5px',
+                cursor: 'pointer',
+                fontSize: '14px'
+              }}
+            >
+              {showFollowUpTable ? 'Show Behaviours' : 'Show Follow-ups'}
+            </button>
             <select onChange={handleYearChange} value={desiredYear}>
               {Object.keys(availableYearMonth).map((year) => (
                 <option key={year} value={year}>
@@ -1278,44 +1536,126 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
           </button>
         </div>
       </div>
-      <table style={{ width: '100%' }}>
-        <thead>
-          <tr>
-            <th style={{ fontSize: '18px' }}>#</th>
-            <th style={{ fontSize: '18px' }}>Resident Name</th>
-            <th style={{ fontSize: '18px' }}>Date</th>
-            <th style={{ fontSize: '18px' }}>Incident Location</th>
-            <th style={{ fontSize: '18px' }}>Incident Type</th>
-            <th style={{ fontSize: '18px' }}>Whose Affected</th>
-            <th style={{ fontSize: '18px' }}>PRN</th>
-            <th style={{ fontSize: '18px' }}>Code White</th>
-            <th style={{ fontSize: '18px' }}>Summary</th>
-            <th style={{ fontSize: '18px' }}>Triggers</th>
-            <th style={{ fontSize: '18px' }}>Interventions</th>
-            <th style={{ fontSize: '18px' }}>Injuries</th>
-            <th style={{ fontSize: '18px' }}>Potential CI</th>
-          </tr>
-        </thead>
-        <tbody id="fallsTableBody">
-          {data && data.map((item, i) => (
-            <tr key={i}>
-              <td style={{ fontSize: '16px' }}>{item.incident_number}</td>
-              <td style={{ fontSize: '16px' }}>{item.name}</td>
-              <td style={{ fontSize: '16px' }}>{item.date}</td>
-              <td style={{ fontSize: '16px' }}>{item.incident_location}</td>
-              <td style={{ fontSize: '16px' }}>{item.incident_type}</td>
-              <td style={{ fontSize: '16px' }}>{item.who_affected}</td>
-              <td style={{ fontSize: '16px' }}>{item.prn}</td>
-              <td style={{ fontSize: '16px' }}>{item.code_white}</td>
-              <td style={{ fontSize: '16px' }}>{item.summary}</td>
-              <td style={{ fontSize: '16px' }}>{cleanDuplicateText(item.triggers, 'triggers')}</td>
-              <td style={{ fontSize: '16px' }}>{cleanDuplicateText(item.interventions, 'interventions')}</td>
-              <td style={{ fontSize: '16px' }}>{item.injuries}</td>
-              <td style={{ fontSize: '16px' }}>{item.CI || "Still Gathering Data/Unknown"}</td>
+      {!showFollowUpTable ? (
+        <table style={{ width: '100%' }}>
+          <thead>
+            <tr>
+              <th style={{ fontSize: '18px' }}>#</th>
+              <th style={{ fontSize: '18px' }}>Resident Name</th>
+              <th style={{ fontSize: '18px' }}>Date</th>
+              <th style={{ fontSize: '18px' }}>Incident Location</th>
+              <th style={{ fontSize: '18px' }}>Incident Type</th>
+              <th style={{ fontSize: '18px' }}>Whose Affected</th>
+              <th style={{ fontSize: '18px' }}>PRN</th>
+              <th style={{ fontSize: '18px' }}>Code White</th>
+              <th style={{ fontSize: '18px' }}>Summary</th>
+              <th style={{ fontSize: '18px' }}>Triggers</th>
+              <th style={{ fontSize: '18px' }}>Interventions</th>
+              <th style={{ fontSize: '18px' }}>Injuries</th>
+              <th style={{ fontSize: '18px' }}>Potential CI</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody id="fallsTableBody">
+            {data && data.map((item, i) => (
+              <tr key={i}>
+                <td style={{ fontSize: '16px' }}>{item.incident_number}</td>
+                <td style={{ fontSize: '16px' }}>{item.name}</td>
+                <td style={{ fontSize: '16px' }}>{item.date}</td>
+                <td style={{ fontSize: '16px' }}>{item.incident_location}</td>
+                <td style={{ fontSize: '16px' }}>{item.incident_type}</td>
+                <td style={{ fontSize: '16px' }}>{item.who_affected}</td>
+                <td style={{ fontSize: '16px' }}>{item.prn}</td>
+                <td style={{ fontSize: '16px' }}>{item.code_white}</td>
+                <td style={{ 
+                  fontSize: '16px',
+                  backgroundColor: item.summary?.includes('No Progress') && item.summary?.includes('24hrs of RIM') ? '#ffcdd2' : 'transparent'
+                }}>{item.summary}</td>
+                <td style={{ 
+                  fontSize: '16px',
+                  backgroundColor: cleanDuplicateText(item.triggers, 'triggers')?.includes('No Progress') && cleanDuplicateText(item.triggers, 'triggers')?.includes('24hrs of RIM') ? '#ffcdd2' : 'transparent'
+                }}>{cleanDuplicateText(item.triggers, 'triggers')}</td>
+                <td style={{ 
+                  fontSize: '16px',
+                  backgroundColor: cleanDuplicateText(item.interventions, 'interventions')?.includes('No Progress') && cleanDuplicateText(item.interventions, 'interventions')?.includes('24hrs of RIM') ? '#ffcdd2' : 'transparent'
+                }}>{cleanDuplicateText(item.interventions, 'interventions')}</td>
+                <td style={{ fontSize: '16px' }}>{item.injuries}</td>
+                <td style={{ fontSize: '16px' }}>{item.CI || "Still Gathering Data/Unknown"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : (
+        <div>
+          {followUpLoading ? (
+            <div style={{ textAlign: 'center', padding: '20px' }}>Loading follow-up data...</div>
+          ) : (
+            <table style={{ width: '100%' }}>
+              <thead>
+                <tr>
+                  <th style={{ fontSize: '18px' }}>#</th>
+                  <th style={{ fontSize: '18px' }}>Resident Name</th>
+                  <th style={{ fontSize: '18px' }}>Date</th>
+                  <th style={{ fontSize: '18px' }}>Summary of Behaviour</th>
+                  <th style={{ fontSize: '18px' }}>Other Notes Included</th>
+                </tr>
+              </thead>
+              <tbody>
+                {followUpData.length > 0 ? (
+                  // Show real Firebase data if available
+                  followUpData.map((item, index) => (
+                    <tr key={item.id || index}>
+                      <td style={{ fontSize: '16px' }}>{index + 1}</td>
+                      <td style={{ fontSize: '16px' }}>{item.resident_name || 'Unknown Resident'}</td>
+                      <td style={{ fontSize: '16px' }}>{item.date || 'Unknown Date'}</td>
+                      <td style={{ fontSize: '16px' }}>{item.summary_of_behaviour || 'No summary available'}</td>
+                      <td style={{ fontSize: '16px' }}>{item.other_notes || 'No notes available'}</td>
+                    </tr>
+                  ))
+                ) : (
+                  // Show dummy data when no Firebase data is available
+                  <>
+                                        <tr>
+                      <td style={{ fontSize: '16px' }}>1</td>
+                      <td style={{ fontSize: '16px' }}>ANDERSON, GEORGE</td>
+                      <td style={{ fontSize: '16px' }}>2025-01-15</td>
+                      <td style={{ fontSize: '16px' }}>Increased agitation during evening hours, refusing medication and care</td>
+                      <td style={{ fontSize: '16px' }}>Physician Note</td>
+                    </tr>
+                    <tr>
+                      <td style={{ fontSize: '16px' }}>2</td>
+                      <td style={{ fontSize: '16px' }}>BRYMER, WENDY</td>
+                      <td style={{ fontSize: '16px' }}>2025-01-14</td>
+                      <td style={{ fontSize: '16px' }}>Wandering behavior, attempting to leave facility and enter other residents' rooms</td>
+                      <td style={{ fontSize: '16px' }}>Progress Note</td>
+                    </tr>
+                    <tr>
+                      <td style={{ fontSize: '16px' }}>3</td>
+                      <td style={{ fontSize: '16px' }}>CLELAND, AILEEN</td>
+                      <td style={{ fontSize: '16px' }}>2025-01-13</td>
+                      <td style={{ fontSize: '16px' }}>Verbal aggression towards staff and other residents, increased paranoia</td>
+                      <td style={{ fontSize: '16px' }}>Resident/Family Follow Up</td>
+                    </tr>
+                    <tr>
+                      <td style={{ fontSize: '16px' }}>4</td>
+                      <td style={{ fontSize: '16px' }}>COX, CICELY (001106)</td>
+                      <td style={{ fontSize: '16px' }}>2025-01-12</td>
+                      <td style={{ fontSize: '16px' }}>Depression symptoms, social withdrawal, refusing meals and activities</td>
+                      <td style={{ fontSize: '16px' }}></td>
+                </tr>
+                    <tr>
+                      <td style={{ fontSize: '16px' }}>5</td>
+                      <td style={{ fontSize: '16px' }}>ANDERSON, GEORGE</td>
+                      <td style={{ fontSize: '16px' }}>2025-01-11</td>
+                      <td style={{ fontSize: '16px' }}>Sleep disturbances, nighttime confusion, calling out for assistance</td>
+                      <td style={{ fontSize: '16px' }}></td>
+                    </tr>
+                  </>
+                )}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
       {isModalOpen && (
         <div className={styles.modal}>
           <div className={styles.modalContent}>
