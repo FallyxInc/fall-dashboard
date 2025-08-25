@@ -90,6 +90,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal, unit
   const [analysisTimeRange, setAnalysisTimeRange] = useState('current');
   const [analysisUnit, setAnalysisUnit] = useState('allUnits');
   const [analysisHeaderText, setAnalysisHeaderText] = useState('Falls by Time of Day');
+  const [shiftFilter, setShiftFilter] = useState('all'); // Add shift filter state
 
   const [currentIntervention, setCurrentIntervention] = useState('');
   const [currentRowIndex, setCurrentRowIndex] = useState(null);
@@ -118,6 +119,61 @@ export default function Dashboard({ name, title, unitSelectionValues, goal, unit
       return unitGoals[desiredUnit];
     }
     return goal || 34; // fallback to original goal or default
+  };
+
+  // Filter data by shift timing
+  const filterDataByShift = (dataToFilter) => {
+    if (shiftFilter === 'all') return dataToFilter;
+    
+    return dataToFilter.filter(item => {
+      if (!item.time) return false;
+      
+      // Convert time to military time for comparison
+      const timeStr = item.time.toLowerCase();
+      let hour = 0;
+      let minute = 0;
+      
+      if (timeStr.includes('pm') || timeStr.includes('p.m.')) {
+        // Handle PM times
+        const timeMatch = timeStr.match(/(\d+):?(\d*)/);
+        if (timeMatch) {
+          hour = parseInt(timeMatch[1]);
+          minute = timeMatch[2] ? parseInt(timeMatch[2]) : 0;
+          if (hour !== 12) hour += 12; // Convert to 24-hour format (except 12 PM)
+        }
+      } else if (timeStr.includes('am') || timeStr.includes('a.m.')) {
+        // Handle AM times
+        const timeMatch = timeStr.match(/(\d+):?(\d*)/);
+        if (timeMatch) {
+          hour = parseInt(timeMatch[1]);
+          minute = timeMatch[2] ? parseInt(timeMatch[2]) : 0;
+          if (hour === 12) hour = 0; // 12 AM becomes 00:00
+        }
+      } else {
+        // Assume it's already in 24-hour format
+        const timeMatch = timeStr.match(/(\d+):?(\d*)/);
+        if (timeMatch) {
+          hour = parseInt(timeMatch[1]);
+          minute = timeMatch[2] ? parseInt(timeMatch[2]) : 0;
+        }
+      }
+      
+      const timeInMinutes = hour * 60 + minute;
+      
+      switch (shiftFilter) {
+        case 'day':
+          // Day shift: 7:00 AM - 3:30 PM (07:00 - 15:30)
+          return timeInMinutes >= 420 && timeInMinutes <= 930;
+        case 'evening':
+          // Evening shift: 3:31 PM - 11:00 PM (15:31 - 23:00)
+          return timeInMinutes >= 931 && timeInMinutes <= 1380;
+        case 'night':
+          // Night shift: 11:01 PM - 6:59 AM (23:01 - 419)
+          return timeInMinutes >= 1381 || timeInMinutes <= 419;
+        default:
+          return true;
+      }
+    });
   };
 
   const MOCK_INCIDENT_DATA = {
@@ -366,7 +422,8 @@ export default function Dashboard({ name, title, unitSelectionValues, goal, unit
 
   const updateFallsChart = () => {
     const timeRange = fallsTimeRange;
-    const currentFalls = countTotalFalls();
+    const filteredData = filterDataByShift(data);
+    const currentFalls = filteredData.length;
     let newData;
 
     if (currentFalls >= getCurrentGoal()) {
@@ -461,12 +518,14 @@ export default function Dashboard({ name, title, unitSelectionValues, goal, unit
   };
 
   function countTotalFalls() {
-    return data.length;
+    const filteredData = filterDataByShift(data);
+    return filteredData.length;
   }
 
   const updateAnalysisChart = () => {
     var selectedUnit = analysisUnit;
-    var filteredData = analysisTimeRange === '3months' ? Array.from(threeMonthData.values()).flat() : data;
+    var baseData = analysisTimeRange === '3months' ? Array.from(threeMonthData.values()).flat() : data;
+    var filteredData = filterDataByShift(baseData);
 
     if (selectedUnit !== 'allUnits') {
       filteredData = filteredData.filter(
@@ -871,12 +930,12 @@ export default function Dashboard({ name, title, unitSelectionValues, goal, unit
   useEffect(() => {
     updateFallsChart();
     // console.log('Falls Chart');
-  }, [fallsTimeRange, data, desiredMonth, desiredYear]);
+  }, [fallsTimeRange, data, desiredMonth, desiredYear, shiftFilter]);
 
   useEffect(() => {
     updateAnalysisChart();
     // console.log('Analysis Chart');
-  }, [analysisType, analysisTimeRange, analysisUnit, data, desiredYear]);
+  }, [analysisType, analysisTimeRange, analysisUnit, data, desiredYear, shiftFilter]);
 
   useEffect(() => {
     if (data.length > 0) {
@@ -1176,7 +1235,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal, unit
   // Update chart when unit changes
   useEffect(() => {
     updateFallsChart();
-  }, [desiredUnit]);
+  }, [desiredUnit, shiftFilter]);
 
 
 
@@ -1206,7 +1265,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal, unit
               <div id="gaugeContainer">
                 <div className={styles.gauge}>
                   {gaugeChartData.datasets.length > 0 && <Doughnut data={gaugeChartData} options={gaugeChartOptions} />}
-                  <div className={styles['gauge-value']}>{data.length}</div>
+                  <div className={styles['gauge-value']}>{filterDataByShift(data).length}</div>
                   <br />
                   <div className={styles['gauge-label']}>falls this month</div>
                   <div className={styles['gauge-goal']}>
@@ -1270,6 +1329,16 @@ export default function Dashboard({ name, title, unitSelectionValues, goal, unit
             ))}
           </select>
 
+          <select 
+            onChange={(e) => setShiftFilter(e.target.value)} 
+            value={shiftFilter}
+          >
+            <option value="all">All Shifts</option>
+            <option value="day">Day Shift (7:00 AM - 3:30 PM)</option>
+            <option value="evening">Evening Shift (3:31 PM - 11:00 PM)</option>
+            <option value="night">Night Shift (11:01 PM - 6:59 AM)</option>
+          </select>
+
           {analysisChartData.datasets.length > 0 && <Bar data={analysisChartData} options={analysisChartOptions} />}
         </div>
 
@@ -1305,6 +1374,16 @@ export default function Dashboard({ name, title, unitSelectionValues, goal, unit
                 </option>
               ))}
             </select>
+
+            <select 
+              onChange={(e) => setShiftFilter(e.target.value)} 
+              value={shiftFilter}
+            >
+              <option value="all">All Shifts</option>
+              <option value="day">Day Shift (7:00 AM - 3:30 PM)</option>
+              <option value="evening">Evening Shift (3:31 PM - 11:00 PM)</option>
+              <option value="night">Night Shift (11:01 PM - 6:59 AM)</option>
+            </select>
           </div>
         </div>
         <div>
@@ -1331,7 +1410,7 @@ export default function Dashboard({ name, title, unitSelectionValues, goal, unit
           </tr>
         </thead>
         <tbody id="fallsTableBody">
-          {data && data.map((item, i) => (
+          {filterDataByShift(data).map((item, i) => (
             <tr 
               key={i}
               style={{ 
@@ -1348,7 +1427,10 @@ export default function Dashboard({ name, title, unitSelectionValues, goal, unit
               <td style={{ fontSize: '16px' }}>
                 {item.cause}
                 <br />
-                <button onClick={() => handleEditCauseOfFall(i)}>Edit</button>
+                <button onClick={() => {
+                  const originalIndex = data.findIndex(d => d.id === item.id);
+                  if (originalIndex !== -1) handleEditCauseOfFall(originalIndex);
+                }}>Edit</button>
               </td>
               <td style={{ fontSize: '16px' }}>{item.injury || item.injuries}</td>
               <td style={{ fontSize: '16px' }}>{item.transfer_to_hospital}</td>
