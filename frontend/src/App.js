@@ -23,6 +23,7 @@ import ONCB from './pages/ONCB';
 import LM1 from './pages/LM1';
 import Wellington from './pages/Wellington';
 import SRR from './pages/SRR';
+import BehavioursDashboard from './pages/BehavioursDashboard';
 
 
 
@@ -418,11 +419,11 @@ function App() {
             path="/MCB"
             element={
               
-                <MCB
-                  name="MCB"
-                  title="Mill Creek Behaviours Dashboard"
-                  goal={30}
-                />
+              <BehavioursDashboard
+                name="MCB"
+                title="Mill Creek Behaviours Dashboard"
+                goal={30}
+              />
               
             }
           />  
@@ -431,11 +432,11 @@ function App() {
             path="/ONCB"
             element={
               
-                <ONCB
-                  name="ONCB"
-                  title="The O'Neill Centre Behaviours Dashboard"
-                  goal={15}
-                />
+              <BehavioursDashboard
+                name="ONCB"
+                title="The O'Neill Centre Behaviours Dashboard"
+                goal={15}
+              />
               
             }
           />   
