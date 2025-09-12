@@ -24,11 +24,17 @@ import {
   countFallsByHour,
 } from '../utils/DashboardUtils';
 import Modal from './Modal';
-import AnalysisChart from '../components/behaviours/AnalysisChart';
+import AnalysisChart from '../components/behaviours/BeAnalysisChart';
+import BeTrackingTable from '../components/behaviours/BeTrackingTable';
 
 Chart.register(ArcElement, PointElement, LineElement);
 
 export default function BehavioursDashboard({ name, title, unitSelectionValues, goal }) {
+  const altName = name === 'ONCB'
+    ? 'oneill'
+    : name === 'MCB'
+      ? 'millCreek'
+      : undefined;
   const months_forward = {
     '01': 'January',
     '02': 'February',
@@ -434,49 +440,6 @@ const getTimeOfDay = (time) => {
     return data.length;
   }
 
-  const countBehavioursByType = (data) => {
-    const counts = {};
-    data.forEach(item => {
-      const type = item.incident_type;
-      if (type) {
-        counts[type] = (counts[type] || 0) + 1;
-      }
-    });
-    return counts;
-  };
-
-  const countBehavioursByUnit = (data) => {
-    const counts = {};
-    data.forEach(item => {
-      const unit = item.room;
-      if (unit) {
-        counts[unit] = (counts[unit] || 0) + 1;
-      }
-    });
-    return counts;
-  };
-
-  const countBehavioursByHour = (data) => {
-    const counts = Array(24).fill(0);
-    data.forEach(item => {
-      const hour = new Date(item.date + ' ' + item.time).getHours();
-      counts[hour]++;
-    });
-    return counts;
-  };
-
-  const countBehavioursByAffected = (data) => {
-    const counts = {};
-    data.forEach(item => {
-      const affected = item.affected;
-      if (affected) {
-        counts[affected] = (counts[affected] || 0) + 1;
-      }
-    });
-    return counts;
-  };
-
-
   const tableRef = useRef(null);
 
   const handleSavePDF = async () => {
@@ -720,7 +683,7 @@ const getTimeOfDay = (time) => {
     // Start measuring fetch data time
     performance.mark('start-fetch-data');
 
-    const dataRef = ref(db, `/oneill/behaviours/2025/${months_backword[desiredMonth]}`);
+    const dataRef = ref(db, `/${altName}/behaviours/2025/${months_backword[desiredMonth]}`);
     const currentYear = 2025; // Hardcoded to 2025
     const currentMonth = parseInt(months_backword[desiredMonth]); // current month
     const pastThreeMonths = [];
@@ -780,7 +743,7 @@ const getTimeOfDay = (time) => {
     });
 
     // Load follow-up data
-    const followUpRef = ref(db, `/oneill/follow/${currentYear}/${months_backword[desiredMonth]}`);
+    const followUpRef = ref(db, `/${altName}/follow/${currentYear}/${months_backword[desiredMonth]}`);
     const followUpListener = onValue(followUpRef, (snapshot) => {
       console.log('Follow-up data:', snapshot.val());
       if (snapshot.exists()) {
@@ -903,8 +866,8 @@ const getTimeOfDay = (time) => {
   };
 
   useEffect(() => {
-    const yearsRef = ref(db, `/oneill/behaviours`);
-    console.log('Checking available years/months for ONeill');
+    const yearsRef = ref(db, `/${altName}/behaviours`);
+    console.log('Checking available years/months for ${altName}');
     
     onValue(yearsRef, (snapshot) => {
       const yearMonthMapping = {};
@@ -1421,53 +1384,11 @@ const getTimeOfDay = (time) => {
         </div>
       </div>
       {!showFollowUpTable ? (
-        <table style={{ width: '100%' }}>
-          <thead>
-            <tr>
-              <th style={{ fontSize: '18px' }}>#</th>
-              <th style={{ fontSize: '18px' }}>Resident Name</th>
-              <th style={{ fontSize: '18px' }}>Date</th>
-              <th style={{ fontSize: '18px' }}>Incident Location</th>
-              <th style={{ fontSize: '18px' }}>Incident Type</th>
-              <th style={{ fontSize: '18px' }}>Whose Affected</th>
-              <th style={{ fontSize: '18px' }}>PRN</th>
-              <th style={{ fontSize: '18px' }}>Code White</th>
-              <th style={{ fontSize: '18px' }}>Summary</th>
-              <th style={{ fontSize: '18px' }}>Triggers</th>
-              <th style={{ fontSize: '18px' }}>Interventions</th>
-              <th style={{ fontSize: '18px' }}>Injuries</th>
-              <th style={{ fontSize: '18px' }}>Potential CI</th>
-            </tr>
-          </thead>
-          <tbody id="fallsTableBody">
-            {filteredData && filteredData.map((item, i) => (
-              <tr key={i}>
-                <td style={{ fontSize: '16px' }}>{item.incident_number}</td>
-                <td style={{ fontSize: '16px' }}>{item.name}</td>
-                <td style={{ fontSize: '16px' }}>{item.date}</td>
-                <td style={{ fontSize: '16px' }}>{item.incident_location}</td>
-                <td style={{ fontSize: '16px' }}>{item.incident_type}</td>
-                <td style={{ fontSize: '16px' }}>{item.who_affected}</td>
-                <td style={{ fontSize: '16px' }}>{item.prn}</td>
-                <td style={{ fontSize: '16px' }}>{item.code_white}</td>
-                <td style={{ 
-                  fontSize: '16px',
-                  backgroundColor: item.summary?.includes('No Progress') && item.summary?.includes('24hrs of RIM') ? '#ffcdd2' : 'transparent'
-                }}>{item.summary}</td>
-                <td style={{ 
-                  fontSize: '16px',
-                  backgroundColor: cleanDuplicateText(item.triggers, 'triggers')?.includes('No Progress') && cleanDuplicateText(item.triggers, 'triggers')?.includes('24hrs of RIM') ? '#ffcdd2' : 'transparent'
-                }}>{cleanDuplicateText(item.triggers, 'triggers')}</td>
-                <td style={{ 
-                  fontSize: '16px',
-                  backgroundColor: cleanDuplicateText(item.interventions, 'interventions')?.includes('No Progress') && cleanDuplicateText(item.interventions, 'interventions')?.includes('24hrs of RIM') ? '#ffcdd2' : 'transparent'
-                }}>{cleanDuplicateText(item.interventions, 'interventions')}</td>
-                <td style={{ fontSize: '16px' }}>{item.injuries}</td>
-                <td style={{ fontSize: '16px' }}>{item.CI || "Still Gathering Data/Unknown"}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <BeTrackingTable 
+          filteredData={filteredData} 
+          cleanDuplicateText={cleanDuplicateText} 
+          storageKey={`${name}_${desiredYear}_${desiredMonth}_behaviours_checked`}
+        />
       ) : (
         <div>
           {followUpLoading ? (
