@@ -1,8 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Doughnut, Bar, Line } from 'react-chartjs-2';
-// import "../styles/Dashboard.css"
-import styles from '../styles/Dashboard.module.css';
-import { useNavigate } from 'react-router-dom';
+import styles from '../styles/Behaviours.module.css';
 import * as Papa from 'papaparse';
 import { saveAs } from 'file-saver';
 import { Chart, ArcElement, PointElement, LineElement } from 'chart.js';
@@ -1144,7 +1141,37 @@ const getTimeOfDay = (time) => {
 
   return (
     <div className={styles.dashboard} ref={tableRef}>
-      <h1>{title}</h1>
+      <div className={styles.topHeader}
+        style={
+          {marginLeft: '10px'}
+        }>
+        <h1>{title}</h1>
+        <div className={styles.dateSelector} >
+          <button
+            onClick={() => setShowFollowUpTable(!showFollowUpTable)}
+            className={`${styles.toggleButton} ${showFollowUpTable ? styles.active : styles.inactive}`}
+            style={{height: '50px'}}
+          >
+            {showFollowUpTable ? 'Show Behaviours' : 'Show Follow-ups'}
+          </button>
+
+          <select className={styles.selector} style={{height: '50px'}}onChange={handleYearChange} value={desiredYear}>
+            {Object.keys(availableYearMonth).map((year) => (
+              <option key={year} value={year}>
+                {year}
+              </option>
+            ))}
+          </select>
+
+          <select className={styles.selector}  style={{height: '50px'}} onChange={handleMonthChange} value={desiredMonth}>
+            {(availableYearMonth[desiredYear] || []).map((month) => (
+              <option key={month} value={month}>
+                {month}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
 
       {/* <button className="logout-button" onClick={logout}>
         Log Out
@@ -1157,11 +1184,12 @@ const getTimeOfDay = (time) => {
 
         <div className={styles.chart}>
           <div className={styles['gauge-container']}>
-            <h2 style={{ paddingTop: '7.5px' }}>Behaviours Overview</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '20px' }}>
-              {/* Toggle for showing resident names */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-                <label style={{ fontSize: '14px', fontWeight: 'bold', color: '#0D0E10' }}>
+            <div className={styles.topHeader}>
+              
+              <h3>Behaviours Overview</h3>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom:'2px'}}>
+                <label style={{ fontSize: '14px'}}>
                   Show Resident Names:
                 </label>
                 <input
@@ -1171,8 +1199,9 @@ const getTimeOfDay = (time) => {
                   style={{ width: '18px', height: '18px' }}
                 />
               </div>
-
-              {/* Antipsychotics without Prescription Card */}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '20px' }}>
+      
               <div style={{ 
                 backgroundColor: '#F8F9FA', 
                 border: '2px solid #28a745', 
@@ -1186,7 +1215,8 @@ const getTimeOfDay = (time) => {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                   <div style={{ 
                     backgroundColor: '#28a745', 
-                    borderRadius: '50%', 
+                    borderRadius: '20%', 
+                    padding: '10px',
                     width: '60px', 
                     height: '60px', 
                     display: 'flex', 
@@ -1232,7 +1262,8 @@ const getTimeOfDay = (time) => {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                   <div style={{ 
                     backgroundColor: '#28a745', 
-                    borderRadius: '50%', 
+                    borderRadius: '20%', 
+                    padding: '10px',
                     width: '60px', 
                     height: '60px', 
                     display: 'flex', 
@@ -1278,7 +1309,8 @@ const getTimeOfDay = (time) => {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                   <div style={{ 
                     backgroundColor: '#28a745', 
-                    borderRadius: '50%', 
+                    borderRadius: '20%', 
+                    padding: '10px',
                     width: '60px', 
                     height: '60px', 
                     display: 'flex', 
@@ -1314,65 +1346,42 @@ const getTimeOfDay = (time) => {
         </div>
       </div>
       <div className={styles['table-header']}>
-        <div className={styles['header']}>
+        <div className={styles['header']} style={{marginBottom: '10px', marginLeft: '10px'}}>
           <h2>
-            {showFollowUpTable ? 'Behavior Follow-ups' : 'Behaviours Tracking Table'}: {desiredMonth} {desiredYear}
+            {showFollowUpTable ? 'Behaviour Follow-ups' : 'Behaviours Tracking Table'}
           </h2>
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-            <button 
-              onClick={() => setShowFollowUpTable(!showFollowUpTable)}
-              style={{
-                padding: '8px 13px',
-                backgroundColor: showFollowUpTable ? '#007bff' : '#6c757d',
-                color: 'white',
-                border: 'none',
-                borderRadius: '5px',
-                cursor: 'pointer',
-                fontSize: '14px'
-              }}
-            >
-              {showFollowUpTable ? 'Show Behaviours' : 'Show Follow-ups'}
-            </button>
-            <select onChange={handleYearChange} value={desiredYear}>
-              {Object.keys(availableYearMonth).map((year) => (
-                <option key={year} value={year}>
-                  {year}
-                </option>
-              ))}
-            </select>
+        </div>
+      </div>
+      
+      <div className={styles['table-header']}>
+        <div className={styles['header']}>
 
-            <select onChange={handleMonthChange} value={desiredMonth}>
-              {(availableYearMonth[desiredYear] || []).map((month) => (
-                <option key={month} value={month}>
-                  {month}
-                </option>
-              ))}
-            </select>
+      <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
 
-            <select value={filterResident} onChange={(e) => setFilterResident(e.target.value)}>
-                <option>Any Resident</option>
-                {[...new Set(data.map((d) => d.name))].map((name) => (
-                  <option key={name}>{name}</option>
-                ))}
-              </select>
+        <select className={styles.selector}value={filterResident} onChange={(e) => setFilterResident(e.target.value)}>
+            <option>Any Resident</option>
+            {[...new Set(data.map((d) => d.name))].map((name) => (
+              <option key={name}>{name}</option>
+            ))}
+          </select>
 
-              {/* Behavior Type Filter */}
-              <select value={filterBehaviorType} onChange={(e) => setFilterBehaviorType(e.target.value)}>
-                <option>All Types</option>
-                {[...new Set(data.map((d) => d.incident_type))].map((t) => (
-                  <option key={t}>{t}</option>
-                ))}
-              </select>
+          {/* Behavior Type Filter */}
+          <select className={styles.selector} value={filterBehaviorType} onChange={(e) => setFilterBehaviorType(e.target.value)}>
+            <option>All Types</option>
+            {[...new Set(data.map((d) => d.incident_type))].map((t) => (
+              <option key={t}>{t}</option>
+            ))}
+          </select>
 
-              {/* Time of Day Filter */}
-              <select value={filterTimeOfDay} onChange={(e) => setFilterTimeOfDay(e.target.value)}>
-                <option>Anytime</option>
-                <option>Morning</option>
-                <option>Afternoon</option>
-                <option>Evening</option>
-                <option>Night</option>
-              </select>
-          </div>
+          {/* Time of Day Filter */}
+          <select className={styles.selector} value={filterTimeOfDay} onChange={(e) => setFilterTimeOfDay(e.target.value)}>
+            <option>Anytime</option>
+            <option>Morning</option>
+            <option>Afternoon</option>
+            <option>Evening</option>
+            <option>Night</option>
+          </select>
+      </div>
         </div>
         <div>
           <button className={styles['download-button']} onClick={handleSaveCSV}>
@@ -1383,6 +1392,7 @@ const getTimeOfDay = (time) => {
           </button>
         </div>
       </div>
+
       {!showFollowUpTable ? (
         <BeTrackingTable 
           filteredData={filteredData} 
