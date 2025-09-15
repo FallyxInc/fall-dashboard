@@ -64,7 +64,7 @@ h3 {
   font-weight: 500;
   color: #212529; /* Text color */
   cursor: pointer;
-  min-width: 120px; /* Ensure a minimum width */
+  /* min-width: 120px; Ensure a minimum width */
   /* height: 50px; */
 
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
@@ -72,7 +72,7 @@ h3 {
   background-repeat: no-repeat; 
   background-size: 16px;
 
-  padding-right: 20px; /* This ensures text doesn't overlap the arrow */
+  padding-right: 40px; /* This ensures text doesn't overlap the arrow */
 
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   /* Optional: Focus and Hover states for better UX */

@@ -22,7 +22,7 @@ ChartJS.register(
   Legend
 );
 
-const AnalysisChart = ({data, desiredYear, desiredMonth, threeMonthData}) => {
+const AnalysisChart = ({data, desiredYear, desiredMonth, threeMonthData, getTimeOfDay}) => {
 
     const [analysisChartData, setAnalysisChartData] = useState({
         labels: [],
@@ -90,15 +90,18 @@ const AnalysisChart = ({data, desiredYear, desiredMonth, threeMonthData}) => {
   const countBehavioursByTimeOfDay = (data) => {
     const counts = {
       Morning: 0,
+      Afternoon: 0,
       Evening: 0,
       Night: 0
     };
 
     data.forEach(item => {
-      const hour = new Date(item.date + ' ' + item.time).getHours();
-      if (hour >= 6 && hour < 14) {
+      const timeOfDay = getTimeOfDay(item.time);
+      if (timeOfDay === "Morning") {
         counts.Morning++;
-      } else if (hour >= 14 && hour < 22) {
+      } else if (timeOfDay === "Afternoon" ) {
+        counts.Afternoon++;
+      } else if (timeOfDay === "Evening") {
         counts.Evening++;
       } else {
         counts.Night++;
@@ -171,10 +174,10 @@ const AnalysisChart = ({data, desiredYear, desiredMonth, threeMonthData}) => {
         switch (analysisType) {
         case 'timeOfDay':
             setAnalysisHeaderText('Behaviours by Time of Day');
-            newLabels = ['Morning', 'Evening', 'Night'];
+            newLabels = ['Morning', 'Afternoon', 'Evening', 'Night'];
             var timeOfDayCounts = countBehavioursByTimeOfDay(filteredData);
             setResidentsByTimeOfDay(countResidentsByTimeOfDay(filteredData));
-            newData = [timeOfDayCounts.Morning, timeOfDayCounts.Evening, timeOfDayCounts.Night];
+            newData = [timeOfDayCounts.Morning, timeOfDayCounts.Afternoon, timeOfDayCounts.Evening, timeOfDayCounts.Night];
             break;
 
         case 'injuries':
@@ -308,9 +311,9 @@ const AnalysisChart = ({data, desiredYear, desiredMonth, threeMonthData}) => {
                 </select>
             </div>
 
-            <div style={{ flex: '1', height: '100%', minHeight: '200px' }}> 
-                {analysisChartData.datasets.length > 0 && <Bar data={analysisChartData} options={analysisChartOptions} />}
-            </div>
+          <div style={{ flex: '1', height: '100%', minHeight: '200px' }}> 
+            {analysisChartData.datasets.length > 0 && <Bar data={analysisChartData} options={analysisChartOptions} />}
+          </div>
         </div>
     );
 };

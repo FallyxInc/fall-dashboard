@@ -1,271 +1,180 @@
 import React, { useEffect, useState } from 'react';
-import styles from '../../styles/Dashboard.module.css';
+import styles from '../../styles/Behaviours.module.css';
 import { Bar } from 'react-chartjs-2';
 
-const FollowUpChart = ({data, desiredYear, desiredMonth, threeMonthData}) => {
+const FollowUpChart = ({data, desiredYear, desiredMonth}) => {
     
     const [analysisChartData, setAnalysisChartData] = useState({
         labels: [],
         datasets: [],
     });
-    const [analysisType, setAnalysisType] = useState('timeOfDay');
-    const [analysisTimeRange, setAnalysisTimeRange] = useState('current');
-    const [analysisUnit, setAnalysisUnit] = useState('allUnits');
-    const [analysisHeaderText, setAnalysisHeaderText] = useState('Behaviours by Time of Day');
+    const [analysisType, setAnalysisType] = useState('residents');
+    const [analysisHeaderText, setAnalysisHeaderText] = useState('Follow-ups by Resident');
 
-    // Logic
     useEffect(() => {
         updateAnalysisChart();
-    // console.log('Analysis Chart');
-    }, [analysisType, analysisTimeRange, analysisUnit, data, desiredYear]);
+    }, [analysisType, data, desiredYear]);
 
-
-    function countTotalBehaviours() {
+    function countTotalFollowUps() {
         return data.length;
     }
 
-    const countBehavioursByType = (data) => {
+    const countFollowUpsByResident = (data) => {
         const counts = {};
         data.forEach(item => {
-        const type = item.incident_type;
-        if (type) {
-            counts[type] = (counts[type] || 0) + 1;
-        }
+            const resident = item.resident_name;
+            if (resident) {
+                counts[resident] = (counts[resident] || 0) + 1;
+            }
         });
         return counts;
     };
 
-    const countBehavioursByUnit = (data) => {
+    const countFollowUpsByNoteType = (data) => {
         const counts = {};
         data.forEach(item => {
-        const unit = item.room;
-        if (unit) {
-            counts[unit] = (counts[unit] || 0) + 1;
-        }
+            const noteType = item.other_notes || 'No Category';
+            if (noteType.trim()) {
+                counts[noteType] = (counts[noteType] || 0) + 1;
+            } else {
+                counts['No Category'] = (counts['No Category'] || 0) + 1;
+            }
         });
         return counts;
     };
 
-    const countBehavioursByHour = (data) => {
-        const counts = Array(24).fill(0);
-        data.forEach(item => {
-        const hour = new Date(item.date + ' ' + item.time).getHours();
-        counts[hour]++;
-        });
-        return counts;
-    };
 
-    const countBehavioursByAffected = (data) => {
+    const countFollowUpsByMonth = (data) => {
         const counts = {};
         data.forEach(item => {
-        const affected = item.affected;
-        if (affected) {
-            counts[affected] = (counts[affected] || 0) + 1;
-        }
+            const date = new Date(item.date);
+            const month = date.toLocaleDateString('en-US', { month: 'long' });
+            if (month && month !== 'Invalid Date') {
+                counts[month] = (counts[month] || 0) + 1;
+            }
         });
         return counts;
     };
 
-
-  const countBehavioursByTimeOfDay = (data) => {
-    const counts = {
-      Morning: 0,
-      Evening: 0,
-      Night: 0
+    const countFollowUpsByWeek = (data) => {
+        const counts = {};
+        data.forEach(item => {
+            const date = new Date(item.date);
+            const weekStart = new Date(date.setDate(date.getDate() - date.getDay()));
+            const weekLabel = weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            if (weekLabel && weekLabel !== 'Invalid Date') {
+                counts[`Week of ${weekLabel}`] = (counts[`Week of ${weekLabel}`] || 0) + 1;
+            }
+        });
+        return counts;
     };
 
-    data.forEach(item => {
-      const hour = new Date(item.date + ' ' + item.time).getHours();
-      if (hour >= 6 && hour < 14) {
-        counts.Morning++;
-      } else if (hour >= 14 && hour < 22) {
-        counts.Evening++;
-      } else {
-        counts.Night++;
-      }
-    });
-
-    return counts;
-  };
-
-  const countResidentsByTimeOfDay = (data) => {
-    const counts = {
-      Morning: [],
-      Evening: [],
-      Night: []
-    };
-
-    data.forEach(item => {
-      const hour = new Date(item.date + ' ' + item.time).getHours();
-      if (hour >= 6 && hour < 14) {
-        counts.Morning.push(item.name);
-      } else if (hour >= 14 && hour < 22) {
-        counts.Evening.push(item.name);
-      } else {
-        counts.Night.push(item.name);
-      }
-    });
-
-    return counts;
-  };
-
-  const countBehavioursByLocation = (data) => {
-    const counts = {};
-    data.forEach(item => {
-      const location = item.location || item.incident_location;
-      if (location) {
-        counts[location] = (counts[location] || 0) + 1;
-      }
-    });
-    return counts;
-  };
-
-  const countBehavioursByInjury = (data) => {
-    const counts = {};
-    data.forEach(item => {
-      const injury = item.injuries;
-      if (injury) {
-        counts[injury] = (counts[injury] || 0) + 1;
-      }
-    });
-    return counts;
-  };
-
-  const countResidentsWithRecurringBehaviours = (data) => {
-    const counts = {};
-    data.forEach(item => {
-      if (item.name) {
-        counts[item.name] = (counts[item.name] || 0) + 1;
-      }
-    });
-    return counts;
-  };
-
-    const [residentsByTimeOfDay, setResidentsByTimeOfDay] = useState({});
     const updateAnalysisChart = () => {
-        var filteredData = analysisTimeRange === '3months' ? Array.from(threeMonthData.values()).flat() : data;
-
         let newLabels = [];
         let newData = [];
 
         switch (analysisType) {
-        case 'timeOfDay':
-            setAnalysisHeaderText('Behaviours by Time of Day');
-            newLabels = ['Morning', 'Evening', 'Night'];
-            var timeOfDayCounts = countBehavioursByTimeOfDay(filteredData);
-            setResidentsByTimeOfDay(countResidentsByTimeOfDay(filteredData));
-            newData = [timeOfDayCounts.Morning, timeOfDayCounts.Evening, timeOfDayCounts.Night];
-            break;
+            case 'residents':
+                setAnalysisHeaderText('Follow-ups by Resident');
+                var residentCounts = countFollowUpsByResident(data);
+                // Sort by count in descending order
+                const sortedResidents = Object.entries(residentCounts)
+                    .sort(([,a], [,b]) => b - a);
+                newLabels = sortedResidents.map(([label]) => label);
+                newData = sortedResidents.map(([,count]) => count);
+                break;
 
-        case 'injuries':
-            setAnalysisHeaderText('Behaviours by Injury');
-            var injuryCounts = countBehavioursByInjury(filteredData);
-            // Sort by count in descending order
-            const sortedInjuries = Object.entries(injuryCounts)
-            .sort(([,a], [,b]) => b - a);
-            newLabels = sortedInjuries.map(([label]) => label);
-            newData = sortedInjuries.map(([,count]) => count);
-            break;
+            case 'monthly':
+                setAnalysisHeaderText('Follow-ups by Month');
+                var monthlyCounts = countFollowUpsByMonth(data);
+                // Sort chronologically
+                const monthOrder = ['January', 'February', 'March', 'April', 'May', 'June',
+                                  'July', 'August', 'September', 'October', 'November', 'December'];
+                const sortedMonths = Object.entries(monthlyCounts)
+                    .sort(([a], [b]) => monthOrder.indexOf(a) - monthOrder.indexOf(b));
+                newLabels = sortedMonths.map(([label]) => label);
+                newData = sortedMonths.map(([,count]) => count);
+                break;
 
-        case 'behaviourType':
-            setAnalysisHeaderText('Behaviours by Type');
-            var typeCounts = countBehavioursByType(filteredData);
-            // Sort by count in descending order
-            const sortedTypes = Object.entries(typeCounts)
-            .sort(([,a], [,b]) => b - a);
-            newLabels = sortedTypes.map(([label]) => label);
-            newData = sortedTypes.map(([,count]) => count);
-            break;
-
-        case 'residents':
-            setAnalysisHeaderText('Behaviours by Resident Name');
-            var residentCounts = countResidentsWithRecurringBehaviours(filteredData);
-            // Sort by count in descending order
-            const sortedResidents = Object.entries(residentCounts)
-            .sort(([,a], [,b]) => b - a);
-            newLabels = sortedResidents.map(([label]) => label);
-            newData = sortedResidents.map(([,count]) => count);
-            break;
-
-        case 'unit':
-            setAnalysisHeaderText('Behaviours by Unit');
-            var unitCounts = countBehavioursByUnit(filteredData);
-            // Sort by count in descending order
-            const sortedUnits = Object.entries(unitCounts)
-            .sort(([,a], [,b]) => b - a);
-            newLabels = sortedUnits.map(([label]) => label);
-            newData = sortedUnits.map(([,count]) => count);
-            break;
-
-        case 'hour':
-            setAnalysisHeaderText('Behaviours by Hour');
-            newLabels = Array.from({length: 24}, (_, i) => `${i}:00`);
-            newData = countBehavioursByHour(filteredData);
-            break;
+            case 'weekly':
+                setAnalysisHeaderText('Follow-ups by Week');
+                var weeklyCounts = countFollowUpsByWeek(data);
+                // Sort by date
+                const sortedWeeks = Object.entries(weeklyCounts)
+                    .sort(([a], [b]) => new Date(a.replace('Week of ', '')) - new Date(b.replace('Week of ', '')));
+                newLabels = sortedWeeks.map(([label]) => label);
+                newData = sortedWeeks.map(([,count]) => count);
+                break;
         }
 
         setAnalysisChartData({
-        labels: newLabels,
-        datasets: [
-            {
+            labels: newLabels,
+            datasets: [
+                {
             data: newData,
             backgroundColor: 'rgba(76, 175, 80, 0.6)',
             borderColor: 'rgb(76, 175, 80)',
             borderWidth: 1,
-            },
-        ],
+                },
+            ],
         });
     };
 
-
-    
     const analysisChartOptions = {
         responsive: true,
+        maintainAspectRatio: false,
         scales: {
-            y: {
-            beginAtZero: true,
-            ticks: {
-                stepSize: 1,
+            x: {
+                grid: {
+                    display: false,
+                },
+                barPercentage: 1,     // Make bars take up 100% of their allocated category space
+                categoryPercentage: 1, // Make categories take up 100% of the available X-axis space
+                ticks: {
+                    color: '#495057', // Example: dark gray for x-axis labels
+                }
             },
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    stepSize: 1,
+                    color: '#495057', // Example: dark gray for y-axis labels
+                },
+                grid: {
+                    color: 'rgba(0, 0, 0, 0.1)', // Light grid lines
+                }
             },
         },
         plugins: {
             tooltip: { 
-            enabled: true,
-            callbacks: {
-                label: function(context) {
-                    return residentsByTimeOfDay[context.label].map(name => `• ${name}`).join('\n');
-                }
-            }
+                enabled: true,
             },
             legend: { display: false },
         },
     };
     
     return (
-        <div className={styles.chart}>
-            <h2>{analysisHeaderText}</h2>
+        <div className={styles.chart}  style={{display: 'flex', justifyContent: 'space-between', flexDirection: 'column', flex: '1'}}>
+          <div className={styles.topHeader}>
+            <h3>{analysisHeaderText}</h3>
             <select
-            id="fallsAnalysisType"
-            value={analysisType}
-            onChange={(e) => {
-                setAnalysisType(e.target.value);
-            }}
+                className={styles.selector}
+                id="followUpAnalysisType"
+                value={analysisType}
+                onChange={(e) => {
+                    setAnalysisType(e.target.value);
+                }}
             >
-            <option value="timeOfDay">Time of Day</option>
-            <option value="injuries">Injury Breakdown</option>
-            <option value="behaviourType">Behaviour Type</option>
-            <option value="residents">Resident Name</option>
-            <option value="unit">Unit</option>
-            <option value="hour">By Hour (24hr)</option>
+                <option value="residents">By Resident</option>
+                <option value="monthly">By Month</option>
+                <option value="weekly">By Week</option>
             </select>
-
+          </div>
+          <div style={{ flex: '1', height: '100%', minHeight: '200px' }}> 
             {analysisChartData.datasets.length > 0 && <Bar data={analysisChartData} options={analysisChartOptions} />}
+          </div>
         </div>
     );
-
-    
 };
-
 
 export default FollowUpChart;

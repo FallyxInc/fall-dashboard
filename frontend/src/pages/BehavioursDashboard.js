@@ -23,6 +23,7 @@ import {
 import Modal from './Modal';
 import AnalysisChart from '../components/behaviours/BeAnalysisChart';
 import BeTrackingTable from '../components/behaviours/BeTrackingTable';
+import FollowUpChart from '../components/behaviours/BeFollowUpChart';
 
 Chart.register(ArcElement, PointElement, LineElement);
 
@@ -61,6 +62,45 @@ export default function BehavioursDashboard({ name, title, unitSelectionValues, 
     November: '11',
     December: '12',
   };
+
+  // Dummy follow-up data when Firebase data unavailable
+  const DUMMY_FOLLOW_UP_DATA = [
+    {
+      id: '1',
+      resident_name: 'ANDERSON, GEORGE',
+      date: '2025-01-15',
+      summary_of_behaviour: 'Increased agitation during evening hours, refusing medication and care',
+      other_notes: 'Physician Note'
+    },
+    {
+      id: '2',
+      resident_name: 'BRYMER, WENDY',
+      date: '2025-01-14',
+      summary_of_behaviour: 'Wandering behavior, attempting to leave facility and enter other residents\' rooms',
+      other_notes: 'Progress Note'
+    },
+    {
+      id: '3',
+      resident_name: 'CLELAND, AILEEN',
+      date: '2025-01-13',
+      summary_of_behaviour: 'Verbal aggression towards staff and other residents, increased paranoia',
+      other_notes: 'Resident/Family Follow Up'
+    },
+    {
+      id: '4',
+      resident_name: 'COX, CICELY (001106)',
+      date: '2025-01-12',
+      summary_of_behaviour: 'Depression symptoms, social withdrawal, refusing meals and activities',
+      other_notes: ''
+    },
+    {
+      id: '5',
+      resident_name: 'ANDERSON, GEORGE',
+      date: '2025-01-11',
+      summary_of_behaviour: 'Sleep disturbances, nighttime confusion, calling out for assistance',
+      other_notes: ''
+    }
+  ];
 
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -242,57 +282,15 @@ const [filterTimeOfDay, setFilterTimeOfDay] = useState("Anytime");
     setIsModalOpen(true);
   };
 
-  const handleSubmitIntervention = () => {
-    if (currentIntervention === data[currentRowIndex].interventions) {
-      setIsModalOpen(false);
-      return;
-    }
 
-    const updatedData = [...data];
-    updatedData[currentRowIndex].interventions = currentIntervention;
-    updatedData[currentRowIndex].isInterventionsUpdated = 'yes';
-
-    console.log(updatedData);
-    const rowRef = ref(db, `/${name}/${desiredYear}/${months_backword[desiredMonth]}/row-${data[currentRowIndex].id}`);
-    update(rowRef, {
-      interventions: currentIntervention,
-      isInterventionsUpdated: 'yes',
-    })
-      .then(() => {
-        console.log('Intervention updated successfully');
-        setData(updatedData);
-        setIsModalOpen(false);
-      })
-      .catch((error) => {
-        console.error('Error updating intervention:', error);
-      });
+  const getTimeOfDay = (time) => {
+    if (!time) return "Anytime";
+    const hour = new Date("1970-01-01T" + time).getHours();
+    if (hour >= 6 && hour < 12) return "Morning";
+    if (hour >= 12 && hour < 18) return "Afternoon";
+    if (hour >= 18 && hour < 24) return "Evening";
+    return "Night"; // 0-6
   };
-
-  const filteredData = data.filter((item) => {
-  // Resident filter
-  if (filterResident !== "Any Resident" && item.name !== filterResident) return false;
-
-  // Behavior type filter
-  if (filterBehaviorType !== "All Types" && item.incident_type !== filterBehaviorType)
-    return false;
-
-  // Time of day filter
-  if (filterTimeOfDay !== "Anytime") {
-    const tod = getTimeOfDay(item.time);
-    if (tod !== filterTimeOfDay) return false;
-  }
-
-  return true;
-});
-
-const getTimeOfDay = (time) => {
-  if (!time) return "Anytime";
-  const hour = new Date("1970-01-01T" + time).getHours();
-  if (hour >= 6 && hour < 12) return "Morning";
-  if (hour >= 12 && hour < 18) return "Afternoon";
-  if (hour >= 18 && hour < 24) return "Evening";
-  return "Night"; // 0-6
-};
   const handleEditCauseOfFall = (index) => {
     setCurrentCauseOfFall(data[index].cause);
     setCurrentCauseRowIndex(index);
@@ -356,6 +354,48 @@ const getTimeOfDay = (time) => {
       });
   };
 
+  const handleSubmitIntervention = () => {
+    if (currentIntervention === data[currentRowIndex].interventions) {
+      setIsModalOpen(false);
+      return;
+    }
+
+    const updatedData = [...data];
+    updatedData[currentRowIndex].interventions = currentIntervention;
+    updatedData[currentRowIndex].isInterventionsUpdated = 'yes';
+
+    console.log(updatedData);
+    const rowRef = ref(db, `/${name}/${desiredYear}/${months_backword[desiredMonth]}/row-${data[currentRowIndex].id}`);
+    update(rowRef, {
+      interventions: currentIntervention,
+      isInterventionsUpdated: 'yes',
+    })
+      .then(() => {
+        console.log('Intervention updated successfully');
+        setData(updatedData);
+        setIsModalOpen(false);
+      })
+      .catch((error) => {
+        console.error('Error updating intervention:', error);
+      });
+  };
+
+  const filteredData = data.filter((item) => {
+  // Resident filter
+  if (filterResident !== "Any Resident" && item.name !== filterResident) return false;
+
+  // Behavior type filter
+  if (filterBehaviorType !== "All Types" && item.incident_type !== filterBehaviorType)
+    return false;
+
+  // Time of day filter
+  if (filterTimeOfDay !== "Anytime") {
+    const tod = getTimeOfDay(item.time);
+    if (tod !== filterTimeOfDay) return false;
+  }
+
+  return true;
+});
   const updateFallsChart = () => {
     const timeRange = fallsTimeRange;
     const currentBehaviours = countTotalBehaviours();
@@ -500,44 +540,15 @@ const getTimeOfDay = (time) => {
     let filename;
     
     if (showFollowUpTable) {
-      // Export follow-up data (dummy data)
-      modifiedData = [
-        {
-          'Follow-up Number': '1',
-          'Resident Name': 'John Smith',
-          'Date': '2025-01-15',
-          'Summary of Behaviour': 'Increased agitation during evening hours, refusing medication',
-          'Other Notes Included': 'Family notified, care plan updated'
-        },
-        {
-          'Follow-up Number': '2',
-          'Resident Name': 'Mary Johnson',
-          'Date': '2025-01-14',
-          'Summary of Behaviour': 'Wandering behavior, attempting to leave facility',
-          'Other Notes Included': 'Safety measures implemented, door alarms activated'
-        },
-        {
-          'Follow-up Number': '3',
-          'Resident Name': 'Robert Wilson',
-          'Date': '2025-01-13',
-          'Summary of Behaviour': 'Verbal aggression towards staff and other residents',
-          'Other Notes Included': 'Behavioral therapy session scheduled'
-        },
-        {
-          'Follow-up Number': '4',
-          'Resident Name': 'Sarah Davis',
-          'Date': '2025-01-12',
-          'Summary of Behaviour': 'Depression symptoms, social withdrawal',
-          'Other Notes Included': 'Social activities increased, counselor consultation'
-        },
-        {
-          'Follow-up Number': '5',
-          'Resident Name': 'Michael Brown',
-          'Date': '2025-01-11',
-          'Summary of Behaviour': 'Sleep disturbances, nighttime confusion',
-          'Other Notes Included': 'Sleep hygiene protocol initiated'
-        }
-      ];
+      // Export follow-up data
+      const dataToExport = followUpData.length > 0 ? followUpData : DUMMY_FOLLOW_UP_DATA;
+      modifiedData = dataToExport.map((item, index) => ({
+        'Follow-up Number': String(index + 1),
+        'Resident Name': item.resident_name || 'Unknown Resident',
+        'Date': item.date || 'Unknown Date',
+        'Summary of Behaviour': item.summary_of_behaviour || 'No summary available',
+        'Other Notes Included': item.other_notes || 'No notes available'
+      }));
       
       const monthNum = months_backword[desiredMonth];
       filename = `${name}_${desiredYear}_${monthNum}_follow_ups.csv`;
@@ -769,7 +780,7 @@ const getTimeOfDay = (time) => {
         setFollowUpData(sortedFollowUpData);
         setFollowUpLoading(false);
       } else {
-        // No data exists, set loading to false and show dummy data
+        // No data exists, set loading to false
         setFollowUpData([]);
         setFollowUpLoading(false);
       }
@@ -1179,8 +1190,23 @@ const getTimeOfDay = (time) => {
 
       <div className={styles['chart-container']}>
           {/* {analysisChartData.datasets.length > 0 && <Bar data={analysisChartData} options={analysisChartOptions} />} */}
-        <AnalysisChart data={data} desiredYear={desiredYear} desiredMonth={desiredMonth} threeMonthData={threeMonthData}/>
-
+        {showFollowUpTable &&
+          <FollowUpChart
+            data={(followUpData.length > 0 ? followUpData : DUMMY_FOLLOW_UP_DATA)}
+            desiredYear={desiredYear}
+            desiredMonth={desiredMonth}
+          />
+        }
+        
+        { !showFollowUpTable &&
+          <AnalysisChart 
+            data={data} 
+            desiredYear={desiredYear} 
+            desiredMonth={desiredMonth} 
+            threeMonthData={threeMonthData}
+            getTimeOfDay={getTimeOfDay}
+            />
+        }
 
         <div className={styles.chart}>
           <div className={styles['gauge-container']}>
@@ -1415,57 +1441,16 @@ const getTimeOfDay = (time) => {
                 </tr>
               </thead>
               <tbody>
-                {followUpData.length > 0 ? (
-                  // Show real Firebase data if available
-                  followUpData.map((item, index) => (
-                    <tr key={item.id || index}>
-                      <td style={{ fontSize: '16px' }}>{index + 1}</td>
-                      <td style={{ fontSize: '16px' }}>{item.resident_name || 'Unknown Resident'}</td>
-                      <td style={{ fontSize: '16px' }}>{item.date || 'Unknown Date'}</td>
-                      <td style={{ fontSize: '16px' }}>{item.summary_of_behaviour || 'No summary available'}</td>
-                      <td style={{ fontSize: '16px' }}>{item.other_notes || 'No notes available'}</td>
-                    </tr>
-                  ))
-                ) : (
-                  // Show dummy data when no Firebase data is available
-                  <>
-                                        <tr>
-                      <td style={{ fontSize: '16px' }}>1</td>
-                      <td style={{ fontSize: '16px' }}>ANDERSON, GEORGE</td>
-                      <td style={{ fontSize: '16px' }}>2025-01-15</td>
-                      <td style={{ fontSize: '16px' }}>Increased agitation during evening hours, refusing medication and care</td>
-                      <td style={{ fontSize: '16px' }}>Physician Note</td>
-                    </tr>
-                    <tr>
-                      <td style={{ fontSize: '16px' }}>2</td>
-                      <td style={{ fontSize: '16px' }}>BRYMER, WENDY</td>
-                      <td style={{ fontSize: '16px' }}>2025-01-14</td>
-                      <td style={{ fontSize: '16px' }}>Wandering behavior, attempting to leave facility and enter other residents' rooms</td>
-                      <td style={{ fontSize: '16px' }}>Progress Note</td>
-                    </tr>
-                    <tr>
-                      <td style={{ fontSize: '16px' }}>3</td>
-                      <td style={{ fontSize: '16px' }}>CLELAND, AILEEN</td>
-                      <td style={{ fontSize: '16px' }}>2025-01-13</td>
-                      <td style={{ fontSize: '16px' }}>Verbal aggression towards staff and other residents, increased paranoia</td>
-                      <td style={{ fontSize: '16px' }}>Resident/Family Follow Up</td>
-                    </tr>
-                    <tr>
-                      <td style={{ fontSize: '16px' }}>4</td>
-                      <td style={{ fontSize: '16px' }}>COX, CICELY (001106)</td>
-                      <td style={{ fontSize: '16px' }}>2025-01-12</td>
-                      <td style={{ fontSize: '16px' }}>Depression symptoms, social withdrawal, refusing meals and activities</td>
-                      <td style={{ fontSize: '16px' }}></td>
-                </tr>
-                    <tr>
-                      <td style={{ fontSize: '16px' }}>5</td>
-                      <td style={{ fontSize: '16px' }}>ANDERSON, GEORGE</td>
-                      <td style={{ fontSize: '16px' }}>2025-01-11</td>
-                      <td style={{ fontSize: '16px' }}>Sleep disturbances, nighttime confusion, calling out for assistance</td>
-                      <td style={{ fontSize: '16px' }}></td>
-                    </tr>
-                  </>
-                )}
+                {/* Use Firebase data if available, otherwise show dummy data */}
+                {(followUpData.length > 0 ? followUpData : DUMMY_FOLLOW_UP_DATA).map((item, index) => (
+                  <tr key={item.id || index}>
+                    <td style={{ fontSize: '16px' }}>{index + 1}</td>
+                    <td style={{ fontSize: '16px' }}>{item.resident_name || 'Unknown Resident'}</td>
+                    <td style={{ fontSize: '16px' }}>{item.date || 'Unknown Date'}</td>
+                    <td style={{ fontSize: '16px' }}>{item.summary_of_behaviour || 'No summary available'}</td>
+                    <td style={{ fontSize: '16px' }}>{item.other_notes || 'No notes available'}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           )}
