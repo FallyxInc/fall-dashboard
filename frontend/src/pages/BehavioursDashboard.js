@@ -32,6 +32,10 @@ export default function BehavioursDashboard({ name, title, unitSelectionValues, 
     ? 'oneill'
     : name === 'MCB'
       ? 'millCreek'
+      : name === 'berkshire'
+        ? 'berkshire'
+        : name === 'banwell'
+          ? 'banwell'
       : undefined;
   const months_forward = {
     '01': 'January',
@@ -39,7 +43,7 @@ export default function BehavioursDashboard({ name, title, unitSelectionValues, 
     '03': 'March',
     '04': 'April',
     '05': 'May',
-    '06': 'June',
+    '0`6`': 'June',
     '07': 'July',
     '08': 'August',
     '09': 'September',
@@ -691,7 +695,10 @@ const [filterTimeOfDay, setFilterTimeOfDay] = useState("Anytime");
     // Start measuring fetch data time
     performance.mark('start-fetch-data');
 
-    const dataRef = ref(db, `/${altName}/behaviours/2025/${months_backword[desiredMonth]}`);
+    let dataRef = ref(db, `/${altName}/behaviours/2025/${months_backword[desiredMonth]}`);
+    if (altName === 'berkshire' || altName === 'banwell') {
+      dataRef = ref(db, `/${altName}/2025/${months_backword[desiredMonth]}`);
+    } 
     const currentYear = 2025; // Hardcoded to 2025
     const currentMonth = parseInt(months_backword[desiredMonth]); // current month
     const pastThreeMonths = [];
@@ -712,8 +719,11 @@ const [filterTimeOfDay, setFilterTimeOfDay] = useState("Anytime");
     }
 
     pastThreeMonths.forEach(({ year, month }) => {
-      const monthRef = ref(db, `/millCreek/behaviours/${year}/${month}`);
+      let monthRef = ref(db, `/${altName}/behaviours/${year}/${month}`);
 
+      if (altName === 'berkshire' || altName === 'banwell') {
+        monthRef = ref(db, `/${altName}/${year}/${month}`);
+      } 
       const listener = onValue(monthRef, (snapshot) => {
         if (snapshot.exists()) {
           const behavioursData = snapshot.val();
