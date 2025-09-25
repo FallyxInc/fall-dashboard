@@ -459,7 +459,7 @@ function App() {
               
               <BehavioursDashboard
                 name="banwell"
-                title="Banwell GardensBehaviours Dashboard"
+                title="Banwell Gardens Behaviours Dashboard"
                 goal={15}
               />
               
