@@ -112,17 +112,22 @@ const AnalysisChart = ({data, desiredYear, desiredMonth, threeMonthData, getTime
   };
 
   const countResidentsByTimeOfDay = (data) => {
+    console.log("Counting residents by time of day")
     const counts = {
       Morning: [],
+      Afternoon: [],
       Evening: [],
       Night: []
     };
 
     data.forEach(item => {
-      const hour = new Date(item.date + ' ' + item.time).getHours();
-      if (hour >= 6 && hour < 14) {
+
+      const timeOfDay = getTimeOfDay(item.time);
+      if (timeOfDay === "Morning") {
         counts.Morning.push(item.name);
-      } else if (hour >= 14 && hour < 22) {
+      } else if (timeOfDay === "Afternoon" ) {
+        counts.Afternoon.push(item.name);
+      } else if (timeOfDay === "Evening") {
         counts.Evening.push(item.name);
       } else {
         counts.Night.push(item.name);
@@ -249,7 +254,7 @@ const AnalysisChart = ({data, desiredYear, desiredMonth, threeMonthData, getTime
                 callbacks: {
                     label: function(context) {
                         if (analysisType === 'timeOfDay' && residentsByTimeOfDay[context.label]) {
-                            return residentsByTimeOfDay[context.label].map(name => `• ${name}`).join('\n');
+                          return ["Residents: ",...residentsByTimeOfDay[context.label].map(name => `${' - ' + name}`)];
                         }
                         return `${context.dataset.label || 'Count'}: ${context.raw}`;
                     }

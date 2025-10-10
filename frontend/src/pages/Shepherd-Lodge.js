@@ -757,8 +757,13 @@ export default function Dashboard({ name, title, unitSelectionValues, goal }) {
         }
 
         // Then process the data
+        console.log(fetchedData)
         let withIdData = Object.values(fetchedData);
         for (let i = 0; i < withIdData.length; i++) {
+          console.log(withIdData[i]);
+          if (withIdData[i] === null || withIdData[i] === undefined || withIdData[i]=== "") {
+            withIdData[i] = {}; // or handle the null/undefined case as needed
+          }
           withIdData[i].id = i;
         }
 

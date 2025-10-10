@@ -441,6 +441,31 @@ function App() {
             }
           />   
           <Route
+            path="/berkshire"
+            element={
+              
+              <BehavioursDashboard
+                name="berkshire"
+                title="Berkshire Care Behaviours Dashboard"
+                goal={15}
+              />
+              
+            }
+          />   
+
+        <Route
+            path="/banwell"
+            element={
+              
+              <BehavioursDashboard
+                name="banwell"
+                title="Banwell Gardens Behaviours Dashboard"
+                goal={15}
+              />
+              
+            }
+          />   
+          <Route
             path="/LM1"
             element={
               
