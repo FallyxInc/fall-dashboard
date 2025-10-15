@@ -43,13 +43,13 @@ export default function BehavioursDashboard({ name, title, unitSelectionValues, 
     '03': 'March',
     '04': 'April',
     '05': 'May',
-    '0`6`': 'June',
+    '06': 'June',
     '07': 'July',
     '08': 'August',
     '09': 'September',
-    10: 'October',
-    11: 'November',
-    12: 'December',
+    '10': 'October',
+    '11': 'November',
+    '12': 'December',
   };
 
   const months_backword = {
@@ -712,11 +712,11 @@ const [filterTimeOfDay, setFilterTimeOfDay] = useState("Anytime");
     // Start measuring fetch data time
     performance.mark('start-fetch-data');
 
-    let dataRef = ref(db, `/${altName}/behaviours/2025/${months_backword[desiredMonth]}`);
+    let dataRef = ref(db, `/${altName}/behaviours/${desiredYear}/${months_backword[desiredMonth]}`);
     if (altName === 'berkshire' || altName === 'banwell') {
-      dataRef = ref(db, `/${altName}/2025/${months_backword[desiredMonth]}`);
+      dataRef = ref(db, `/${altName}/${desiredYear}/${months_backword[desiredMonth]}`);
     } 
-    const currentYear = 2025; // Hardcoded to 2025
+    const currentYear = desiredYear;
     const currentMonth = parseInt(months_backword[desiredMonth]); // current month
     const pastThreeMonths = [];
 
@@ -760,6 +760,7 @@ const [filterTimeOfDay, setFilterTimeOfDay] = useState("Anytime");
         if (!fetchedData) {
           console.log('No data available');
           setData([]);
+          setIsLoading(false);
           return;
         }
 
@@ -774,6 +775,11 @@ const [filterTimeOfDay, setFilterTimeOfDay] = useState("Anytime");
           (a, b) => new Date(b.date) - new Date(a.date)
         );
         setData(sortedData);
+        setIsLoading(false);
+      } else {
+        // No data exists, set empty data and loading to false
+        setData([]);
+        setIsLoading(false);
       }
     });
 
@@ -804,10 +810,6 @@ const [filterTimeOfDay, setFilterTimeOfDay] = useState("Anytime");
         const sortedFollowUpData = withIdFollowUpData.sort(
           (a, b) => new Date(b.date) - new Date(a.date)
         );
-        sortedFollowUpData.filter(item => {
-            // Check filter for resident names
-
-        })
         setFollowUpData(sortedFollowUpData);
         setFollowUpLoading(false);
       } else {
@@ -821,7 +823,7 @@ const [filterTimeOfDay, setFilterTimeOfDay] = useState("Anytime");
       off(dataRef, listener); // Cleanup listener on unmount
       off(followUpRef, followUpListener); // Cleanup follow-up listener on unmount
     };
-  }, [desiredMonth]); // Remove desiredYear from dependencies since it's hardcoded
+  }, [desiredMonth, desiredYear]); // Include desiredYear in dependencies
 
   useEffect(() => {
     updateFallsChart();
@@ -905,8 +907,15 @@ const [filterTimeOfDay, setFilterTimeOfDay] = useState("Anytime");
   };
 
   useEffect(() => {
-    const yearsRef = ref(db, `/${altName}/behaviours`);
-    console.log('Checking available years/months for ${altName}');
+    // Determine the correct Firebase path based on home type
+    let yearsRef;
+    if (altName === 'berkshire' || altName === 'banwell') {
+      yearsRef = ref(db, `/${altName}`);
+    } else {
+      yearsRef = ref(db, `/${altName}/behaviours`);
+    }
+    
+    console.log(`Checking available years/months for ${altName}`);
     
     onValue(yearsRef, (snapshot) => {
       const yearMonthMapping = {};
@@ -970,7 +979,7 @@ const [filterTimeOfDay, setFilterTimeOfDay] = useState("Anytime");
           }
         }
         
-        setDesiredYear(yearToUse);
+        setDesiredYear(parseInt(yearToUse));
         setDesiredMonth(monthToUse);
       }
     });
