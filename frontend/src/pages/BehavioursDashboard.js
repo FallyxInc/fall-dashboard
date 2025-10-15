@@ -122,6 +122,11 @@ export default function BehavioursDashboard({ name, title, unitSelectionValues, 
   const [filterResident, setFilterResident] = useState("Any Resident");
 const [filterBehaviorType, setFilterBehaviorType] = useState("All Types");
 const [filterTimeOfDay, setFilterTimeOfDay] = useState("Anytime");
+  
+  // Follow-up specific filters
+  const [filterFollowUpResident, setFilterFollowUpResident] = useState("Any Resident");
+  const [filterStartDate, setFilterStartDate] = useState("");
+  const [filterEndDate, setFilterEndDate] = useState("");
   // const [desiredMonth, setDesiredMonth] = useState('January');
   // const [desiredYear, setDesiredYear] = useState(2025);
   const [availableYearMonth, setAvailableYearMonth] = useState({});
@@ -400,6 +405,18 @@ const [filterTimeOfDay, setFilterTimeOfDay] = useState("Anytime");
 
   return true;
 });
+
+  // Filter follow-up data
+  const filteredFollowUpData = followUpData.filter((item) => {
+    // Resident filter for follow-ups
+    if (filterFollowUpResident !== "Any Resident" && item.resident_name !== filterFollowUpResident) return false;
+
+    // Date range filter
+    if (filterStartDate && item.date && new Date(item.date) < new Date(filterStartDate)) return false;
+    if (filterEndDate && item.date && new Date(item.date) > new Date(filterEndDate)) return false;
+
+    return true;
+  });
   const updateFallsChart = () => {
     const timeRange = fallsTimeRange;
     const currentBehaviours = countTotalBehaviours();
@@ -545,7 +562,7 @@ const [filterTimeOfDay, setFilterTimeOfDay] = useState("Anytime");
     
     if (showFollowUpTable) {
       // Export follow-up data
-      const dataToExport = followUpData.length > 0 ? followUpData : DUMMY_FOLLOW_UP_DATA;
+      const dataToExport = followUpData.length > 0 ? filteredFollowUpData : DUMMY_FOLLOW_UP_DATA;
       modifiedData = dataToExport.map((item, index) => ({
         'Follow-up Number': String(index + 1),
         'Resident Name': item.resident_name || 'Unknown Resident',
@@ -775,9 +792,13 @@ const [filterTimeOfDay, setFilterTimeOfDay] = useState("Anytime");
         }
 
         // Convert to array while preserving the stored IDs
-        let withIdFollowUpData = Object.values(fetchedFollowUpData).map(item => ({
+        let withIdFollowUpData = Object.values(fetchedFollowUpData).map((item, index) => ({
           ...item,
-          id: item.id || ''
+          id: item.id || String(index + 1),
+          resident_name: item.resident_name || item.Name || 'Unknown Resident',
+          date: item.date || 'Unknown Date',
+          summary_of_behaviour: item.summary_of_behaviour || 'No summary available',
+          other_notes: item.other_notes || 'No notes available'
         }));
 
         const sortedFollowUpData = withIdFollowUpData.sort(
@@ -1202,7 +1223,7 @@ const [filterTimeOfDay, setFilterTimeOfDay] = useState("Anytime");
           {/* {analysisChartData.datasets.length > 0 && <Bar data={analysisChartData} options={analysisChartOptions} />} */}
         {showFollowUpTable &&
           <FollowUpChart
-            data={(followUpData.length > 0 ? followUpData : DUMMY_FOLLOW_UP_DATA)}
+            data={(followUpData.length > 0 ? filteredFollowUpData : DUMMY_FOLLOW_UP_DATA)}
             desiredYear={desiredYear}
             desiredMonth={desiredMonth}
           />
@@ -1266,7 +1287,7 @@ const [filterTimeOfDay, setFilterTimeOfDay] = useState("Anytime");
                   </div>
                   <div style={{ textAlign: 'left' }}>
                     <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#0D0E10', marginBottom: '5px' }}>
-                      % of Residents on Suspected Antipsychotics Usage without Prescription
+                      % of Residents with Potentially Inappropriate Use of Antipsychotics
                     </h3>
                     <p style={{ fontSize: '14px', color: '#676879', margin: 0 }}>
                       Residents receiving antipsychotics without proper documentation
@@ -1393,30 +1414,83 @@ const [filterTimeOfDay, setFilterTimeOfDay] = useState("Anytime");
         <div className={styles['header']}>
 
       <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+        {!showFollowUpTable ? (
+          <>
+            {/* Behavior Tracking Filters */}
+            <select className={styles.selector}value={filterResident} onChange={(e) => setFilterResident(e.target.value)}>
+                <option>Any Resident</option>
+                {[...new Set(data.map((d) => d.name))].map((name) => (
+                  <option key={name}>{name}</option>
+                ))}
+              </select>
 
-        <select className={styles.selector}value={filterResident} onChange={(e) => setFilterResident(e.target.value)}>
-            <option>Any Resident</option>
-            {[...new Set(data.map((d) => d.name))].map((name) => (
-              <option key={name}>{name}</option>
-            ))}
-          </select>
+              {/* Behavior Type Filter */}
+              <select className={styles.selector} value={filterBehaviorType} onChange={(e) => setFilterBehaviorType(e.target.value)}>
+                <option>All Types</option>
+                {[...new Set(data.map((d) => d.incident_type))].map((t) => (
+                  <option key={t}>{t}</option>
+                ))}
+              </select>
 
-          {/* Behavior Type Filter */}
-          <select className={styles.selector} value={filterBehaviorType} onChange={(e) => setFilterBehaviorType(e.target.value)}>
-            <option>All Types</option>
-            {[...new Set(data.map((d) => d.incident_type))].map((t) => (
-              <option key={t}>{t}</option>
-            ))}
-          </select>
+              {/* Time of Day Filter */}
+              <select className={styles.selector} value={filterTimeOfDay} onChange={(e) => setFilterTimeOfDay(e.target.value)}>
+                <option>Anytime</option>
+                <option>Morning</option>
+                <option>Afternoon</option>
+                <option>Evening</option>
+                <option>Night</option>
+              </select>
+          </>
+        ) : (
+          <>
+            {/* Follow-up Filters */}
+            <select className={styles.selector} value={filterFollowUpResident} onChange={(e) => setFilterFollowUpResident(e.target.value)}>
+              <option>Any Resident</option>
+              {[...new Set(followUpData.map((d) => d.resident_name))].map((name) => (
+                <option key={name}>{name}</option>
+              ))}
+            </select>
 
-          {/* Time of Day Filter */}
-          <select className={styles.selector} value={filterTimeOfDay} onChange={(e) => setFilterTimeOfDay(e.target.value)}>
-            <option>Anytime</option>
-            <option>Morning</option>
-            <option>Afternoon</option>
-            <option>Evening</option>
-            <option>Night</option>
-          </select>
+            {/* Start Date Filter */}
+            <input
+              type="date"
+              className={styles.selector}
+              value={filterStartDate}
+              onChange={(e) => setFilterStartDate(e.target.value)}
+              placeholder="Start Date"
+              style={{ padding: '8px' }}
+            />
+
+            {/* End Date Filter */}
+            <input
+              type="date"
+              className={styles.selector}
+              value={filterEndDate}
+              onChange={(e) => setFilterEndDate(e.target.value)}
+              placeholder="End Date"
+              style={{ padding: '8px' }}
+            />
+
+            {/* Clear Date Filters Button */}
+            <button
+              onClick={() => {
+                setFilterStartDate("");
+                setFilterEndDate("");
+              }}
+              style={{
+                padding: '8px 12px',
+                backgroundColor: '#6c757d',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '14px'
+              }}
+            >
+              Clear Dates
+            </button>
+          </>
+        )}
       </div>
         </div>
         <div>
@@ -1452,7 +1526,7 @@ const [filterTimeOfDay, setFilterTimeOfDay] = useState("Anytime");
               </thead>
               <tbody>
                 {/* Use Firebase data if available, otherwise show dummy data */}
-                {(followUpData.length > 0 ? followUpData : DUMMY_FOLLOW_UP_DATA).map((item, index) => (
+                {(followUpData.length > 0 ? filteredFollowUpData : DUMMY_FOLLOW_UP_DATA).map((item, index) => (
                   <tr key={item.id || index}>
                     <td style={{ fontSize: '16px' }}>{index + 1}</td>
                     <td style={{ fontSize: '16px' }}>{item.resident_name || 'Unknown Resident'}</td>
