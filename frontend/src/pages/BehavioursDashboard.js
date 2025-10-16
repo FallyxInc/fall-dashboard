@@ -24,6 +24,7 @@ import Modal from './Modal';
 import AnalysisChart from '../components/behaviours/BeAnalysisChart';
 import BeTrackingTable from '../components/behaviours/BeTrackingTable';
 import FollowUpChart from '../components/behaviours/BeFollowUpChart';
+import BeFollowUpTable from '../components/behaviours/BeFollowUpTable';
 
 Chart.register(ArcElement, PointElement, LineElement);
 
@@ -1519,35 +1520,11 @@ const [filterTimeOfDay, setFilterTimeOfDay] = useState("Anytime");
           storageKey={`${name}_${desiredYear}_${desiredMonth}_behaviours_checked`}
         />
       ) : (
-        <div>
-          {followUpLoading ? (
-            <div style={{ textAlign: 'center', padding: '20px' }}>Loading follow-up data...</div>
-          ) : (
-            <table style={{ width: '100%' }}>
-              <thead>
-                <tr>
-                  <th style={{ fontSize: '18px' }}>#</th>
-                  <th style={{ fontSize: '18px' }}>Resident Name</th>
-                  <th style={{ fontSize: '18px' }}>Date</th>
-                  <th style={{ fontSize: '18px' }}>Summary of Behaviour</th>
-                  <th style={{ fontSize: '18px' }}>Other Notes Included</th>
-                </tr>
-              </thead>
-              <tbody>
-                {/* Use Firebase data if available, otherwise show dummy data */}
-                {(followUpData.length > 0 ? filteredFollowUpData : DUMMY_FOLLOW_UP_DATA).map((item, index) => (
-                  <tr key={item.id || index}>
-                    <td style={{ fontSize: '16px' }}>{index + 1}</td>
-                    <td style={{ fontSize: '16px' }}>{item.resident_name || 'Unknown Resident'}</td>
-                    <td style={{ fontSize: '16px' }}>{item.date || 'Unknown Date'}</td>
-                    <td style={{ fontSize: '16px' }}>{item.summary_of_behaviour || 'No summary available'}</td>
-                    <td style={{ fontSize: '16px' }}>{item.other_notes || 'No notes available'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+        <BeFollowUpTable 
+          filteredData={filteredFollowUpData}
+          DUMMY_FOLLOW_UP_DATA={DUMMY_FOLLOW_UP_DATA}
+          followUpLoading={followUpLoading}
+        />
       )}
       {isModalOpen && (
         <div className={styles.modal}>
