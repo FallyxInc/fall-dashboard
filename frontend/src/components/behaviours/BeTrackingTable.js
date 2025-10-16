@@ -45,8 +45,8 @@ const BeTrackingTable = ({filteredData, cleanDuplicateText, storageKey = 'behavi
 
     return (
         <div>
-            {/* Optional: Add a utility button to clear all checked items */}
-            {checkedItems.size > 0 && (
+                {/* Optional: Add a utility button to clear all checked items */}
+                {checkedItems.size > 0 && (
                 <div style={s.clearButtonContainer}>
                     <button
                         onClick={clearAllChecked}
@@ -54,7 +54,7 @@ const BeTrackingTable = ({filteredData, cleanDuplicateText, storageKey = 'behavi
                     >
                         Clear All Checked ({checkedItems.size})
                     </button>
-                </div>
+            </div>
             )}
 
             <table style={s.table}>
@@ -74,6 +74,10 @@ const BeTrackingTable = ({filteredData, cleanDuplicateText, storageKey = 'behavi
                         <th style={s.tableHeader}>Interventions</th>
                         <th style={s.tableHeader}>Injuries</th>
                         <th style={s.tableHeader}>Potential CI</th>
+                        {/* Conditionally render Other Notes header if any item has other_notes */}
+                        {filteredData && filteredData.some(item => item.other_notes) && (
+                            <th style={s.tableHeader}>Other Notes</th>
+                        )}
                     </tr>
                 </thead>
                 <tbody id="fallsTableBody">
@@ -110,6 +114,29 @@ const BeTrackingTable = ({filteredData, cleanDuplicateText, storageKey = 'behavi
                                 <td style={{ ...s.tableCell, ...interventionsBgColor }}>{cleanDuplicateText(item.interventions, 'interventions')}</td>
                                 <td style={s.tableCell}>{item.injuries}</td>
                                 <td style={s.tableCell}>{item.CI || "Still Gathering Data/Unknown"}</td>
+                                {/* Conditionally render Other Notes cell if any item has other_notes */}
+                                {filteredData && filteredData.some(dataItem => dataItem.other_notes) && (
+                                    <td style={s.tableCell}>
+                                        {item.other_notes ? 
+                                            (() => {
+                                                const truncatedText = truncateOtherNotes(item.other_notes);
+                                                const lines = truncatedText.replace(/<br\s*\/?>/gi, '\n').split('\n');
+                                                return lines.map((line, index) => (
+                                                    <Fragment key={index}>
+                                                        {line}
+                                                        {index < lines.length - 1 && (
+                                                            <>
+                                                                <br />
+                                                                <br />
+                                                            </>
+                                                        )}
+                                                    </Fragment>
+                                                ));
+                                            })()
+                                            : ''
+                                        }
+                                    </td>
+                                )}
                             </tr>
                         );
                     })}
