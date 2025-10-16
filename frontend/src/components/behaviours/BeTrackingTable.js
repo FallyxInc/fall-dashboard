@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Fragment} from 'react';
 
 const BeTrackingTable = ({filteredData, cleanDuplicateText, storageKey = 'behaviours_checked_items'}) => {
     const [checkedItems, setCheckedItems] = useState(new Set());
@@ -66,7 +66,7 @@ const BeTrackingTable = ({filteredData, cleanDuplicateText, storageKey = 'behavi
                         <th style={s.tableHeader}>Date</th>
                         <th style={s.tableHeader}>Location</th>
                         <th style={s.tableHeader}>Type</th>
-                        <th style={s.tableHeader}>Whose Affected</th>
+                        <th style={s.tableHeader}>Who Affected</th>
                         <th style={s.tableHeader}>PRN</th>
                         <th style={s.tableHeader}>Code White</th>
                         <th style={s.tableHeader}>Summary</th>
@@ -116,22 +116,24 @@ const BeTrackingTable = ({filteredData, cleanDuplicateText, storageKey = 'behavi
                                 <td style={s.tableCell}>{item.CI || "Still Gathering Data/Unknown"}</td>
                                 {/* Conditionally render Other Notes cell if any item has other_notes */}
                                 {filteredData && filteredData.some(dataItem => dataItem.other_notes) && (
-                                    <td style={s.tableCell}>
+                                    <td style={{ ...s.tableCell, whiteSpace: 'pre-wrap' }}>
                                         {item.other_notes ? 
                                             (() => {
-                                                const truncatedText = truncateOtherNotes(item.other_notes);
-                                                const lines = truncatedText.replace(/<br\s*\/?>/gi, '\n').split('\n');
-                                                return lines.map((line, index) => (
-                                                    <Fragment key={index}>
-                                                        {line}
-                                                        {index < lines.length - 1 && (
-                                                            <>
-                                                                <br />
-                                                                <br />
-                                                            </>
-                                                        )}
-                                                    </Fragment>
-                                                ));
+                                                const lines = item.other_notes.replace(/<br\s*\/?>/gi, '\n').split('\n');
+                                                return lines
+                                                    .map(line => line.replace(/note text\s*:\s*/gi, ''))
+                                                    .map(line => line.replace(/202[4-5]-/g, ''))
+                                                    .map((line, index) => (
+                                                        <Fragment key={index}>
+                                                            {line}
+                                                            {index < lines.length - 1 && (
+                                                                <>
+                                                                    <br />
+                                                                    <br />
+                                                                </>
+                                                            )}
+                                                        </Fragment>
+                                                    ));
                                             })()
                                             : ''
                                         }
@@ -165,28 +167,37 @@ const s = {
         width: '100%',
         borderCollapse: 'collapse',
         marginTop: '20px',
-        fontSize: '18px',
+        fontSize: '13px',
+        tableLayout: 'auto',
     },
     tableHeader: {
         border: '1px solid #ddd',
-        padding: '10px',
+        padding: '4px 2px',
         textAlign: 'center',
         backgroundColor: '#e8f5e9',
         fontWeight: '600',
         fontSize: '13px',
+        verticalAlign: 'middle',
+        whiteSpace: 'nowrap',
     },
     tableHeaderCheckbox: {
         textAlign: 'center',
-        width: '30px',
+        width: '25px',
+        padding: '2px',
     },
     tableCell: {
         border: '1px solid #ddd',
-        padding: '10px',
+        padding: '4px 2px',
         textAlign: 'left',
         fontSize: '14px',
+        verticalAlign: 'top',
+        maxWidth: '120px',
     },
     checkboxCell: {
         textAlign: 'center',
+        width: '25px',
+        padding: '2px',
+        verticalAlign: 'middle',
     },
     checkboxInput: {
         width: '18px',
