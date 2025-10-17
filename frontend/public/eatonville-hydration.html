@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Eatonbille Hydration Tracking Dashboard</title>
+    <title>Eatonville Hydration Tracking Dashboard</title>
     <style>
         * {
             margin: 0;
@@ -462,7 +462,7 @@
     </div>
 
     <!-- Load dynamic data from CSV -->
-    <script src="dashboard_data.js"></script>
+    <script src="eatonville_dashboard_data.js"></script>
     <script>
 
         let filteredData = [...hydrationData];
@@ -549,7 +549,9 @@
                         <tr>
                             <th>Resident Name</th>
                             <th>Goal (mL)</th>
-                            <th>Yesterday's Intake</th>
+                            <th>Oct 14th</th>
+                            <th>Oct 15th</th>
+                            <th>Oct 16th</th>
                             <th>Status</th>
                             <th>Progress</th>
                             <th>Missed 3 Days</th>
@@ -558,6 +560,9 @@
                     <tbody>
                         ${filteredData.map(resident => {
                             const goal = parseFloat(resident.goal) || 0;
+                            const day14 = parseFloat(resident.day14) || 0;
+                            const day15 = parseFloat(resident.day15) || 0;
+                            const day16 = parseFloat(resident.day16) || 0;
                             const yesterday = parseFloat(resident.yesterday) || 0;
                             const metGoal = goal > 0 && yesterday >= goal;
                             const progressPercent = goal > 0 ? Math.min((yesterday / goal) * 100, 100) : 0;
@@ -566,7 +571,9 @@
                                 <tr>
                                     <td class="resident-name">${resident.name}</td>
                                     <td class="goal">${goal.toLocaleString()}</td>
-                                    <td class="yesterday">${yesterday.toLocaleString()}</td>
+                                    <td class="yesterday">${day14.toLocaleString()}</td>
+                                    <td class="yesterday">${day15.toLocaleString()}</td>
+                                    <td class="yesterday">${day16.toLocaleString()}</td>
                                     <td>
                                         <span class="status ${metGoal ? 'met' : 'missed'}">
                                             ${metGoal ? 'Met Goal' : 'Missed Goal'}
