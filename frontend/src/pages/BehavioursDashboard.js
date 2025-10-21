@@ -297,9 +297,8 @@ const [filterTimeOfDay, setFilterTimeOfDay] = useState("Anytime");
     if (!time) return "Anytime";
     const hour = new Date("1970-01-01T" + time).getHours();
     if (hour >= 6 && hour < 12) return "Morning";
-    if (hour >= 12 && hour < 18) return "Afternoon";
-    if (hour >= 18 && hour < 24) return "Evening";
-    return "Night"; // 0-6
+    if (hour >= 12 && hour < 20) return "Evening";
+    return "Night";
   };
   const handleEditCauseOfFall = (index) => {
     setCurrentCauseOfFall(data[index].cause);
@@ -1446,7 +1445,6 @@ const [filterTimeOfDay, setFilterTimeOfDay] = useState("Anytime");
               <select className={styles.selector} value={filterTimeOfDay} onChange={(e) => setFilterTimeOfDay(e.target.value)}>
                 <option>Anytime</option>
                 <option>Morning</option>
-                <option>Afternoon</option>
                 <option>Evening</option>
                 <option>Night</option>
               </select>

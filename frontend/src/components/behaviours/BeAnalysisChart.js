@@ -90,7 +90,6 @@ const AnalysisChart = ({data, desiredYear, desiredMonth, threeMonthData, getTime
   const countBehavioursByTimeOfDay = (data) => {
     const counts = {
       Morning: 0,
-      Afternoon: 0,
       Evening: 0,
       Night: 0
     };
@@ -99,8 +98,6 @@ const AnalysisChart = ({data, desiredYear, desiredMonth, threeMonthData, getTime
       const timeOfDay = getTimeOfDay(item.time);
       if (timeOfDay === "Morning") {
         counts.Morning++;
-      } else if (timeOfDay === "Afternoon" ) {
-        counts.Afternoon++;
       } else if (timeOfDay === "Evening") {
         counts.Evening++;
       } else {
@@ -115,7 +112,6 @@ const AnalysisChart = ({data, desiredYear, desiredMonth, threeMonthData, getTime
     console.log("Counting residents by time of day")
     const counts = {
       Morning: [],
-      Afternoon: [],
       Evening: [],
       Night: []
     };
@@ -125,8 +121,6 @@ const AnalysisChart = ({data, desiredYear, desiredMonth, threeMonthData, getTime
       const timeOfDay = getTimeOfDay(item.time);
       if (timeOfDay === "Morning") {
         counts.Morning.push(item.name);
-      } else if (timeOfDay === "Afternoon" ) {
-        counts.Afternoon.push(item.name);
       } else if (timeOfDay === "Evening") {
         counts.Evening.push(item.name);
       } else {
@@ -179,10 +173,10 @@ const AnalysisChart = ({data, desiredYear, desiredMonth, threeMonthData, getTime
         switch (analysisType) {
         case 'timeOfDay':
             setAnalysisHeaderText('Behaviours by Time of Day');
-            newLabels = ['Morning', 'Afternoon', 'Evening', 'Night'];
+            newLabels = ['Morning', 'Evening', 'Night'];
             var timeOfDayCounts = countBehavioursByTimeOfDay(filteredData);
             setResidentsByTimeOfDay(countResidentsByTimeOfDay(filteredData));
-            newData = [timeOfDayCounts.Morning, timeOfDayCounts.Afternoon, timeOfDayCounts.Evening, timeOfDayCounts.Night];
+            newData = [timeOfDayCounts.Morning, timeOfDayCounts.Evening, timeOfDayCounts.Night];
             break;
 
         case 'injuries':
