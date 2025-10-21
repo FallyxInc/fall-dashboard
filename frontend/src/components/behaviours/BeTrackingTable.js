@@ -2,6 +2,7 @@ import React, { useState, useEffect, Fragment} from 'react';
 
 const BeTrackingTable = ({filteredData, cleanDuplicateText, storageKey = 'behaviours_checked_items'}) => {
     const [checkedItems, setCheckedItems] = useState(new Set());
+    const [expandedNotes, setExpandedNotes] = useState({});
 
     // Load checked items from localStorage on component mount
     useEffect(() => {
@@ -41,6 +42,14 @@ const BeTrackingTable = ({filteredData, cleanDuplicateText, storageKey = 'behavi
     // Clear all checked items (optional utility function)
     const clearAllChecked = () => {
         setCheckedItems(new Set());
+    };
+
+    // Toggle expanded state for a specific note
+    const toggleExpanded = (incidentNumber) => {
+        setExpandedNotes(prev => ({
+            ...prev,
+            [incidentNumber]: !prev[incidentNumber]
+        }));
     };
 
     return (
@@ -119,21 +128,47 @@ const BeTrackingTable = ({filteredData, cleanDuplicateText, storageKey = 'behavi
                                     <td style={{ ...s.tableCell, whiteSpace: 'pre-wrap' }}>
                                         {item.other_notes ? 
                                             (() => {
-                                                const lines = item.other_notes.replace(/<br\s*\/?>/gi, '\n').split('\n');
-                                                return lines
-                                                    .map(line => line.replace(/note text\s*:\s*/gi, ''))
-                                                    .map(line => line.replace(/202[4-5]-/g, ''))
-                                                    .map((line, index) => (
-                                                        <Fragment key={index}>
-                                                            {line}
-                                                            {index < lines.length - 1 && (
-                                                                <>
-                                                                    <br />
-                                                                    <br />
-                                                                </>
-                                                            )}
-                                                        </Fragment>
-                                                    ));
+                                                const cleanedText = item.other_notes
+                                                    .replace(/<br\s*\/?>/gi, '\n')
+                                                    .replace(/note text\s*:\s*/gi, '')
+                                                    .replace(/202[4-5]-/g, '');
+                                                
+                                                const expanded = expandedNotes[item.incident_number] || false;
+                                                const maxLength = 200;
+                                                const shouldTruncate = cleanedText.length > maxLength;
+                                                const displayText = expanded || !shouldTruncate ? cleanedText : cleanedText.slice(0, maxLength) + '...';
+                                                
+                                                return (
+                                                    <div style={{ cursor: 'pointer', position: 'relative', zIndex: 10 }} onClick={() => toggleExpanded(item.incident_number)}>
+                                                        {displayText
+                                                        }
+
+                                                    <br/>   
+                                                        {shouldTruncate && (
+                                                            <>
+                                                                <button
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        toggleExpanded(item.incident_number);
+                                                                    }}
+                                                                    style={{
+                                                                        background: 'none',
+                                                                        border: 'none',
+                                                                        color: '#007bff',
+                                                                        cursor: 'pointer',
+                                                                        textDecoration: 'underline',
+                                                                        padding: 0,
+                                                                        fontSize: '12px',
+                                                                        position: 'relative',
+                                                                        zIndex: 10
+                                                                    }}
+                                                                >
+                                                                    {expanded ? 'Show less' : 'Show more'}
+                                                                </button>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                );
                                             })()
                                             : ''
                                         }

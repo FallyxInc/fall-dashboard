@@ -128,20 +128,26 @@ const FollowUpChart = ({data, desiredYear, desiredMonth}) => {
                 grid: {
                     display: false,
                 },
-                barPercentage: 1,     // Make bars take up 100% of their allocated category space
-                categoryPercentage: 1, // Make categories take up 100% of the available X-axis space
+                barPercentage: 1,
+                categoryPercentage: 1,
                 ticks: {
-                    color: '#495057', // Example: dark gray for x-axis labels
+                    color: '#495057',
+                    font: {
+                        size: 11
+                    }
                 }
             },
             y: {
                 beginAtZero: true,
                 ticks: {
                     stepSize: 1,
-                    color: '#495057', // Example: dark gray for y-axis labels
+                    color: '#495057',
+                    font: {
+                        size: 11
+                    }
                 },
                 grid: {
-                    color: 'rgba(0, 0, 0, 0.1)', // Light grid lines
+                    color: 'rgba(0, 0, 0, 0.1)',
                 }
             },
         },
@@ -154,9 +160,15 @@ const FollowUpChart = ({data, desiredYear, desiredMonth}) => {
     };
     
     return (
-        <div className={styles.chart}  style={{display: 'flex', justifyContent: 'space-between', flexDirection: 'column', flex: '1'}}>
-          <div className={styles.topHeader}>
-            <h3>{analysisHeaderText}</h3>
+        <div className={styles.chart} style={{
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            flexDirection: 'column', 
+            flex: '1',
+            fontSize: '13px'
+        }}>
+          <div className={styles.topHeader} style={{ padding: '4px 2px' }}>
+            <h3 style={{ fontSize: '13px', margin: '4px 0' }}>{analysisHeaderText}</h3>
             <select
                 className={styles.selector}
                 id="followUpAnalysisType"
@@ -164,13 +176,18 @@ const FollowUpChart = ({data, desiredYear, desiredMonth}) => {
                 onChange={(e) => {
                     setAnalysisType(e.target.value);
                 }}
+                style={{ 
+                    fontSize: '11px', 
+                    padding: '4px 2px',
+                    height: 'auto'
+                }}
             >
                 <option value="residents">By Resident</option>
                 <option value="monthly">By Month</option>
                 <option value="weekly">By Week</option>
             </select>
           </div>
-          <div style={{ flex: '1', height: '100%', minHeight: '200px' }}> 
+          <div style={{ flex: '1', height: '100%', minHeight: '180px' }}> 
             {analysisChartData.datasets.length > 0 && <Bar data={analysisChartData} options={analysisChartOptions} />}
           </div>
         </div>
