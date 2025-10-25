@@ -5,6 +5,8 @@ const BeFollowUpTable = ({ filteredData, DUMMY_FOLLOW_UP_DATA, followUpLoading }
         <div>
             {followUpLoading ? (
                 <div style={{ textAlign: 'center', padding: '20px' }}>Loading follow-up data...</div>
+            ) : filteredData.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '20px', color: '#666' }}>No follow-up data available</div>
             ) : (
                 <table style={s.table}>
                     <thead>
