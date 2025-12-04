@@ -21,11 +21,14 @@ export default function Login() {
     // performance.clearMarks();
     // performance.clearMeasures();
 
-    const fakeEmail = `${username}@example.com`;
+    let email = username; 
+    if (!email.includes('@')) {
+      email = `${username}@example.com`;
+    }
 
     // performance.mark('start-signin');
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, fakeEmail, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
       // performance.mark('end-signin');
       // performance.measure('Sign-in Time', 'start-signin', 'end-signin');
 
