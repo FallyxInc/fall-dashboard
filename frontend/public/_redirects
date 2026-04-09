@@ -1,1 +1,3 @@
+/login https://cortex.ascenix.co/login 301!
+/login/ https://cortex.ascenix.co/login 301!
 /* https://ascenix.co/:splat 301!
